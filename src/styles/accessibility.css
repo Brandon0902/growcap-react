@@ -1,0 +1,29 @@
+:focus-visible {
+  outline: 3px solid #f7c948;
+  outline-offset: 3px;
+}
+
+.skip-link {
+  background: #102a43;
+  color: #ffffff;
+  left: 12px;
+  padding: 10px 14px;
+  position: absolute;
+  top: -48px;
+  z-index: 10;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
