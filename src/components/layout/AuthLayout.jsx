@@ -1,37 +1,41 @@
 import { Outlet } from 'react-router-dom';
-import { ShieldCheck } from 'lucide-react';
+import { useRef } from 'react';
+import { gsap, useGSAP } from '../../animations/gsapSetup.js';
+import LoginWealthScene from '../../features/auth/components/LoginWealthScene.jsx';
 
 function AuthLayout() {
+  const authRef = useRef(null);
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap
+          .timeline({
+            defaults: {
+              duration: 0.58,
+              ease: 'power3.out',
+            },
+          })
+          .from('.auth-panel', { autoAlpha: 0, x: 24, scale: 0.99 }, '<0.12')
+          .from('.auth-panel .form-intro, .auth-panel .form-field, .auth-panel .button, .auth-panel .helper-text', {
+            autoAlpha: 0,
+            y: 14,
+            stagger: 0.07,
+            duration: 0.42,
+          }, '<0.18');
+      });
+
+      return () => mm.revert();
+    },
+    { scope: authRef },
+  );
+
   return (
-    <main className="auth-layout">
+    <main className="auth-layout motion-auth" ref={authRef}>
       <section className="auth-story" aria-label="Resumen Growcap">
-        <div className="auth-vertical" aria-hidden="true">
-          Growcap
-        </div>
-        <div className="auth-story-content">
-          <span className="brand-mark auth-mark" aria-hidden="true">
-            <ShieldCheck size={30} />
-          </span>
-          <p className="auth-eyebrow">Caja de ahorro para empleados</p>
-          <h1>{import.meta.env.VITE_APP_NAME || 'Growcap'}</h1>
-          <p>
-            Acceso privado para ahorro, inversion y prestamos con una interfaz directa para usuarios internos.
-          </p>
-        </div>
-        <div className="auth-proof-grid">
-          <div>
-            <span>01</span>
-            <strong>Ahorro</strong>
-          </div>
-          <div>
-            <span>02</span>
-            <strong>Inversion</strong>
-          </div>
-          <div>
-            <span>03</span>
-            <strong>Prestamos</strong>
-          </div>
-        </div>
+        <LoginWealthScene />
       </section>
       <section className="auth-panel">
         <Outlet />

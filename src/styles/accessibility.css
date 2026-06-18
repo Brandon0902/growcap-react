@@ -1,11 +1,12 @@
 :focus-visible {
-  outline: 3px solid #f7c948;
+  outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
 
 .skip-link {
-  background: #102a43;
-  color: #ffffff;
+  background: var(--color-primary-dark);
+  color: var(--color-on-primary);
+  border-radius: var(--radius);
   left: 12px;
   padding: 10px 14px;
   position: absolute;

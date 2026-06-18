@@ -1,8 +1,6 @@
 # Growcap React
 
-Frontend inicial en React para migrar la interfaz actual de Growcap desde Laravel Blade hacia una aplicacion moderna con Vite.
-
-Esta primera version contiene solo la estructura base del proyecto. No incluye integracion real con APIs, reglas completas de negocio ni diseno visual avanzado.
+Frontend React/Vite de Growcap preparado para publicarse como sitio estatico.
 
 ## Tecnologias
 
@@ -10,55 +8,47 @@ Esta primera version contiene solo la estructura base del proyecto. No incluye i
 - JavaScript
 - React Router DOM
 - Axios
-- CSS simple
+- GSAP
+- pnpm
 
 ## Instalacion
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
-
-Vite mostrara la URL local para abrir el proyecto en el navegador.
 
 ## Configuracion de entorno
 
-Copia `.env.example` a `.env` y ajusta las variables cuando exista la API correspondiente:
+La API se configura con variables Vite:
 
 ```bash
-VITE_API_BASE_URL=
+VITE_BACKEND_URL=https://cajagrowcap.casabarrel.com
+VITE_API_URL=https://cajagrowcap.casabarrel.com/api
 VITE_APP_NAME=Growcap
 ```
 
-## Modulos incluidos
+`VITE_BACKEND_URL` se usa para `/sanctum/csrf-cookie`; `VITE_API_URL` se usa para los endpoints `/api/*`. Para produccion, el archivo `.env.production` ya apunta al backend real.
 
-- Autenticacion: login temporal, token en `localStorage`, logout y ruta protegida.
-- Dashboard: pantalla principal con accesos a ahorro, inversion y prestamos.
-- Ahorro: pagina principal y estructura de formulario de solicitud.
-- Inversion: pagina principal, tarjetas de planes y formulario de solicitud.
-- Prestamos: pagina principal y flujo guiado separado en pasos.
-- Perfil: pantalla base de informacion del usuario.
-- Errores: pagina 404.
+## Build de produccion
 
-## Estructura
-
-```text
-src/
-  api/
-  components/
-    common/
-    layout/
-  features/
-    auth/
-    dashboard/
-    savings/
-    investments/
-    loans/
-    profile/
-  hooks/
-  routes/
-  styles/
-  utils/
+```bash
+pnpm install --frozen-lockfile
+pnpm run build
 ```
 
-Los servicios en `features/*/services` tienen funciones placeholder y comentarios `TODO` para conectar despues con Axios y los endpoints declarados en `src/api/endpoints.js`.
+El build genera la carpeta `dist`. Para cPanel/Apache, sube el contenido de `dist` directamente a `public_html`.
+
+## Rutas en Apache
+
+El archivo `public/.htaccess` se copia a `dist` durante el build para soportar React Router en Apache.
+
+## Modulos incluidos
+
+- Autenticacion SPA con cookies HttpOnly de Laravel Sanctum.
+- Dashboard financiero.
+- Perfil conectado a `/cliente/mis-datos`.
+- Ahorros con solicitud guiada, planes y Stripe Checkout.
+- Inversiones con solicitud guiada, planes y Stripe Checkout.
+- Prestamos con flujo guiado y aval por codigo o documentos.
+- Modales para consultar registros existentes.

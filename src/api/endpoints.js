@@ -1,18 +1,38 @@
 export const ENDPOINTS = {
   auth: {
     login: '/auth/login',
+    loginCookie: '/auth/login-cookie',
+    logoutCookie: '/auth/logout-cookie',
+    meCookie: '/auth/me-cookie',
     logout: '/auth/logout',
+    csrfCookie: '/sanctum/csrf-cookie',
+  },
+  client: {
+    availableBalance: '/cliente/saldo-disponible',
+    myData: '/cliente/mis-datos',
   },
   loans: {
     base: '/prestamos',
     plans: '/prestamos/planes',
+    byId: (id) => `/prestamos/${id}`,
   },
   savings: {
-    base: '/api/ahorros',
-    plans: '/api/ahorros/planes',
+    base: '/ahorros',
+    plans: '/ahorros/planes',
+    frequency: '/ahorros/frecuencia',
+    byId: (id) => `/ahorros/${id}`,
+    checkout: (id) => `/ahorros/${id}/stripe/checkout`,
+    withdraw: (id) => `/ahorros/${id}/retirar`,
+    transfer: (id) => `/ahorros/${id}/transferir`,
+    payLoan: (id) => `/ahorros/${id}/abonar-prestamo`,
+    changeFee: (id) => `/ahorros/${id}/cambiar-cuota`,
+    cancelStripe: (id) => `/ahorros/${id}/cancelar-stripe`,
   },
   investments: {
-    base: '/api/inversiones',
-    plans: '/api/inversiones/planes',
+    base: '/inversiones',
+    plans: '/inversiones/planes',
+    byId: (id) => `/inversiones/${id}`,
+    checkout: (id) => `/inversiones/${id}/stripe/checkout`,
+    payWithBalance: (id) => `/inversiones/${id}/pay-saldo`,
   },
 };

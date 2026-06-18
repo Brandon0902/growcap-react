@@ -1,22 +1,82 @@
 import { ENDPOINTS } from '../../../api/endpoints.js';
-import { clearSession, setToken, setUser } from '../../../utils/storage.js';
+import axiosClient, { backendClient } from '../../../api/axiosClient.js';
 
-export async function login(credentials) {
-  // TODO: Conectar con ENDPOINTS.auth.login cuando la API este disponible.
-  setToken('development-token');
-  setUser({
-    name: 'Usuario Growcap',
-    email: credentials.email,
-  });
+const DEFAULT_DEVICE = 'cliente-web';
+
+function getResponseUser(data, fallbackEmail) {
+  return data?.user || data?.data?.user || data?.data || data || { email: fallbackEmail, name: 'Usuario Growcap' };
+}
+
+function normalizeAuthError(error) {
+  const response = error?.response;
+  const data = response?.data;
+
+  if (response?.status === 422) {
+    return {
+      message: data?.message || 'Revisa los datos ingresados.',
+      fieldErrors: data?.errors || {},
+      status: response.status,
+    };
+  }
+
+  if (response?.status === 401 || response?.status === 403) {
+    return {
+      message: data?.message || data?.error || 'Credenciales incorrectas.',
+      fieldErrors: {},
+      status: response.status,
+    };
+  }
 
   return {
-    endpoint: ENDPOINTS.auth.login,
-    token: 'development-token',
+    message: data?.message || data?.error || 'No fue posible iniciar sesion. Intenta nuevamente.',
+    fieldErrors: {},
+    status: response?.status,
   };
 }
 
+async function prepareCookieAuth() {
+  try {
+    await backendClient.get(ENDPOINTS.auth.csrfCookie);
+  } catch (error) {
+    if (error?.response?.status !== 404) {
+      throw error;
+    }
+  }
+}
+
+export async function login(credentials) {
+  try {
+    const payload = {
+      email: credentials.email?.trim(),
+      password: credentials.password,
+      device: DEFAULT_DEVICE,
+    };
+
+    await prepareCookieAuth();
+    await axiosClient.post(ENDPOINTS.auth.loginCookie, payload);
+    const { data } = await axiosClient.get(ENDPOINTS.auth.meCookie);
+    const user = getResponseUser(data, payload.email);
+
+    return {
+      user,
+    };
+  } catch (error) {
+    throw normalizeAuthError(error);
+  }
+}
+
+export async function getAuthenticatedUser() {
+  const { data } = await axiosClient.get(ENDPOINTS.auth.meCookie);
+
+  return getResponseUser(data);
+}
+
 export async function logout() {
-  // TODO: Conectar con ENDPOINTS.auth.logout si el backend requiere invalidar token.
-  clearSession();
-  return { endpoint: ENDPOINTS.auth.logout };
+  try {
+    await axiosClient.post(ENDPOINTS.auth.logoutCookie);
+  } catch (error) {
+    if (error?.response?.status !== 401) {
+      throw normalizeAuthError(error);
+    }
+  }
 }

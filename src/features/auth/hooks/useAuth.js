@@ -1,14 +1,7 @@
-import { useMemo } from 'react';
-import { getToken, getUser } from '../../../utils/storage.js';
+import { useAuthContext } from '../context/useAuthContext.js';
 
 function useAuth() {
-  return useMemo(
-    () => ({
-      isAuthenticated: Boolean(getToken()),
-      user: getUser(),
-    }),
-    [],
-  );
+  return useAuthContext();
 }
 
 export default useAuth;

@@ -1,6 +1,6 @@
 import Card from '../../../components/common/Card.jsx';
 
-function SummaryCard({ icon: Icon, label, value }) {
+function SummaryCard({ helper, icon: Icon, label, status = 'Estado', value }) {
   return (
     <Card className="summary-card">
       {Icon && (
@@ -11,9 +11,10 @@ function SummaryCard({ icon: Icon, label, value }) {
       <div>
         <p className="summary-label">{label}</p>
         <strong className="summary-value">{value}</strong>
+        {helper && <p className="summary-helper">{helper}</p>}
       </div>
-      <span className="summary-status" aria-hidden="true">
-        Disponible
+      <span className="summary-status">
+        {status}
       </span>
     </Card>
   );

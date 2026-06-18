@@ -1,15 +1,24 @@
 import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
+import { useState } from 'react';
 import Button from '../common/Button.jsx';
-import { clearSession } from '../../utils/storage.js';
 import logoGrowcap from '../../assets/rombo_blanco.png';
+import useAuth from '../../features/auth/hooks/useAuth.js';
 
 function Header() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    clearSession();
-    navigate('/login', { replace: true });
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+    } finally {
+      setIsLoggingOut(false);
+      navigate('/login', { replace: true });
+    }
   };
 
   return (
@@ -33,9 +42,9 @@ function Header() {
         </div>
       </div>
 
-      <Button className="button-secondary icon-button" onClick={handleLogout}>
+      <Button className="button-secondary icon-button" disabled={isLoggingOut} onClick={handleLogout}>
         <LogOut size={20} aria-hidden="true" />
-        Salir
+        {isLoggingOut ? 'Saliendo...' : 'Salir'}
       </Button>
     </header>
   );
