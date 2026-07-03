@@ -25,10 +25,31 @@ export function extractMeta(payload) {
   return payload?.meta || payload?.data?.meta || null;
 }
 
+const genericValidationMessages = {
+  id_activo: 'El plan seleccionado no es válido.',
+  cantidad: 'El monto debe ser un número.',
+  codigo_aval: 'El código de aval no es válido.',
+};
+
+function normalizeFieldErrors(errors) {
+  return Object.fromEntries(Object.entries(errors).map(([field, messages]) => {
+    const list = Array.isArray(messages) ? messages : [messages];
+    const normalized = list.map((message) => {
+      if (genericValidationMessages[field] && /expected|received nan|invalid_type/i.test(String(message))) {
+        return genericValidationMessages[field];
+      }
+
+      return message;
+    });
+
+    return [field, normalized];
+  }));
+}
+
 export function normalizeApiError(error, fallbackMessage = 'No fue posible completar la operacion.') {
   const response = error?.response;
   const data = response?.data;
-  const errors = data?.errors || {};
+  const errors = normalizeFieldErrors({ ...(data?.errors || {}), ...(data?.details || {}) });
   const firstError = Object.values(errors).flat().find(Boolean);
 
   if (response?.status === 401) {

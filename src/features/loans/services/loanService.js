@@ -1,6 +1,7 @@
 import { ENDPOINTS } from '../../../api/endpoints.js';
 import axiosClient from '../../../api/axiosClient.js';
-import { extractCollection, extractMeta, toFormData } from '../../../api/apiUtils.js';
+import { extractCollection, extractMeta } from '../../../api/apiUtils.js';
+import { buildLoanRequest } from './loanRequest.js';
 
 export async function getLoans(params = {}) {
   const { data } = await axiosClient.get(ENDPOINTS.loans.base, { params });
@@ -25,11 +26,8 @@ export async function getLoanPlans() {
 }
 
 export async function createLoanRequest(payload) {
-  const { data } = await axiosClient.post(ENDPOINTS.loans.base, toFormData(payload), {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const request = buildLoanRequest(payload);
+  const { data } = await axiosClient.post(ENDPOINTS.loans.base, request.data, request.config);
 
   return {
     data,

@@ -152,7 +152,7 @@ function LoanWizard({ onCreated, plans = [] }) {
 
   const buildLoanPayload = () => {
     const payload = {
-      cantidad: values.cantidad,
+      cantidad: Number(values.cantidad),
       id_activo: Number(values.id_activo),
     };
 
