@@ -25,10 +25,34 @@ export function extractMeta(payload) {
   return payload?.meta || payload?.data?.meta || null;
 }
 
+const genericValidationMessages = {
+  id_activo: 'El plan seleccionado no es v\u00e1lido.',
+  cantidad: 'El monto debe ser un n\u00famero.',
+  codigo_aval: 'El c\u00f3digo de aval no es v\u00e1lido.',
+  ahorro_id: 'El plan de ahorro seleccionado no es v\u00e1lido.',
+  cuota: 'La cuota debe ser un n\u00famero v\u00e1lido.',
+  return_url: 'La URL de retorno de Stripe no es v\u00e1lida.',
+};
+
+function normalizeFieldErrors(errors) {
+  return Object.fromEntries(Object.entries(errors).map(([field, messages]) => {
+    const list = Array.isArray(messages) ? messages : [messages];
+    const normalized = list.map((message) => {
+      if (genericValidationMessages[field] && /expected|received nan|invalid_type|invalid url/i.test(String(message))) {
+        return genericValidationMessages[field];
+      }
+
+      return message;
+    });
+
+    return [field, normalized];
+  }));
+}
+
 export function normalizeApiError(error, fallbackMessage = 'No fue posible completar la operacion.') {
   const response = error?.response;
   const data = response?.data;
-  const errors = data?.errors || {};
+  const errors = normalizeFieldErrors({ ...(data?.errors || {}), ...(data?.details || {}) });
   const firstError = Object.values(errors).flat().find(Boolean);
 
   if (response?.status === 401) {

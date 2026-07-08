@@ -12,6 +12,7 @@ import Input from '../../../components/common/Input.jsx';
 import RequestStartCard from '../../../components/common/RequestStartCard.jsx';
 import WizardStep from '../../../components/common/WizardStep.jsx';
 import { createSavingsCheckout, createSavingsRequest } from '../services/savingsService.js';
+import { buildSavingsCheckoutPayload, buildSavingsRequestPayload, formatSavingsRequestError } from '../services/savingsRequest.js';
 
 const initialValues = {
   ahorro_id: '',
@@ -256,24 +257,7 @@ function SavingsRequestForm({ onCreated, plans = [], suggestedFrequency }) {
     setCurrentStep((step) => Math.max(step - 1, 0));
   };
 
-  const buildPayload = () => {
-    const payload = {
-      ahorro_id: Number(values.ahorro_id),
-      cuota: Number(values.cuota),
-      fecha_inicio: undefined,
-      frecuencia_pago: suggestedFrequency || undefined,
-      monto_inicial: Number(values.monto_inicial || 0),
-      monto_ahorro: Number(values.monto_inicial || 0),
-      pago_inicial: values.payment_method === 'later' ? 'definir_despues' : values.payment_method,
-      pay_method: values.payment_method === 'later' ? undefined : values.payment_method,
-    };
-
-    if (isSeasonal) {
-      payload.fecha_fin = values.fecha_fin;
-    }
-
-    return payload;
-  };
+  const buildPayload = () => buildSavingsRequestPayload(values, suggestedFrequency, isSeasonal);
 
   const handleSubmit = async () => {
     setError('');
@@ -293,6 +277,7 @@ function SavingsRequestForm({ onCreated, plans = [], suggestedFrequency }) {
     }
 
     setIsSubmitting(true);
+    let requestStage = 'create';
 
     try {
       const created = await createSavingsRequest(buildPayload());
@@ -305,20 +290,15 @@ function SavingsRequestForm({ onCreated, plans = [], suggestedFrequency }) {
         }
 
         const action = created?.action ?? created?.data?.action ?? 'create';
-        const parsedInitialAmount = Number(values.monto_inicial || 0);
-        const parsedFee = Number(values.cuota || 0);
-        const returnUrl = `${window.location.origin}/ahorro/stripe/return?ahorro_id=${savingsId}&action=${action}`;
-        const checkout = await createSavingsCheckout(savingsId, {
+        requestStage = 'checkout';
+        const checkout = await createSavingsCheckout(savingsId, buildSavingsCheckoutPayload({
           action,
-          add_cuota: action === 'update' ? parsedFee : undefined,
-          add_monto: action === 'update' ? parsedInitialAmount : undefined,
-          charge_cuota_now: true,
-          charge_monto_now: parsedInitialAmount > 0,
-          cuota: parsedFee,
-          monto_inicial: parsedInitialAmount,
-          old_subscription_id: created?.ahorro?.stripe_subscription_id ?? created?.data?.ahorro?.stripe_subscription_id,
-          return_url: returnUrl,
-        });
+          savingsId,
+          cuota: values.cuota,
+          monto_inicial: values.monto_inicial,
+          oldSubscriptionId: created?.ahorro?.stripe_subscription_id ?? created?.data?.ahorro?.stripe_subscription_id,
+          origin: window.location.origin,
+        }));
         const checkoutUrl = extractCheckoutUrl(checkout);
 
         if (!checkoutUrl) {
@@ -337,7 +317,7 @@ function SavingsRequestForm({ onCreated, plans = [], suggestedFrequency }) {
     } catch (requestError) {
       const normalized = normalizeApiError(requestError, 'No fue posible enviar la solicitud de ahorro.');
       setFieldErrors(normalized.fieldErrors);
-      setError(normalized.message);
+      setError(formatSavingsRequestError(requestStage, normalized.message));
     } finally {
       setIsSubmitting(false);
     }
