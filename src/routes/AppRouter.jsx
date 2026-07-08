@@ -42,7 +42,9 @@ function AppRouter() {
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="/ahorro" element={<SavingsPage />} />
+          <Route path="/ahorros" element={<SavingsPage />} />
           <Route path="/ahorro/stripe/return" element={<SavingsPage />} />
+          <Route path="/ahorros/stripe/return" element={<SavingsPage />} />
           <Route path="/inversion" element={<InvestmentsPage />} />
           <Route path="/inversion/stripe/return" element={<InvestmentsPage />} />
           <Route path="/prestamos" element={<LoansPage />} />

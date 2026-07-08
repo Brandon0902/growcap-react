@@ -26,7 +26,7 @@ export function buildSavingsCheckoutPayload({ action, savingsId, cuota, monto_in
     charge_monto_now: amount > 0,
     cuota: fee,
     monto_inicial: amount,
-    return_url: `${origin}/ahorros?ahorro_id=${savingsId}&action=${action}`,
+    return_url: `${origin}/ahorro/stripe/return?ahorro_id=${savingsId}&action=${action}`,
   };
 
   if (action === 'update') {
