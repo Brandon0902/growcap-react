@@ -1,6 +1,6 @@
 import { LogIn } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import Input from '../../../components/common/Input.jsx';
@@ -8,8 +8,24 @@ import logoGrowcap from '../../../assets/rombo_blanco.png';
 import useForm from '../../../hooks/useForm.js';
 import useAuth from '../hooks/useAuth.js';
 
+function getRedirectTarget(location) {
+  const target = location.state?.from;
+
+  if (!target || typeof target.pathname !== 'string') {
+    return '/';
+  }
+
+  if (target.pathname === '/login') {
+    return '/';
+  }
+
+  return `${target.pathname}${target.search || ''}${target.hash || ''}`;
+}
+
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTarget = getRedirectTarget(location);
   const { isAuthenticated, isLoading, login } = useAuth();
   const { values, handleChange } = useForm({ email: '', password: '' });
   const [fieldErrors, setFieldErrors] = useState({});
@@ -18,9 +34,9 @@ function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate('/', { replace: true });
+      navigate(redirectTarget, { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, navigate, redirectTarget]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -30,7 +46,7 @@ function LoginPage() {
 
     try {
       await login(values);
-      navigate('/', { replace: true });
+      navigate(redirectTarget, { replace: true });
     } catch (error) {
       setFieldErrors(error.fieldErrors || {});
       setFormError(error.message || 'No fue posible iniciar sesion.');
