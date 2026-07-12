@@ -13,6 +13,7 @@ import RequestStartCard from '../../../components/common/RequestStartCard.jsx';
 import WizardStep from '../../../components/common/WizardStep.jsx';
 import { createSavingsCheckout, createSavingsRequest } from '../services/savingsService.js';
 import { buildSavingsCheckoutPayload, buildSavingsRequestPayload, formatSavingsRequestError } from '../services/savingsRequest.js';
+import { getSavingsPlanPeriod } from '../services/savingsPlanDisplay.js';
 
 const initialValues = {
   ahorro_id: '',
@@ -24,7 +25,6 @@ const initialValues = {
 
 const baseTotalSteps = 5;
 const percentFields = ['porcentaje', 'porcentaje_1', 'tasa', 'tasa_interes', 'rendimiento', 'interes', 'interes_anual', 'percentage'];
-const periodFields = ['plazo', 'periodo', 'tiempo', 'duracion', 'meses', 'dias', 'tiempo_minimo', 'frecuencia_pago'];
 const minFeeFields = [
   'cuota_minima',
   'cuota_min',
@@ -180,7 +180,7 @@ function SavingsRequestForm({ onCreated, plans = [], suggestedFrequency }) {
 
   const selectedPlan = plans.find((plan) => String(getPlanId(plan)) === String(values.ahorro_id));
   const planYield = getPlanValue(selectedPlan, percentFields);
-  const planPeriod = getPlanValue(selectedPlan, periodFields);
+  const planPeriod = getSavingsPlanPeriod(selectedPlan);
   const minFee = getNumericValue(getPlanValue(selectedPlan, minFeeFields));
   const feeAmount = Number(values.cuota || 0);
   const initialAmount = Number(values.monto_inicial || 0);
