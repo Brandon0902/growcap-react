@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '../../../api/endpoints.js';
 import axiosClient, { backendClient } from '../../../api/axiosClient.js';
+import { clearStoredAuthToken, storeAuthToken } from './authSession.js';
 
 const DEFAULT_DEVICE = 'cliente-web';
 
@@ -52,10 +53,19 @@ export async function login(credentials) {
       device: DEFAULT_DEVICE,
     };
 
-    await prepareCookieAuth();
-    await axiosClient.post(ENDPOINTS.auth.loginCookie, payload);
-    const { data } = await axiosClient.get(ENDPOINTS.auth.meCookie);
-    const user = getResponseUser(data, payload.email);
+    const { data: tokenData } = await axiosClient.post(ENDPOINTS.auth.login, payload);
+    storeAuthToken(tokenData?.access_token);
+
+    try {
+      await prepareCookieAuth();
+      await axiosClient.post(ENDPOINTS.auth.loginCookie, payload);
+    } catch (cookieError) {
+      if (cookieError?.response?.status === 401 || cookieError?.response?.status === 403) {
+        throw cookieError;
+      }
+    }
+
+    const user = getResponseUser(tokenData, payload.email);
 
     return {
       user,
@@ -78,5 +88,7 @@ export async function logout() {
     if (error?.response?.status !== 401) {
       throw normalizeAuthError(error);
     }
+  } finally {
+    clearStoredAuthToken();
   }
 }

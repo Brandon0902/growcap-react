@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AuthContext } from './authContext.js';
 import { getAuthenticatedUser, login as loginWithCookie, logout as logoutWithCookie } from '../services/authService.js';
-
-function clearLegacyAuthStorage() {
-  localStorage.removeItem('growcap_token');
-  localStorage.removeItem('growcap_user');
-}
+import { clearLegacyAuthUser, clearStoredAuthToken } from '../services/authSession.js';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -20,6 +16,7 @@ export function AuthProvider({ children }) {
       return authenticatedUser;
     } catch (error) {
       if (error?.response?.status === 401) {
+        clearStoredAuthToken();
         setUser(null);
         return null;
       }
@@ -41,18 +38,20 @@ export function AuthProvider({ children }) {
     try {
       await logoutWithCookie();
     } finally {
-      clearLegacyAuthStorage();
+      clearStoredAuthToken();
+      clearLegacyAuthUser();
       setUser(null);
     }
   }, []);
 
   useEffect(() => {
-    clearLegacyAuthStorage();
+    clearLegacyAuthUser();
     refreshUser().catch(() => undefined);
   }, [refreshUser]);
 
   useEffect(() => {
     const handleUnauthorized = () => {
+      clearStoredAuthToken();
       setUser(null);
     };
 

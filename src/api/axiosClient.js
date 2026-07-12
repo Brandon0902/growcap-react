@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getStoredAuthToken } from '../features/auth/services/authSession.js';
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
@@ -19,6 +20,15 @@ export const backendClient = axios.create({
   },
 });
 
+axiosClient.interceptors.request.use((config) => {
+  const token = getStoredAuthToken();
+
+  if (token && !config.headers?.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
 function shouldSkipUnauthorizedEvent(config) {
   const url = String(config?.url || '');
 
