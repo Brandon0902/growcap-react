@@ -1,5 +1,5 @@
 export function buildSavingsRequestPayload(values, suggestedFrequency, seasonal) {
-  const paymentMethod = values.payment_method === 'later' ? 'definir_despues' : values.payment_method;
+  const paymentMethod = values.payment_method || 'stripe';
   const payload = {
     ahorro_id: Number(values.ahorro_id),
     cuota: Number(values.cuota),
@@ -7,7 +7,7 @@ export function buildSavingsRequestPayload(values, suggestedFrequency, seasonal)
     monto_inicial: Number(values.monto_inicial || 0),
     monto_ahorro: Number(values.monto_inicial || 0),
     pago_inicial: paymentMethod,
-    pay_method: values.payment_method === 'later' ? undefined : values.payment_method,
+    pay_method: paymentMethod,
   };
 
   if (seasonal) {

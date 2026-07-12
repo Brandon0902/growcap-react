@@ -20,10 +20,9 @@ const initialValues = {
   cuota: '',
   fecha_fin: '',
   monto_inicial: '',
-  payment_method: 'later',
+  payment_method: 'stripe',
 };
 
-const baseTotalSteps = 5;
 const percentFields = ['porcentaje', 'porcentaje_1', 'tasa', 'tasa_interes', 'rendimiento', 'interes', 'interes_anual', 'percentage'];
 const minFeeFields = [
   'cuota_minima',
@@ -157,19 +156,7 @@ function formatPercent(value) {
   return `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(numeric)}%`;
 }
 
-function getPaymentLabel(value) {
-  if (value === 'saldo') {
-    return 'Saldo disponible';
-  }
-
-  if (value === 'stripe') {
-    return 'Stripe';
-  }
-
-  return 'Definir despues';
-}
-
-function SavingsRequestForm({ onCreated, plans = [], suggestedFrequency }) {
+function SavingsRequestForm({ plans = [], suggestedFrequency }) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [values, setValues] = useState(initialValues);
@@ -188,15 +175,8 @@ function SavingsRequestForm({ onCreated, plans = [], suggestedFrequency }) {
   const isSeasonal = isSeasonalPlan(selectedPlan);
   const dateEndStep = 3;
   const summaryStep = isSeasonal ? 4 : 3;
-  const paymentStep = isSeasonal ? 5 : 4;
-  const totalSteps = isSeasonal ? baseTotalSteps + 1 : baseTotalSteps;
+  const totalSteps = summaryStep + 1;
 
-  const resetWizard = () => {
-    setCurrentStep(0);
-    setValues(initialValues);
-    setFieldErrors({});
-    setError('');
-  };
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -234,9 +214,6 @@ function SavingsRequestForm({ onCreated, plans = [], suggestedFrequency }) {
       nextErrors.fecha_fin = 'Indica la fecha fin del ahorro de temporada.';
     }
 
-    if (stepIndex === paymentStep && !values.payment_method) {
-      nextErrors.payment_method = 'Elige como quieres pagar.';
-    }
 
     setFieldErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -282,8 +259,7 @@ function SavingsRequestForm({ onCreated, plans = [], suggestedFrequency }) {
     try {
       const created = await createSavingsRequest(buildPayload());
 
-      if (values.payment_method === 'stripe') {
-        const savingsId = extractResourceId(created, ['id', 'id_ahorro', 'ahorro_id']);
+      const savingsId = extractResourceId(created, ['id', 'id_ahorro', 'ahorro_id']);
 
         if (!savingsId) {
           throw new Error('No se pudo iniciar Stripe Checkout porque la API no devolvio el ID del ahorro.');
@@ -308,12 +284,6 @@ function SavingsRequestForm({ onCreated, plans = [], suggestedFrequency }) {
         setMessage('Te enviaremos a Stripe Checkout para completar el pago.');
         window.location.href = checkoutUrl;
         return;
-      }
-
-      setMessage('Solicitud de ahorro enviada correctamente.');
-      setIsOpen(false);
-      resetWizard();
-      onCreated?.();
     } catch (requestError) {
       const normalized = normalizeApiError(requestError, 'No fue posible enviar la solicitud de ahorro.');
       setFieldErrors(normalized.fieldErrors);
@@ -486,46 +456,10 @@ function SavingsRequestForm({ onCreated, plans = [], suggestedFrequency }) {
     if (currentStep === summaryStep) {
       return (
         <WizardStep
-          description="Confirma la cuota y el monto inicial antes de elegir el metodo de pago."
+          description="Confirma la cuota y el monto inicial antes de continuar a Stripe."
           question="Revisa tu solicitud"
         >
           {renderSummary()}
-        </WizardStep>
-      );
-    }
-
-    if (currentStep === paymentStep) {
-      return (
-        <WizardStep
-          description="Si eliges Stripe, el checkout considera la cuota y el monto inicial opcional."
-          question="Como quieres pagar?"
-        >
-          <div className="guided-choice-grid">
-            {[
-              { value: 'stripe', title: 'Stripe', description: 'Pagar cuota y monto inicial en Checkout.' },
-              { value: 'saldo', title: 'Saldo disponible', description: 'Usar mi saldo en Growcap.' },
-              { value: 'later', title: 'Definir despues', description: 'Enviar la solicitud sin pago ahora.' },
-            ].map((option) => (
-              <label className={values.payment_method === option.value ? 'guided-choice selected' : 'guided-choice'} key={option.value}>
-                <input
-                  checked={values.payment_method === option.value}
-                  name="payment_method"
-                  onChange={handleChange}
-                  type="radio"
-                  value={option.value}
-                />
-                <strong>{option.title}</strong>
-                <span>{option.description}</span>
-              </label>
-            ))}
-          </div>
-          {renderSummary()}
-          <dl className="guided-summary compact">
-            <div>
-              <dt>Metodo de pago</dt>
-              <dd>{getPaymentLabel(values.payment_method)}</dd>
-            </div>
-          </dl>
         </WizardStep>
       );
     }

@@ -34,3 +34,15 @@ test('Stripe validation details are translated to actionable messages', () => {
   const normalized = normalizeApiError({ response: { status: 422, data: { details: { return_url: ['Invalid url'] } } } });
   assert.equal(normalized.message, 'La URL de retorno de Stripe no es válida.');
 });
+
+test('savings request defaults to Stripe when payment method is not provided', () => {
+  assert.deepEqual(buildSavingsRequestPayload({ ahorro_id: '1', cuota: '300', monto_inicial: '' }, 'Mensual', false), {
+    ahorro_id: 1,
+    cuota: 300,
+    frecuencia_pago: 'Mensual',
+    monto_inicial: 0,
+    monto_ahorro: 0,
+    pago_inicial: 'stripe',
+    pay_method: 'stripe',
+  });
+});
