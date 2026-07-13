@@ -11,7 +11,14 @@ import UserRecordsModal from '../../../components/common/UserRecordsModal.jsx';
 import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
 import SavingsPlanCard from '../components/SavingsPlanCard.jsx';
 import SavingsRequestForm from '../components/SavingsRequestForm.jsx';
-import { getSavings, getSavingsFrequency, getSavingsPlans } from '../services/savingsService.js';
+import { parseStripeReturn } from '../../payments/services/stripeReturn.js';
+import {
+  confirmSavingsCheckout,
+  deleteSavingsRequest,
+  getSavings,
+  getSavingsFrequency,
+  getSavingsPlans,
+} from '../services/savingsService.js';
 
 function getSavingsPlansError(error) {
   const status = error?.response?.status;
@@ -56,6 +63,7 @@ function getSavingsPlanKey(plan, index) {
 function SavingsPage() {
   const pageRef = useRef(null);
   const plansRef = useRef(null);
+  const handledStripeReturnRef = useRef('');
   const [searchParams, setSearchParams] = useSearchParams();
   const [plans, setPlans] = useState([]);
   const [savings, setSavings] = useState([]);
@@ -63,7 +71,7 @@ function SavingsPage() {
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
   const [plansError, setPlansError] = useState('');
   const [savingsError, setSavingsError] = useState('');
-  const [checkoutMessage, setCheckoutMessage] = useState('');
+  const [checkoutNotice, setCheckoutNotice] = useState({ message: '', type: 'info' });
   const [isRecordsOpen, setIsRecordsOpen] = useState(false);
 
   useGrowcapPageMotion(pageRef);
@@ -104,24 +112,54 @@ function SavingsPage() {
   }, [loadSavingsPlans]);
 
   useEffect(() => {
-    const checkoutStatus = searchParams.get('status') || searchParams.get('payment') || searchParams.get('stripe');
-    const success = searchParams.get('success');
-    const canceled = searchParams.get('canceled') || searchParams.get('cancelled');
-    const returnedSavingsId = searchParams.get('ahorro_id');
-    const isSuccess = checkoutStatus === 'success' || checkoutStatus === 'succeeded' || success === 'true';
-    const isCanceled = checkoutStatus === 'cancel' || checkoutStatus === 'canceled' || canceled === 'true';
+    const stripeReturn = parseStripeReturn(searchParams, 'ahorro_id');
+    const returnKey = searchParams.toString();
 
-    if (!isSuccess && !isCanceled && !returnedSavingsId) {
+    if (!stripeReturn.hasReturn || handledStripeReturnRef.current === returnKey) {
       return;
     }
 
-    setCheckoutMessage(
-      isSuccess || returnedSavingsId
-        ? 'Pago recibido. Estamos confirmando tu operacion con el banco.'
-        : 'Pago cancelado. Puedes iniciar una nueva solicitud cuando quieras.',
-    );
-    loadSavingsPlans();
+    handledStripeReturnRef.current = returnKey;
     setSearchParams({}, { replace: true });
+    setCheckoutNotice({ message: 'Verificando el resultado directamente con Stripe...', type: 'info' });
+
+    const handleStripeReturn = async () => {
+      try {
+        if (stripeReturn.isCanceled) {
+          if (stripeReturn.entityId && stripeReturn.action === 'create') {
+            try {
+              await deleteSavingsRequest(stripeReturn.entityId);
+            } catch (cleanupError) {
+              if (cleanupError?.response?.status !== 404) {
+                throw cleanupError;
+              }
+            }
+          }
+
+          setCheckoutNotice({
+            message: 'Pago cancelado. La solicitud pendiente no fue registrada.',
+            type: 'error',
+          });
+        } else {
+          if (!stripeReturn.entityId || !stripeReturn.sessionId) {
+            throw new Error('El retorno de Stripe no incluye los datos necesarios para confirmar el pago.');
+          }
+
+          await confirmSavingsCheckout(stripeReturn.entityId, stripeReturn.sessionId);
+          setCheckoutNotice({
+            message: 'Pago confirmado por Stripe. Tu ahorro ya esta activo.',
+            type: 'success',
+          });
+        }
+      } catch (returnError) {
+        const normalized = normalizeApiError(returnError, 'No fue posible confirmar el resultado del pago.');
+        setCheckoutNotice({ message: normalized.message, type: 'error' });
+      } finally {
+        loadSavingsPlans();
+      }
+    };
+
+    handleStripeReturn();
   }, [loadSavingsPlans, searchParams, setSearchParams]);
 
   useGSAP(
@@ -164,7 +202,7 @@ function SavingsPage() {
         Consulta las opciones activas desde caja_growcap y compara cada plan con una vista limpia y enfocada.
       </PageHero>
 
-      {checkoutMessage && <Alert type="info">{checkoutMessage}</Alert>}
+      {checkoutNotice.message && <Alert type={checkoutNotice.type}>{checkoutNotice.message}</Alert>}
 
       <section className="section-block savings-plans-section motion-section" ref={plansRef}>
         <div className="section-heading savings-plans-heading">

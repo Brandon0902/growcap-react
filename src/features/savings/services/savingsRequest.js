@@ -17,7 +17,7 @@ export function buildSavingsRequestPayload(values, suggestedFrequency, seasonal)
   return Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined));
 }
 
-export function buildSavingsCheckoutPayload({ action, savingsId, cuota, monto_inicial: initialAmount, origin, oldSubscriptionId }) {
+export function buildSavingsCheckoutPayload({ action, cuota, monto_inicial: initialAmount, origin, oldSubscriptionId }) {
   const amount = Number(initialAmount || 0);
   const fee = Number(cuota || 0);
   const payload = {
@@ -26,7 +26,7 @@ export function buildSavingsCheckoutPayload({ action, savingsId, cuota, monto_in
     charge_monto_now: amount > 0,
     cuota: fee,
     monto_inicial: amount,
-    return_url: `${origin}/ahorro/stripe/return?ahorro_id=${savingsId}&action=${action}`,
+    return_url: `${origin}/ahorro/stripe/return`,
   };
 
   if (action === 'update') {

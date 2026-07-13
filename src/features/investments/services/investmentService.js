@@ -42,6 +42,17 @@ export async function createInvestmentCheckout(id, payload = {}) {
   };
 }
 
+export async function confirmInvestmentCheckout(id, sessionId) {
+  const { data } = await axiosClient.post(ENDPOINTS.investments.confirmCheckout(id), {
+    session_id: sessionId,
+  });
+
+  return {
+    data,
+    endpoint: ENDPOINTS.investments.confirmCheckout(id),
+  };
+}
+
 export async function deleteInvestmentRequest(id) {
   const { data } = await axiosClient.delete(ENDPOINTS.investments.byId(id));
 

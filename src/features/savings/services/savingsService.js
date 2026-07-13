@@ -51,6 +51,17 @@ export async function createSavingsCheckout(id, payload = {}) {
   };
 }
 
+export async function confirmSavingsCheckout(id, sessionId) {
+  const { data } = await axiosClient.post(ENDPOINTS.savings.confirmCheckout(id), {
+    session_id: sessionId,
+  });
+
+  return {
+    data,
+    endpoint: ENDPOINTS.savings.confirmCheckout(id),
+  };
+}
+
 export async function deleteSavingsRequest(id) {
   const { data } = await axiosClient.delete(ENDPOINTS.savings.byId(id));
 

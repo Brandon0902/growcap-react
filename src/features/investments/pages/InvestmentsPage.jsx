@@ -10,7 +10,13 @@ import UserRecordsModal from '../../../components/common/UserRecordsModal.jsx';
 import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
 import InvestmentPlanCard from '../components/InvestmentPlanCard.jsx';
 import InvestmentRequestForm from '../components/InvestmentRequestForm.jsx';
-import { getInvestmentPlans, getInvestments } from '../services/investmentService.js';
+import { parseStripeReturn } from '../../payments/services/stripeReturn.js';
+import {
+  confirmInvestmentCheckout,
+  deleteInvestmentRequest,
+  getInvestmentPlans,
+  getInvestments,
+} from '../services/investmentService.js';
 
 function PlanCardsSkeleton() {
   return (
@@ -34,12 +40,13 @@ function PlanCardsSkeleton() {
 
 function InvestmentsPage() {
   const pageRef = useRef(null);
+  const handledStripeReturnRef = useRef('');
   const [searchParams, setSearchParams] = useSearchParams();
   const [investments, setInvestments] = useState([]);
   const [plans, setPlans] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [checkoutMessage, setCheckoutMessage] = useState('');
+  const [checkoutNotice, setCheckoutNotice] = useState({ message: '', type: 'info' });
   const [isRecordsOpen, setIsRecordsOpen] = useState(false);
 
   useGrowcapPageMotion(pageRef);
@@ -71,24 +78,54 @@ function InvestmentsPage() {
   }, [loadInvestmentsData]);
 
   useEffect(() => {
-    const checkoutStatus = searchParams.get('status') || searchParams.get('payment') || searchParams.get('stripe');
-    const success = searchParams.get('success');
-    const canceled = searchParams.get('canceled') || searchParams.get('cancelled');
-    const returnedInvestmentId = searchParams.get('inversion_id');
-    const isSuccess = checkoutStatus === 'success' || checkoutStatus === 'succeeded' || success === 'true';
-    const isCanceled = checkoutStatus === 'cancel' || checkoutStatus === 'canceled' || canceled === 'true';
+    const stripeReturn = parseStripeReturn(searchParams, 'inversion_id');
+    const returnKey = searchParams.toString();
 
-    if (!isSuccess && !isCanceled && !returnedInvestmentId) {
+    if (!stripeReturn.hasReturn || handledStripeReturnRef.current === returnKey) {
       return;
     }
 
-    setCheckoutMessage(
-      isSuccess || returnedInvestmentId
-        ? 'Pago recibido. Estamos confirmando tu operacion con el banco.'
-        : 'Pago cancelado. Puedes iniciar una nueva solicitud cuando quieras.',
-    );
-    loadInvestmentsData();
+    handledStripeReturnRef.current = returnKey;
     setSearchParams({}, { replace: true });
+    setCheckoutNotice({ message: 'Verificando el resultado directamente con Stripe...', type: 'info' });
+
+    const handleStripeReturn = async () => {
+      try {
+        if (stripeReturn.isCanceled) {
+          if (stripeReturn.entityId) {
+            try {
+              await deleteInvestmentRequest(stripeReturn.entityId);
+            } catch (cleanupError) {
+              if (cleanupError?.response?.status !== 404) {
+                throw cleanupError;
+              }
+            }
+          }
+
+          setCheckoutNotice({
+            message: 'Pago cancelado. La solicitud pendiente no fue registrada.',
+            type: 'error',
+          });
+        } else {
+          if (!stripeReturn.entityId || !stripeReturn.sessionId) {
+            throw new Error('El retorno de Stripe no incluye los datos necesarios para confirmar el pago.');
+          }
+
+          await confirmInvestmentCheckout(stripeReturn.entityId, stripeReturn.sessionId);
+          setCheckoutNotice({
+            message: 'Pago confirmado por Stripe. Tu inversion ya esta activa.',
+            type: 'success',
+          });
+        }
+      } catch (returnError) {
+        const normalized = normalizeApiError(returnError, 'No fue posible confirmar el resultado del pago.');
+        setCheckoutNotice({ message: normalized.message, type: 'error' });
+      } finally {
+        loadInvestmentsData();
+      }
+    };
+
+    handleStripeReturn();
   }, [loadInvestmentsData, searchParams, setSearchParams]);
 
   return (
@@ -105,7 +142,7 @@ function InvestmentsPage() {
         Una vista mas enfocada para revisar opciones y dejar lista tu solicitud sin perder contexto.
       </PageHero>
 
-      {checkoutMessage && <Alert type="info">{checkoutMessage}</Alert>}
+      {checkoutNotice.message && <Alert type={checkoutNotice.type}>{checkoutNotice.message}</Alert>}
 
       <section className="section-block savings-plans-section motion-immediate">
         <div className="section-heading savings-plans-heading">

@@ -22,6 +22,7 @@ export const ENDPOINTS = {
     frequency: '/ahorros/frecuencia',
     byId: (id) => `/ahorros/${id}`,
     checkout: (id) => `/ahorros/${id}/stripe/checkout`,
+    confirmCheckout: (id) => `/ahorros/${id}/stripe/confirm`,
     withdraw: (id) => `/ahorros/${id}/retirar`,
     transfer: (id) => `/ahorros/${id}/transferir`,
     payLoan: (id) => `/ahorros/${id}/abonar-prestamo`,
@@ -33,6 +34,7 @@ export const ENDPOINTS = {
     plans: '/inversiones/planes',
     byId: (id) => `/inversiones/${id}`,
     checkout: (id) => `/inversiones/${id}/stripe/checkout`,
+    confirmCheckout: (id) => `/inversiones/${id}/stripe/confirm`,
     payWithBalance: (id) => `/inversiones/${id}/pay-saldo`,
   },
 };

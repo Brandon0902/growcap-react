@@ -22,7 +22,7 @@ test('Stripe checkout uses the real savings route and numeric values', () => {
     charge_monto_now: false,
     cuota: 300,
     monto_inicial: 0,
-    return_url: 'https://growcap.example/ahorro/stripe/return?ahorro_id=13&action=create',
+    return_url: 'https://growcap.example/ahorro/stripe/return',
   });
 });
 

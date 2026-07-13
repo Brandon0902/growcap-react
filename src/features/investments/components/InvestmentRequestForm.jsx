@@ -216,7 +216,7 @@ function InvestmentRequestForm({ onCreated, plans = [] }) {
           throw new Error('No se pudo iniciar Stripe Checkout porque la API no devolvio el ID de la inversion.');
         }
 
-        const returnUrl = `${window.location.origin}/inversion/stripe/return?inversion_id=${investmentId}`;
+        const returnUrl = `${window.location.origin}/inversion/stripe/return`;
         const checkout = await createInvestmentCheckout(investmentId, {
           return_url: returnUrl,
         });
