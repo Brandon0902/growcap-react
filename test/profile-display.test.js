@@ -13,7 +13,9 @@ test('profile display reads address, bank and beneficiaries from user_data paylo
     user_data: {
       rfc: 'LOAA010101AA1',
       id_estado: '11',
+      estado_nombre: 'Jalisco',
       id_municipio: 22,
+      municipio_nombre: 'Guadalajara',
       direccion: 'Calle 1',
       colonia: 'Centro',
       cp: '76000',
@@ -31,6 +33,8 @@ test('profile display reads address, bank and beneficiaries from user_data paylo
   const view = buildProfileViewData(profile, {});
 
   assert.equal(view.personalData.rfc, 'LOAA010101AA1');
+  assert.equal(getNestedValue([view.addressData, view.personalData], ['estado', 'estado_nombre', 'nombre_estado', 'id_estado']), 'Jalisco');
+  assert.equal(getNestedValue([view.addressData, view.personalData], ['municipio', 'municipio_nombre', 'nombre_municipio', 'ciudad', 'id_municipio']), 'Guadalajara');
   assert.equal(getNestedValue([view.addressData, view.personalData], ['direccion']), 'Calle 1');
   assert.equal(getNestedValue([view.addressData, view.personalData], ['colonia']), 'Centro');
   assert.equal(getNestedValue([view.addressData, view.personalData], ['cp']), '76000');
@@ -38,3 +42,5 @@ test('profile display reads address, bank and beneficiaries from user_data paylo
   assert.equal(getNestedValue([view.bankData, view.personalData], ['cuenta']), '1234567890');
   assert.equal(view.beneficiariesText, 'Luis Lopez (60% - 5551112222), Mia Lopez (40% - 5553334444)');
 });
+
+
