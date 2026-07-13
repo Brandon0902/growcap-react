@@ -1,4 +1,4 @@
-import { AlertCircle, Banknote, Eye, RefreshCw } from 'lucide-react';
+import { AlertCircle, Banknote, Eye, HandCoins, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { normalizeApiError } from '../../../api/apiUtils.js';
 import Button from '../../../components/common/Button.jsx';
@@ -38,20 +38,114 @@ function formatText(value, fallback = 'No definido') {
   return fallback;
 }
 
+function getNumericValue(value) {
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    return getNumericValue(value.monto_min ?? value.monto ?? value.limite ?? value.tasa ?? value.porcentaje ?? value.cantidad);
+  }
+
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.replace(/[$,%\s]/g, '').replace(/,/g, '');
+  const parsed = Number(normalized);
+
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function formatAmount(value) {
+  const numeric = getNumericValue(value);
+
+  if (numeric === null) {
+    return formatText(value);
+  }
+
+  return new Intl.NumberFormat('es-MX', {
+    currency: 'MXN',
+    maximumFractionDigits: 2,
+    style: 'currency',
+  }).format(numeric);
+}
+
+function formatPercent(value) {
+  const numeric = getNumericValue(value);
+
+  if (numeric === null) {
+    return formatText(value);
+  }
+
+  return `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(numeric)}%`;
+}
+
+function formatTerm(value) {
+  const text = formatText(value, '');
+
+  if (!text) {
+    return 'No definido';
+  }
+
+  return /\b(dia|dias|mes|meses|semana|semanas|quincena|quincenal|mensual|anual|ano|anos|year)\b/i.test(text)
+    ? text
+    : `${text} plazo`;
+}
+
+function PlanCardsSkeleton() {
+  return (
+    <div className="savings-plans-grid" aria-hidden="true">
+      {[0, 1, 2].map((item) => (
+        <article className="savings-plan-card savings-plan-skeleton" key={item}>
+          <div className="skeleton-row">
+            <span className="skeleton-icon" />
+            <span className="skeleton-line skeleton-line-title" />
+          </div>
+          <span className="skeleton-line skeleton-line-short" />
+          <div className="skeleton-card-metrics">
+            <span />
+            <span />
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 function LoanPlanCard({ index, plan }) {
   const name = formatText(getValue(plan, ['nombre', 'name', 'titulo', 'title', 'plan', 'tipo']), `Plan ${index + 1}`);
+  const description = formatText(getValue(plan, ['descripcion', 'description', 'detalle']), 'Plan disponible para iniciar una solicitud guiada.');
   const amount = getValue(plan, ['monto_minimo', 'monto_min', 'cantidad_minima', 'monto', 'limite']);
   const term = getValue(plan, ['plazo', 'periodo', 'tiempo', 'duracion', 'meses']);
   const rate = getValue(plan, ['tasa', 'tasa_interes', 'interes', 'porcentaje']);
 
   return (
-    <article className="plan-card motion-item">
-      <h3>{name}</h3>
-      <p>{formatText(getValue(plan, ['descripcion', 'description', 'detalle']), 'Plan disponible para iniciar una solicitud guiada.')}</p>
-      <div className="loan-plan-details">
-        {amount && <span>Monto {formatText(amount)}</span>}
-        {term && <span>Plazo {formatText(term)}</span>}
-        {rate && <span>Tasa {formatText(rate)}%</span>}
+    <article className="savings-plan-card motion-item motion-plan-card" tabIndex={0}>
+      <div className="savings-plan-card-top">
+        <span className="savings-plan-icon loan-card-icon" aria-hidden="true">
+          <HandCoins size={22} />
+        </span>
+        <div>
+          <h3>{name}</h3>
+          <p>{description}</p>
+        </div>
+      </div>
+
+      <div className="savings-plan-rate loan-plan-rate">
+        <span>Tasa</span>
+        <strong>{rate !== null ? formatPercent(rate) : 'No definido'}</strong>
+      </div>
+
+      <div className="savings-plan-summary">
+        <span>
+          <small>Monto disponible</small>
+          <strong>{amount !== null ? formatAmount(amount) : 'No definido'}</strong>
+        </span>
+        <span>
+          <small>Plazo</small>
+          <strong>{term !== null ? formatTerm(term) : 'No definido'}</strong>
+        </span>
       </div>
     </article>
   );
@@ -110,12 +204,14 @@ function LoansPage() {
         Avanza por monto, documentos y confirmacion en una solicitud guiada que evita saturar al usuario.
       </PageHero>
 
-      <section className="section-block plans-section motion-immediate">
-        <div className="section-heading">
-          <span>Opciones disponibles</span>
-          <h2>Planes de prestamo</h2>
+      <section className="section-block savings-plans-section motion-immediate">
+        <div className="section-heading savings-plans-heading">
+          <div>
+            <span>Opciones disponibles</span>
+            <h2>Planes de prestamo</h2>
+          </div>
         </div>
-        {isLoading && <div className="loading">Cargando planes...</div>}
+        {isLoading && <PlanCardsSkeleton />}
         {!isLoading && plansError && (
           <div className="savings-plans-state savings-plans-error" role="alert">
             <AlertCircle size={34} aria-hidden="true" />
@@ -138,7 +234,7 @@ function LoansPage() {
           </div>
         )}
         {!isLoading && !plansError && plans.length > 0 && (
-          <div className="grid grid-2">
+          <div className="savings-plans-grid">
             {plans.map((plan, index) => (
               <LoanPlanCard key={plan?.id || plan?.id_prestamo || plan?.label || `loan-plan-${index}`} index={index} plan={plan} />
             ))}

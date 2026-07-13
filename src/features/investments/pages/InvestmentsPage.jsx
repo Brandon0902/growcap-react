@@ -12,6 +12,26 @@ import InvestmentPlanCard from '../components/InvestmentPlanCard.jsx';
 import InvestmentRequestForm from '../components/InvestmentRequestForm.jsx';
 import { getInvestmentPlans, getInvestments } from '../services/investmentService.js';
 
+function PlanCardsSkeleton() {
+  return (
+    <div className="savings-plans-grid" aria-hidden="true">
+      {[0, 1, 2].map((item) => (
+        <article className="savings-plan-card savings-plan-skeleton" key={item}>
+          <div className="skeleton-row">
+            <span className="skeleton-icon" />
+            <span className="skeleton-line skeleton-line-title" />
+          </div>
+          <span className="skeleton-line skeleton-line-short" />
+          <div className="skeleton-card-metrics">
+            <span />
+            <span />
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 function InvestmentsPage() {
   const pageRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -87,12 +107,14 @@ function InvestmentsPage() {
 
       {checkoutMessage && <Alert type="info">{checkoutMessage}</Alert>}
 
-      <section className="section-block plans-section motion-immediate">
-        <div className="section-heading">
-          <span>Comparador</span>
-          <h2>Planes disponibles</h2>
+      <section className="section-block savings-plans-section motion-immediate">
+        <div className="section-heading savings-plans-heading">
+          <div>
+            <span>Comparador</span>
+            <h2>Planes disponibles</h2>
+          </div>
         </div>
-        {isLoading && <div className="loading">Cargando planes...</div>}
+        {isLoading && <PlanCardsSkeleton />}
         {!isLoading && error && (
           <div className="savings-plans-state savings-plans-error" role="alert">
             <AlertCircle size={34} aria-hidden="true" />
@@ -115,7 +137,7 @@ function InvestmentsPage() {
           </div>
         )}
         {!isLoading && !error && plans.length > 0 && (
-          <div className="grid grid-2">
+          <div className="savings-plans-grid">
             {plans.map((plan, index) => (
               <InvestmentPlanCard key={plan?.id || plan?.id_inversion || plan?.label || `investment-plan-${index}`} plan={plan} />
             ))}

@@ -7,53 +7,8 @@ import Card from '../../../components/common/Card.jsx';
 import PageHero from '../../../components/common/PageHero.jsx';
 import useAuth from '../../auth/hooks/useAuth.js';
 import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
+import { buildProfileViewData, formatValue, getNestedValue, getValue, unwrapProfileData } from '../services/profileDisplay.js';
 import { getMyProfileData } from '../services/profileService.js';
-
-function unwrapProfileData(payload) {
-  return payload?.data?.data || payload?.data || payload || {};
-}
-
-function getValue(source, fields, fallback = 'No registrado') {
-  const field = fields.find((key) => source?.[key] !== undefined && source?.[key] !== null && source?.[key] !== '');
-
-  return field ? source[field] : fallback;
-}
-
-function getNestedValue(sources, fields, fallback = 'No registrado') {
-  for (const source of sources) {
-    const value = getValue(source, fields, null);
-
-    if (value !== null) {
-      return value;
-    }
-  }
-
-  return fallback;
-}
-
-function formatValue(value, fallback = 'No registrado') {
-  if (value === null || value === undefined || value === '') {
-    return fallback;
-  }
-
-  if (typeof value === 'boolean') {
-    return value ? 'Si' : 'No';
-  }
-
-  if (typeof value === 'string' || typeof value === 'number') {
-    return String(value);
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((item) => formatValue(item, '')).filter(Boolean).join(', ') || fallback;
-  }
-
-  if (typeof value === 'object') {
-    return value.nombre || value.name || value.label || value.descripcion || fallback;
-  }
-
-  return fallback;
-}
 
 function ProfileSection({ items, title }) {
   return (
@@ -99,15 +54,7 @@ function ProfilePage() {
     loadProfile();
   }, [loadProfile]);
 
-  const personalData = profile?.cliente || profile?.usuario || profile?.user || profile || {};
-  const addressData = profile?.direccion || profile?.domicilio || personalData?.direccion || personalData?.domicilio || {};
-  const bankData = profile?.banco || profile?.datos_bancarios || personalData?.banco || personalData?.datos_bancarios || {};
-  const beneficiaries = profile?.beneficiarios || personalData?.beneficiarios || [];
-  const beneficiariesText = Array.isArray(beneficiaries)
-    ? beneficiaries
-      .map((beneficiary) => formatValue(beneficiary?.nombre || beneficiary?.name || beneficiary?.nombre_completo, 'Beneficiario'))
-      .join(', ')
-    : beneficiaries;
+  const { addressData, bankData, beneficiariesText, personalData } = buildProfileViewData(profile, user);
 
   return (
     <div className="page profile-page motion-page" ref={pageRef}>
@@ -150,9 +97,10 @@ function ProfilePage() {
           <ProfileSection
             title="Direccion"
             items={[
-              { label: 'Estado', value: getNestedValue([addressData, personalData], ['estado']) },
-              { label: 'Municipio', value: getNestedValue([addressData, personalData], ['municipio', 'ciudad']) },
-              { label: 'Calle', value: getValue(addressData, ['calle', 'direccion', 'domicilio']) },
+              { label: 'Estado', value: getNestedValue([addressData, personalData], ['estado', 'estado_nombre', 'nombre_estado', 'id_estado']) },
+              { label: 'Municipio', value: getNestedValue([addressData, personalData], ['municipio', 'municipio_nombre', 'nombre_municipio', 'ciudad', 'id_municipio']) },
+              { label: 'Calle', value: getNestedValue([addressData, personalData], ['calle', 'direccion', 'domicilio']) },
+              { label: 'Colonia', value: getNestedValue([addressData, personalData], ['colonia']) },
               { label: 'Codigo postal', value: getNestedValue([addressData, personalData], ['codigo_postal', 'cp']) },
             ]}
           />
