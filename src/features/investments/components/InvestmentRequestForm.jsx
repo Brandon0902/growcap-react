@@ -1,4 +1,4 @@
-import { useState, forwardRef, useImperativeHandle } from 'react';
+import { useState, forwardRef, useImperativeHandle, useCallback, useEffect } from 'react';
 import {
   extractCheckoutUrl,
   extractResourceId,
@@ -10,6 +10,8 @@ import Button from '../../../components/common/Button.jsx';
 import GuidedRequestModal from '../../../components/common/GuidedRequestModal.jsx';
 import Input from '../../../components/common/Input.jsx';
 import WizardStep from '../../../components/common/WizardStep.jsx';
+import { getClienteSaldoDisponible } from '../../dashboard/services/dashboardService.js';
+import DepositModal from '../../deposits/components/DepositModal.jsx';
 import { createInvestmentCheckout, createInvestmentRequest } from '../services/investmentService.js';
 
 const initialValues = {
@@ -116,6 +118,24 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [liquidBalance, setLiquidBalance] = useState(null);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+
+  const loadLiquidBalance = useCallback(async () => {
+    try {
+      const res = await getClienteSaldoDisponible();
+      const bal = Number(res?.data?.total ?? res?.data?.saldo_disponible ?? 0);
+      setLiquidBalance(bal);
+    } catch {
+      setLiquidBalance(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadLiquidBalance();
+    }
+  }, [isOpen, loadLiquidBalance]);
 
   useImperativeHandle(ref, () => ({
     openWithPlan: (planId) => {
@@ -167,8 +187,12 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
       nextErrors.cantidad = `El monto maximo para este plan es ${formatMoney(maxAmount)}.`;
     }
 
-    if (stepIndex === 3 && !values.pay_method) {
-      nextErrors.pay_method = 'Elige como quieres pagar.';
+    if (stepIndex === 3) {
+      if (!values.pay_method) {
+        nextErrors.pay_method = 'Elige como quieres pagar.';
+      } else if (values.pay_method === 'saldo' && liquidBalance !== null && Number(values.cantidad) > liquidBalance) {
+        nextErrors.pay_method = `Saldo disponible insuficiente ($${liquidBalance.toFixed(2)} MXN disponibles de $${Number(values.cantidad).toFixed(2)} MXN requeridos). Carga saldo con un depósito o elige 'Definir después'.`;
+      }
     }
 
     setFieldErrors(nextErrors);
@@ -361,19 +385,65 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
     }
 
     if (currentStep === 3) {
+      const numCant = Number(values.cantidad || 0);
+      const isSaldoInsufficient = liquidBalance !== null && liquidBalance < numCant;
+
       return (
         <WizardStep
-          description="Puedes elegir una forma de pago ahora o dejarla para despues."
+          description="Elige si deseas aplicar tu saldo disponible o registrar tu solicitud para coordinar tu aportacion."
           question="Como quieres pagar?"
         >
+          {isSaldoInsufficient && (
+            <div
+              style={{
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                borderRadius: '8px',
+                padding: '10px 12px',
+                marginBottom: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '10px',
+                flexWrap: 'wrap',
+              }}
+            >
+              <div style={{ fontSize: '0.78rem', color: '#92400e' }}>
+                <span>Saldo disponible: <strong>{formatMoney(liquidBalance)}</strong>. Requiere: <strong>{formatMoney(numCant)}</strong>.</span>
+              </div>
+              <Button
+                type="button"
+                className="button-secondary"
+                onClick={() => setIsDepositModalOpen(true)}
+                style={{ fontSize: '0.72rem', padding: '4px 10px', minHeight: '28px' }}
+              >
+                + Cargar saldo
+              </Button>
+            </div>
+          )}
+
           <div className="guided-choice-grid">
             {[
-              { value: 'saldo', title: 'Saldo disponible', description: 'Usar mi saldo en Growcap.' },
-              { value: 'later', title: 'Definir después', description: 'Enviar la solicitud sin pago ahora.' },
+              {
+                value: 'saldo',
+                title: 'Saldo disponible',
+                description: `Pagar con mi saldo (${formatMoney(liquidBalance ?? 0)})${isSaldoInsufficient ? ' — Insuficiente' : ''}`,
+                disabled: isSaldoInsufficient,
+              },
+              {
+                value: 'later',
+                title: 'Definir después (En Revisión)',
+                description: 'Enviar la solicitud para coordinar depósito o transferencia.',
+              },
             ].map((option) => (
-              <label className={values.pay_method === option.value ? 'guided-choice selected' : 'guided-choice'} key={option.value}>
+              <label
+                className={`${values.pay_method === option.value ? 'guided-choice selected' : 'guided-choice'} ${option.disabled ? 'is-disabled' : ''}`}
+                key={option.value}
+                style={option.disabled ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+              >
                 <input
                   checked={values.pay_method === option.value}
+                  disabled={option.disabled}
                   name="pay_method"
                   onChange={handleChange}
                   type="radio"
@@ -384,11 +454,14 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
               </label>
             ))}
           </div>
+          {firstFieldError(fieldErrors, 'pay_method') && (
+            <p className="form-error" style={{ marginTop: '6px' }}>{firstFieldError(fieldErrors, 'pay_method')}</p>
+          )}
           <dl className="guided-summary compact">
             <div>
               <dt>Resumen</dt>
               <dd>
-                {getPlanName(selectedPlan)} - {values.cantidad || 'Sin monto'} - {formatPlanValue(planPeriod)}
+                {getPlanName(selectedPlan)} - {formatMoney(values.cantidad) || 'Sin monto'} - {formatPlanValue(planPeriod)}
               </dd>
             </div>
           </dl>
@@ -400,33 +473,41 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
   };
 
   return (
-    <GuidedRequestModal
-      error={error}
-      isOpen={isOpen}
-      onClose={() => setIsOpen(false)}
-      stepIndex={currentStep}
-      title="Solicitud de inversión"
-      totalSteps={totalSteps}
-      footer={(
-        <>
-          <Button className="button-secondary guided-action" disabled={currentStep === 0 || isSubmitting} onClick={goBack}>
-            Atrás
-          </Button>
-          {currentStep === totalSteps - 1 ? (
-            <Button className="guided-action" disabled={isSubmitting} onClick={handleSubmit}>
-              {isSubmitting ? 'Enviando...' : 'Enviar solicitud'}
+    <>
+      <GuidedRequestModal
+        error={error}
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        stepIndex={currentStep}
+        title="Solicitud de inversión"
+        totalSteps={totalSteps}
+        footer={(
+          <>
+            <Button className="button-secondary guided-action" disabled={currentStep === 0 || isSubmitting} onClick={goBack}>
+              Atrás
             </Button>
-          ) : (
-            <Button className="guided-action" onClick={goNext}>
-              Siguiente
-            </Button>
-          )}
-        </>
-      )}
-    >
-      {message && <div style={{ marginBottom: '15px' }}><Alert type="success">{message}</Alert></div>}
-      {renderStep()}
-    </GuidedRequestModal>
+            {currentStep === totalSteps - 1 ? (
+              <Button className="guided-action" disabled={isSubmitting} onClick={handleSubmit}>
+                {isSubmitting ? 'Enviando...' : 'Enviar solicitud'}
+              </Button>
+            ) : (
+              <Button className="guided-action" onClick={goNext}>
+                Siguiente
+              </Button>
+            )}
+          </>
+        )}
+      >
+        {message && <div style={{ marginBottom: '15px' }}><Alert type="success">{message}</Alert></div>}
+        {renderStep()}
+      </GuidedRequestModal>
+
+      <DepositModal
+        isOpen={isDepositModalOpen}
+        onClose={() => setIsDepositModalOpen(false)}
+        onSuccess={loadLiquidBalance}
+      />
+    </>
   );
 });
 

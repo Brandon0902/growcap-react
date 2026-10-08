@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, KeyRound, LogOut, User } from 'lucide-react';
+import { Building2, ChevronDown, KeyRound, LogOut, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import logoGrowcap from '../../assets/rombo_blanco.png';
 import useAuth from '../../features/auth/hooks/useAuth.js';
 import { getUserDisplayName, getUserInitials } from '../../utils/userFormatting.js';
 import ChangePasswordModal from '../../features/profile/components/ChangePasswordModal.jsx';
+import DepositModal from '../../features/deposits/components/DepositModal.jsx';
 import NotificationBell from './NotificationBell.jsx';
 
 function Header() {
@@ -13,6 +14,7 @@ function Header() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const menuRef = useRef(null);
 
   const displayName = getUserDisplayName(user);
@@ -118,6 +120,24 @@ function Header() {
                 className="dropdown-item"
                 onClick={() => {
                   setIsMenuOpen(false);
+                  setIsDepositModalOpen(true);
+                }}
+                role="menuitem"
+                type="button"
+              >
+                <span className="dropdown-item-icon" aria-hidden="true">
+                  <Building2 size={18} />
+                </span>
+                <span className="dropdown-item-content">
+                  <strong>Cargar saldo</strong>
+                  <small>Registrar depósito o transferencia</small>
+                </span>
+              </button>
+
+              <button
+                className="dropdown-item"
+                onClick={() => {
+                  setIsMenuOpen(false);
                   navigate('/perfil');
                 }}
                 role="menuitem"
@@ -178,6 +198,11 @@ function Header() {
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}
+      />
+
+      <DepositModal
+        isOpen={isDepositModalOpen}
+        onClose={() => setIsDepositModalOpen(false)}
       />
     </header>
   );

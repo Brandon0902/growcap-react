@@ -1,4 +1,4 @@
-import { Banknote, ChartNoAxesColumnIncreasing, ChevronRight, HandCoins, ShieldCheck } from 'lucide-react';
+import { Banknote, ChartNoAxesColumnIncreasing, ChevronRight, HandCoins, PlusCircle, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { normalizeApiError } from '../../../api/apiUtils.js';
 import Alert from '../../../components/common/Alert.jsx';
@@ -11,6 +11,7 @@ import { getClienteSaldoDisponible } from '../services/dashboardService.js';
 import { getPendingAvalRequests } from '../../loans/services/loanService.js';
 import AvalCenterModal from '../../loans/components/AvalCenterModal.jsx';
 import AvalAuthorizeModal from '../../loans/components/AvalAuthorizeModal.jsx';
+import DepositModal from '../../deposits/components/DepositModal.jsx';
 import useAuth from '../../auth/hooks/useAuth.js';
 import { getFullGreeting, getFormalDate } from '../../../utils/userFormatting.js';
 
@@ -86,6 +87,7 @@ function DashboardPage() {
   const [pendingAvalRequests, setPendingAvalRequests] = useState([]);
   const [selectedAvalRequestToReview, setSelectedAvalRequestToReview] = useState(null);
   const [isAvalCenterOpen, setIsAvalCenterOpen] = useState(false);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [notice, setNotice] = useState({ message: '', type: 'info' });
 
   useGrowcapPageMotion(pageRef);
@@ -228,7 +230,25 @@ function DashboardPage() {
       )}
 
       <section className="balance-hero-card motion-immediate" aria-label="Saldo disponible del cliente">
-        <span className="page-kicker">Saldo disponible</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+          <span className="page-kicker">Saldo disponible</span>
+          <Button
+            type="button"
+            className="button-primary"
+            onClick={() => setIsDepositModalOpen(true)}
+            style={{
+              fontSize: '0.8rem',
+              padding: '6px 14px',
+              minHeight: '32px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <PlusCircle size={15} />
+            <span>Cargar Saldo</span>
+          </Button>
+        </div>
         <strong>{isLoadingBalance ? 'Cargando...' : formatCurrency(generalBalance)}</strong>
         <p>
           {balanceDate
@@ -314,6 +334,12 @@ function DashboardPage() {
           setIsAvalCenterOpen(false);
           setSelectedAvalRequestToReview(req);
         }}
+      />
+
+      <DepositModal
+        isOpen={isDepositModalOpen}
+        onClose={() => setIsDepositModalOpen(false)}
+        onSuccess={loadBalance}
       />
     </div>
   );

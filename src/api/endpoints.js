@@ -69,4 +69,8 @@ export const ENDPOINTS = {
     markRead: (id) => `/notificaciones/${id}/leida`,
     markAllRead: '/notificaciones/marcar-todas',
   },
+  deposits: {
+    base: '/depositos',
+    byId: (id) => `/depositos/${id}`,
+  },
 };

@@ -684,10 +684,6 @@ function FinancialRequestList({
       const statusRaw = getValue(item, ['estado', 'estatus', 'status', 'activo']);
       const statusNum = Number(statusRaw ?? 0);
 
-      totalCapital += cap;
-      totalRendimientos += rend;
-      totalSaldoVivo += saldo;
-
       const endDate = item.fecha_fin || getEndDate(item);
       let diasRestantes = null;
       if (endDate) {
@@ -695,23 +691,28 @@ function FinancialRequestList({
         diasRestantes = Math.ceil((endMs - todayMs) / 86400000);
       }
 
-      if (statusNum === 1 || statusNum === 2) {
+      const isApprovedActive = (statusNum === 1 || statusNum === 2) && item.payment_status !== 'pending' && Boolean(item.fecha_inicio);
+
+      if (isApprovedActive) {
         if (diasRestantes !== null && diasRestantes < 0) {
           concludedCount += 1;
         } else {
           activeCount += 1;
+          totalCapital += cap;
+          totalRendimientos += rend;
+          totalSaldoVivo += saldo;
+
+          const tasa = item.rendimiento !== null && item.rendimiento !== undefined
+            ? Number(item.rendimiento)
+            : (item.plan?.rendimiento ? Number(item.plan.rendimiento) : null);
+
+          if (tasa !== null && cap > 0) {
+            weightedYieldSum += cap * tasa;
+            totalCapitalForYield += cap;
+          }
         }
       } else if (statusNum === 3 || statusNum === 4) {
         concludedCount += 1;
-      }
-
-      const tasa = item.rendimiento !== null && item.rendimiento !== undefined
-        ? Number(item.rendimiento)
-        : (item.plan?.rendimiento ? Number(item.plan.rendimiento) : null);
-
-      if (tasa !== null && cap > 0) {
-        weightedYieldSum += cap * tasa;
-        totalCapitalForYield += cap;
       }
     });
 
