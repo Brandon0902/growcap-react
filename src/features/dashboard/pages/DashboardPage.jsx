@@ -237,33 +237,30 @@ function DashboardPage() {
         </p>
       </section>
 
-      <section className="summary-ledger motion-immediate" aria-label="Resumen financiero">
+      <section className="portfolio-ledger-grid motion-immediate" aria-label="Resumen de productos financieros">
         <SummaryCard
-          helper="Saldo real"
+          helper="Saldo acumulado en planes de ahorro"
           icon={HandCoins}
-          label="Ahorro"
-          status={savingsBalance === null ? 'Sin dato' : 'Saldo real'}
+          label="Mis Ahorros"
           value={isLoadingBalance ? 'Cargando...' : formatCurrency(savingsBalance)}
           to="/ahorro?view=my-records"
-          actionLabel="Mis Ahorros"
+          actionLabel="Ver activos"
         />
         <SummaryCard
-          helper="Saldo real"
+          helper="Capital colocado en inversiones vigentes"
           icon={ChartNoAxesColumnIncreasing}
-          label="Inversion"
-          status={investmentBalance === null ? 'Sin dato' : 'Saldo real'}
+          label="Mis Inversiones"
           value={isLoadingBalance ? 'Cargando...' : formatCurrency(investmentBalance)}
           to="/inversion?view=my-records"
-          actionLabel="Mis Inversiones"
+          actionLabel="Ver activos"
         />
         <SummaryCard
-          helper="Seguimiento de prestamos"
+          helper={loansBalance === null ? 'Sin préstamos activos' : 'Seguimiento de saldo deudor'}
           icon={Banknote}
-          label="Prestamos"
-          status={loansBalance === null ? 'Sin prestamos activos' : 'Saldo real'}
+          label="Mis Préstamos"
           value={isLoadingBalance ? 'Cargando...' : (loansBalance === null ? 'No disponible' : formatCurrency(loansBalance))}
           to="/prestamos?view=my-records"
-          actionLabel="Mis Préstamos"
+          actionLabel="Ver activos"
         />
       </section>
 
