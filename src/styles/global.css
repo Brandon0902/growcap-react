@@ -4643,3 +4643,444 @@ h3 {
   color: #0f172a;
 }
 
+/* ==========================================================================
+   Responsive Product List Cards (Savings, Loans, Investments)
+   ========================================================================== */
+
+.financial-item-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.financial-item-card:hover {
+  border-color: rgba(107, 33, 168, 0.22);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.financial-item-card::after {
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent) 72%, var(--color-success));
+  bottom: 0;
+  content: "";
+  height: 3px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  transform: scaleX(0.24);
+  transform-origin: left center;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  pointer-events: none;
+}
+
+.financial-item-card:hover::after,
+.financial-item-card:focus-within::after {
+  transform: scaleX(1);
+}
+
+.financial-row-divider {
+  width: 1px;
+  height: 38px;
+  background: linear-gradient(180deg, transparent, #cbd5e1 20%, #cbd5e1 80%, transparent);
+  flex-shrink: 0;
+}
+
+.financial-sub-divider {
+  width: 1px;
+  height: 22px;
+  background: #e2e8f0;
+  flex-shrink: 0;
+}
+
+/* Préstamos */
+.loan-list-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.loan-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.loan-identity-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.loan-identity-text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.loan-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.loan-actions-desktop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.loan-actions-mobile {
+  display: none;
+}
+
+.loan-metrics-box {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #f1f5f9;
+}
+
+/* Ahorros */
+.savings-list-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 14px;
+}
+
+.savings-identity-block {
+  flex: 1.2 1 190px;
+  min-width: 160px;
+}
+
+.savings-combined-metrics {
+  display: flex;
+  gap: 14px;
+  flex: 0 0 auto;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.savings-metrics-group {
+  display: flex;
+  gap: 14px;
+  flex: 0 0 auto;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.savings-conditions-group {
+  display: flex;
+  gap: 14px;
+  flex: 0 0 auto;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.savings-actions-group {
+  display: flex;
+  gap: 5px;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+/* Inversiones */
+.investment-list-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 14px;
+}
+
+.investment-identity-block {
+  flex: 1.2 1 190px;
+  min-width: 160px;
+}
+
+.investment-combined-metrics {
+  display: flex;
+  gap: 14px;
+  flex: 0 0 auto;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.investment-metrics-group {
+  display: flex;
+  gap: 14px;
+  flex: 0 0 auto;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.investment-conditions-group {
+  display: flex;
+  gap: 14px;
+  flex: 0 0 auto;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.investment-actions-group {
+  display: flex;
+  gap: 5px;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+/* Segmented tabs for loans */
+.loan-tabs-wrapper {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 10px;
+  gap: 3px;
+  border: 1px solid #e2e8f0;
+}
+
+.loan-tab-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints: Tablets & Phones (max-width: 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .financial-row-divider,
+  .financial-sub-divider {
+    display: none !important;
+  }
+
+  /* Préstamos en móvil */
+  .loan-list-row {
+    padding: 14px 14px;
+    gap: 12px;
+  }
+
+  .loan-row-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .loan-actions-desktop {
+    display: none !important;
+  }
+
+  .loan-actions-mobile {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 4px;
+    width: 100%;
+  }
+
+  .loan-actions-mobile .btn-full-width {
+    grid-column: 1 / -1;
+  }
+
+  .loan-actions-mobile .button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .loan-metrics-box {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px 12px;
+    padding: 10px 12px;
+  }
+
+  /* Ahorros en móvil */
+  .savings-list-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px 14px;
+    gap: 12px;
+  }
+
+  .savings-identity-block {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .savings-combined-metrics {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px 12px !important;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .savings-actions-group {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .savings-actions-group .btn-action-primary {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+
+  .savings-actions-group .button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Inversiones en móvil */
+  .investment-list-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px 14px;
+    gap: 12px;
+  }
+
+  .investment-identity-block {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .investment-combined-metrics {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px 12px !important;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .investment-saldo-actual-slot {
+    grid-column: 1 / -1;
+    background: #faf5ff;
+    border: 1px solid #f3e8ff;
+    border-radius: 6px;
+    padding: 6px 10px;
+  }
+
+  .investment-actions-group {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    width: 100%;
+  }
+
+  .investment-actions-group .btn-action-primary {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+
+  .investment-actions-group .button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   Responsive Breakpoints: Small Phones (max-width: 640px)
+   ========================================================================== */
+@media (max-width: 640px) {
+  .request-list {
+    padding: 12px 10px;
+    gap: 12px;
+  }
+
+  .request-list-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .request-list-heading h2 {
+    font-size: 1.35rem;
+  }
+
+  .request-list-heading > div {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .request-list-heading > div .button {
+    flex: 1 1 auto;
+    justify-content: center;
+    font-size: 0.74rem;
+  }
+
+  .loan-tabs-wrapper {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .loan-tab-btn {
+    flex: 1 1 50%;
+    justify-content: center;
+    padding: 7px 6px !important;
+    font-size: 0.74rem !important;
+  }
+
+  .investment-kpi-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .investment-kpi-card {
+    padding: 10px 12px;
+    min-height: 86px;
+  }
+
+  .investment-kpi-card-value {
+    font-size: 1.15rem;
+  }
+
+  .investment-kpi-card-helper {
+    font-size: 0.68rem;
+  }
+}
+
+

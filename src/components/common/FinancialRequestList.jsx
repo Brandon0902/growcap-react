@@ -1274,25 +1274,12 @@ function FinancialRequestList({
 
               return (
                 <article
-                  className="savings-list-row"
+                  className="savings-list-row financial-item-card"
                   key={item?.id || item?.folio || item?.plan?.id || item?.ahorro?.id || index}
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '14px 20px',
-                    gap: '14px',
-                    background: '#ffffff',
-                    borderRadius: '12px',
-                    border: '1px solid #e2e8f0',
-                    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
-                    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
-                  }}
                 >
                   {/* 1. Plan Identity */}
-                  <div style={{ flex: '1.2 1 190px', minWidth: '160px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="savings-identity-block">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <h3 style={{ margin: 0, fontSize: '0.98rem', color: 'var(--color-primary-dark)', fontWeight: 600 }}>
                         {getTitle(item, `Ahorro ${index + 1}`)}
                       </h3>
@@ -1454,20 +1441,12 @@ function FinancialRequestList({
                     )}
                   </div>
 
-                  {/* Separador Vertical 1 */}
-                  <div
-                    style={{
-                      width: '1px',
-                      height: '38px',
-                      background: 'linear-gradient(180deg, transparent, #cbd5e1 20%, #cbd5e1 80%, transparent)',
-                      flexShrink: 0,
-                    }}
-                    aria-hidden="true"
-                  />
+                  {/* Separador Vertical 1 (visible en desktop) */}
+                  <div className="financial-row-divider" aria-hidden="true" />
 
-                  {/* 2. Financial Metrics Group: Saldos */}
-                  <div style={{ display: 'flex', gap: '14px', flex: '0 0 auto', flexWrap: 'nowrap', alignItems: 'center' }}>
-                    <div style={{ minWidth: '78px', whiteSpace: 'nowrap' }}>
+                  {/* 2 & 3. Financial Metrics & Conditions Combined */}
+                  <div className="savings-combined-metrics">
+                    <div style={{ minWidth: '78px' }}>
                       <span style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
                         Ahorrado
                       </span>
@@ -1476,9 +1455,9 @@ function FinancialRequestList({
                       </strong>
                     </div>
 
-                    <div style={{ width: '1px', height: '22px', background: '#e2e8f0', flexShrink: 0 }} aria-hidden="true" />
+                    <div className="financial-sub-divider" aria-hidden="true" />
 
-                    <div style={{ minWidth: '78px', whiteSpace: 'nowrap' }}>
+                    <div style={{ minWidth: '78px' }}>
                       <span style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
                         Disponible
                       </span>
@@ -1486,22 +1465,10 @@ function FinancialRequestList({
                         {formatMoney(item.saldo_disponible)}
                       </strong>
                     </div>
-                  </div>
 
-                  {/* Separador Vertical 2 */}
-                  <div
-                    style={{
-                      width: '1px',
-                      height: '38px',
-                      background: 'linear-gradient(180deg, transparent, #cbd5e1 20%, #cbd5e1 80%, transparent)',
-                      flexShrink: 0,
-                    }}
-                    aria-hidden="true"
-                  />
+                    <div className="financial-sub-divider" aria-hidden="true" />
 
-                  {/* 3. Conditions Group: Cuota & Vencimiento */}
-                  <div style={{ display: 'flex', gap: '14px', flex: '0 0 auto', flexWrap: 'nowrap', alignItems: 'center' }}>
-                    <div style={{ minWidth: '65px', whiteSpace: 'nowrap' }}>
+                    <div style={{ minWidth: '65px' }}>
                       <span style={{ display: 'block', fontSize: '0.65rem', color: item.esta_pausado ? '#d97706' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
                         {item.esta_pausado ? 'Pausado' : 'Cuota'}
                       </span>
@@ -1515,9 +1482,9 @@ function FinancialRequestList({
                       </span>
                     </div>
 
-                    <div style={{ width: '1px', height: '22px', background: '#e2e8f0', flexShrink: 0 }} aria-hidden="true" />
+                    <div className="financial-sub-divider" aria-hidden="true" />
 
-                    <div style={{ minWidth: '92px', whiteSpace: 'nowrap' }}>
+                    <div style={{ minWidth: '92px' }}>
                       <span style={{ display: 'block', fontSize: '0.65rem', color: item.en_ventana_retiro ? '#16a34a' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
                         {item.en_ventana_retiro ? 'Límite Retiro' : 'Vence / Corte'}
                       </span>
@@ -1529,20 +1496,12 @@ function FinancialRequestList({
                     </div>
                   </div>
 
-                  {/* Separador Vertical 3 */}
-                  <div
-                    style={{
-                      width: '1px',
-                      height: '38px',
-                      background: 'linear-gradient(180deg, transparent, #cbd5e1 20%, #cbd5e1 80%, transparent)',
-                      flexShrink: 0,
-                    }}
-                    aria-hidden="true"
-                  />
+                  {/* Separador Vertical 2 (visible en desktop) */}
+                  <div className="financial-row-divider" aria-hidden="true" />
 
                   {/* 4. Action Buttons Group */}
                   {isActive && (
-                    <div style={{ display: 'flex', gap: '5px', flex: '0 0 auto', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'nowrap' }}>
+                    <div className="savings-actions-group">
                       <Button
                         className="button-secondary icon-button"
                         style={{
@@ -1552,7 +1511,6 @@ function FinancialRequestList({
                           fontWeight: 500,
                           minHeight: '29px',
                           height: '29px',
-                          whiteSpace: 'nowrap',
                         }}
                         onClick={() => handleOpenAction('kardex', item)}
                         title="Ver historial de movimientos y transacciones"
@@ -1569,7 +1527,6 @@ function FinancialRequestList({
                           fontWeight: 500,
                           minHeight: '29px',
                           height: '29px',
-                          whiteSpace: 'nowrap',
                         }}
                         onClick={() => handleOpenAction('fee', item)}
                         title="Actualizar cuota periódica de nómina"
@@ -1578,7 +1535,7 @@ function FinancialRequestList({
                         Cuota
                       </Button>
                       <Button
-                        className="button-primary icon-button"
+                        className="button-primary icon-button btn-action-primary"
                         style={{
                           fontSize: '0.72rem',
                           padding: '5px 9px',
@@ -1586,7 +1543,6 @@ function FinancialRequestList({
                           fontWeight: 600,
                           minHeight: '29px',
                           height: '29px',
-                          whiteSpace: 'nowrap',
                           background: '#16a34a',
                           borderColor: '#15803d',
                           color: '#ffffff',
@@ -1611,7 +1567,6 @@ function FinancialRequestList({
                           height: '29px',
                           opacity: canDebit ? 1 : 0.4,
                           cursor: canDebit ? 'pointer' : 'not-allowed',
-                          whiteSpace: 'nowrap',
                         }}
                         disabled={!canDebit}
                         title={
@@ -1635,7 +1590,6 @@ function FinancialRequestList({
                           height: '29px',
                           opacity: canDebit ? 1 : 0.4,
                           cursor: canDebit ? 'pointer' : 'not-allowed',
-                          whiteSpace: 'nowrap',
                         }}
                         disabled={!canDebit}
                         title={
@@ -1658,24 +1612,15 @@ function FinancialRequestList({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', width: '100%' }}>
             {/* Segmented Control Tabs */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-              <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '3px', borderRadius: '10px', gap: '3px', border: '1px solid #e2e8f0' }}>
+              <div className="loan-tabs-wrapper">
                 <button
                   type="button"
                   onClick={() => setLoanTab('current')}
+                  className="loan-tab-btn"
                   style={{
-                    padding: '6px 14px',
-                    borderRadius: '8px',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
                     background: loanTab === 'current' ? '#ffffff' : 'transparent',
                     color: loanTab === 'current' ? '#0f172a' : '#64748b',
                     boxShadow: loanTab === 'current' ? '0 1px 3px rgba(0, 0, 0, 0.08)' : 'none',
-                    transition: 'all 0.15s ease',
                   }}
                 >
                   <span
@@ -1705,20 +1650,11 @@ function FinancialRequestList({
                 <button
                   type="button"
                   onClick={() => setLoanTab('history')}
+                  className="loan-tab-btn"
                   style={{
-                    padding: '6px 14px',
-                    borderRadius: '8px',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
                     background: loanTab === 'history' ? '#ffffff' : 'transparent',
                     color: loanTab === 'history' ? '#0f172a' : '#64748b',
                     boxShadow: loanTab === 'history' ? '0 1px 3px rgba(0, 0, 0, 0.08)' : 'none',
-                    transition: 'all 0.15s ease',
                   }}
                 >
                   <History size={14} />
@@ -1790,23 +1726,12 @@ function FinancialRequestList({
 
                     return (
                       <article
-                        className="loan-list-row"
+                        className="loan-list-row financial-item-card"
                         key={item?.id || index}
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '12px',
-                          padding: '16px 20px',
-                          background: '#ffffff',
-                          borderRadius: '12px',
-                          border: '1px solid #e2e8f0',
-                          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
-                          transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
-                        }}
                       >
                         {/* Top Header Row */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="loan-row-header">
+                          <div className="loan-identity-wrap">
                             <div
                               style={{
                                 width: '36px',
@@ -1823,8 +1748,8 @@ function FinancialRequestList({
                             >
                               <Banknote size={18} />
                             </div>
-                            <div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div className="loan-identity-text">
+                              <div className="loan-title-row">
                                 <h3 style={{ margin: 0, fontSize: '0.98rem', color: '#0f172a', fontWeight: 600 }}>
                                   {planNombre}
                                 </h3>
@@ -1862,15 +1787,15 @@ function FinancialRequestList({
                                   </span>
                                 )}
                               </div>
-                              <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                              <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '2px' }}>
                                 Folio #{item?.id} • Fecha: {formatDate(item?.fecha || item?.fecha_creacion || getDate(item))}
                                 {item?.aval_nombre ? ` • Aval: ${item.aval_nombre}` : item?.aval ? ` • Aval: ${item.aval}` : ''}
                               </span>
                             </div>
                           </div>
 
-                          {/* Action Button */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {/* Action Button (visible on desktop) */}
+                          <div className="loan-actions-desktop">
                             {isActive && saldoRestante > 0 && (
                               <>
                                 <Button
@@ -1958,12 +1883,12 @@ function FinancialRequestList({
 
                         {/* Progress Bar */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '4px', fontSize: '0.72rem' }}>
                             <span style={{ color: '#64748b' }}>
-                              Progreso de liquidación: <strong style={{ color: '#0f172a' }}>{porcentajePagado}%</strong> ({formatMoney(montoPagado)} pagado)
+                              Progreso: <strong style={{ color: '#0f172a' }}>{porcentajePagado}%</strong> ({formatMoney(montoPagado)} pagado)
                             </span>
                             <span style={{ color: '#64748b' }}>
-                              Total adeudado: <strong>{formatMoney(totalAdeudo)}</strong>
+                              Total: <strong style={{ color: '#0f172a' }}>{formatMoney(totalAdeudo)}</strong>
                             </span>
                           </div>
                           <div
@@ -1990,17 +1915,7 @@ function FinancialRequestList({
                         </div>
 
                         {/* Financial Metrics Grid */}
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-                            gap: '8px',
-                            padding: '10px 14px',
-                            background: '#f8fafc',
-                            borderRadius: '8px',
-                            border: '1px solid #f1f5f9',
-                          }}
-                        >
+                        <div className="loan-metrics-box">
                           <div>
                             <small style={{ fontSize: '0.68rem', color: '#64748b', display: 'block' }}>Saldo restante:</small>
                             <strong style={{ fontSize: '1rem', color: (isLiquidated || saldoRestante === 0) ? '#059669' : (moraAcumulada > 0 ? '#dc2626' : '#0f172a'), fontWeight: 700 }}>
@@ -2037,6 +1952,73 @@ function FinancialRequestList({
                               {item?.cuotas_totales ? `${item.cuotas_totales} cuotas (${frecuencia})` : ''}
                             </span>
                           </div>
+                        </div>
+
+                        {/* Action Buttons for Mobile (visible on <= 768px) */}
+                        <div className="loan-actions-mobile">
+                          {isActive && saldoRestante > 0 && (
+                            <>
+                              <Button
+                                className="button-secondary icon-button"
+                                style={{
+                                  fontSize: '0.74rem',
+                                  padding: '6px 10px',
+                                  minHeight: '32px',
+                                }}
+                                onClick={() => handleOpenAction('kardex', item)}
+                              >
+                                <History size={14} />
+                                Movimientos
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="button-outline icon-button"
+                                style={{
+                                  fontSize: '0.74rem',
+                                  padding: '6px 10px',
+                                  minHeight: '32px',
+                                }}
+                                onClick={() => handleOpenStatement(item.id)}
+                                title="Generar Estado de Cuenta Oficial en PDF"
+                              >
+                                <FileText size={14} />
+                                Estado de cuenta
+                              </Button>
+                              <Button
+                                className="button-primary icon-button btn-full-width"
+                                style={{
+                                  fontSize: '0.76rem',
+                                  padding: '7px 14px',
+                                  minHeight: '34px',
+                                  background: '#059669',
+                                  borderColor: '#047857',
+                                  fontWeight: 600,
+                                }}
+                                onClick={() => setSelectedLoanForAbono(item)}
+                              >
+                                <CreditCard size={14} />
+                                Abonar / Liquidar
+                              </Button>
+                            </>
+                          )}
+                          {isPending && onCancelLoan && (
+                            <Button
+                              variant="outline"
+                              className="button-outline icon-button btn-full-width"
+                              style={{
+                                fontSize: '0.76rem',
+                                padding: '6px 12px',
+                                minHeight: '32px',
+                                color: '#dc2626',
+                                borderColor: '#fca5a5',
+                                background: '#ffffff',
+                              }}
+                              onClick={() => onCancelLoan(item)}
+                            >
+                              <X size={14} />
+                              Cancelar solicitud
+                            </Button>
+                          )}
                         </div>
                       </article>
                     );
@@ -2079,24 +2061,11 @@ function FinancialRequestList({
 
               return (
                 <article
-                  className="investment-list-row savings-list-row"
+                  className="investment-list-row savings-list-row financial-item-card"
                   key={item?.id || item?.folio || item?.plan?.id || index}
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '14px 20px',
-                    gap: '14px',
-                    background: '#ffffff',
-                    borderRadius: '12px',
-                    border: '1px solid #e2e8f0',
-                    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
-                    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
-                  }}
                 >
                   {/* 1. Plan Identity */}
-                  <div style={{ flex: '1.2 1 190px', minWidth: '160px' }}>
+                  <div className="investment-identity-block">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <h3 style={{ margin: 0, fontSize: '0.98rem', color: 'var(--color-primary-dark)', fontWeight: 600 }}>
                         {getTitle(item, `Póliza #${item.id || index + 1}`)}
@@ -2145,20 +2114,12 @@ function FinancialRequestList({
                     )}
                   </div>
 
-                  {/* Separador Vertical 1 */}
-                  <div
-                    style={{
-                      width: '1px',
-                      height: '38px',
-                      background: 'linear-gradient(180deg, transparent, #cbd5e1 20%, #cbd5e1 80%, transparent)',
-                      flexShrink: 0,
-                    }}
-                    aria-hidden="true"
-                  />
+                  {/* Separador Vertical 1 (visible en desktop) */}
+                  <div className="financial-row-divider" aria-hidden="true" />
 
-                  {/* 2. Financial Metrics Group */}
-                  <div style={{ display: 'flex', gap: '14px', flex: '0 0 auto', flexWrap: 'nowrap', alignItems: 'center' }}>
-                    <div style={{ minWidth: '82px', whiteSpace: 'nowrap' }}>
+                  {/* 2 & 3. Financial Metrics & Conditions Combined */}
+                  <div className="investment-combined-metrics">
+                    <div style={{ minWidth: '82px' }}>
                       <span style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
                         Invertido
                       </span>
@@ -2167,9 +2128,9 @@ function FinancialRequestList({
                       </strong>
                     </div>
 
-                    <div style={{ width: '1px', height: '22px', background: '#e2e8f0', flexShrink: 0 }} aria-hidden="true" />
+                    <div className="financial-sub-divider" aria-hidden="true" />
 
-                    <div style={{ minWidth: '82px', whiteSpace: 'nowrap' }}>
+                    <div style={{ minWidth: '82px' }}>
                       <span style={{ display: 'block', fontSize: '0.65rem', color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
                         Ganancia
                       </span>
@@ -2178,9 +2139,9 @@ function FinancialRequestList({
                       </strong>
                     </div>
 
-                    <div style={{ width: '1px', height: '22px', background: '#e2e8f0', flexShrink: 0 }} aria-hidden="true" />
+                    <div className="financial-sub-divider" aria-hidden="true" />
 
-                    <div style={{ minWidth: '88px', whiteSpace: 'nowrap' }}>
+                    <div className="investment-saldo-actual-slot" style={{ minWidth: '88px' }}>
                       <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--color-primary-dark)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
                         Saldo Actual
                       </span>
@@ -2188,22 +2149,10 @@ function FinancialRequestList({
                         {formatMoney(capitalActual)}
                       </strong>
                     </div>
-                  </div>
 
-                  {/* Separador Vertical 2 */}
-                  <div
-                    style={{
-                      width: '1px',
-                      height: '38px',
-                      background: 'linear-gradient(180deg, transparent, #cbd5e1 20%, #cbd5e1 80%, transparent)',
-                      flexShrink: 0,
-                    }}
-                    aria-hidden="true"
-                  />
+                    <div className="financial-sub-divider" aria-hidden="true" />
 
-                  {/* 3. Conditions Group: Plazo & Vencimiento */}
-                  <div style={{ display: 'flex', gap: '14px', flex: '0 0 auto', flexWrap: 'nowrap', alignItems: 'center' }}>
-                    <div style={{ minWidth: '65px', whiteSpace: 'nowrap' }}>
+                    <div style={{ minWidth: '65px' }}>
                       <span style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
                         Plazo
                       </span>
@@ -2212,9 +2161,9 @@ function FinancialRequestList({
                       </span>
                     </div>
 
-                    <div style={{ width: '1px', height: '22px', background: '#e2e8f0', flexShrink: 0 }} aria-hidden="true" />
+                    <div className="financial-sub-divider" aria-hidden="true" />
 
-                    <div style={{ minWidth: '92px', whiteSpace: 'nowrap' }}>
+                    <div style={{ minWidth: '92px' }}>
                       <span style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
                         Vence
                       </span>
@@ -2224,19 +2173,11 @@ function FinancialRequestList({
                     </div>
                   </div>
 
-                  {/* Separador Vertical 3 */}
-                  <div
-                    style={{
-                      width: '1px',
-                      height: '38px',
-                      background: 'linear-gradient(180deg, transparent, #cbd5e1 20%, #cbd5e1 80%, transparent)',
-                      flexShrink: 0,
-                    }}
-                    aria-hidden="true"
-                  />
+                  {/* Separador Vertical 2 (visible en desktop) */}
+                  <div className="financial-row-divider" aria-hidden="true" />
 
                   {/* 4. Action Buttons Group */}
-                  <div style={{ display: 'flex', gap: '5px', flex: '0 0 auto', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'nowrap' }}>
+                  <div className="investment-actions-group">
                     <Button
                       className="button-secondary icon-button"
                       style={{
@@ -2246,7 +2187,6 @@ function FinancialRequestList({
                         fontWeight: 500,
                         minHeight: '29px',
                         height: '29px',
-                        whiteSpace: 'nowrap',
                       }}
                       onClick={() => handleOpenAction('kardex', item)}
                       title="Ver historial de movimientos y transacciones"
@@ -2263,7 +2203,6 @@ function FinancialRequestList({
                         fontWeight: 500,
                         minHeight: '29px',
                         height: '29px',
-                        whiteSpace: 'nowrap',
                       }}
                       onClick={() => handleOpenStatement(item.id)}
                       title="Descargar Estado de Cuenta Oficial de esta póliza en PDF"
@@ -2273,7 +2212,7 @@ function FinancialRequestList({
                     </Button>
                     {isPaymentPendingState && checkoutUrl && (
                       <Button
-                        className="button-primary icon-button"
+                        className="button-primary icon-button btn-action-primary"
                         style={{
                           fontSize: '0.72rem',
                           padding: '5px 9px',
@@ -2281,7 +2220,6 @@ function FinancialRequestList({
                           fontWeight: 600,
                           minHeight: '29px',
                           height: '29px',
-                          whiteSpace: 'nowrap',
                         }}
                         onClick={() => { window.location.href = checkoutUrl; }}
                       >
