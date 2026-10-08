@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef, useImperativeHandle } from 'react';
 import {
   extractCheckoutUrl,
   extractResourceId,
@@ -109,7 +109,7 @@ function formatPercent(value) {
   return `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(numeric)}%`;
 }
 
-function InvestmentRequestForm({ onCreated, plans = [] }) {
+const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [values, setValues] = useState(initialValues);
@@ -117,6 +117,17 @@ function InvestmentRequestForm({ onCreated, plans = [] }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    openWithPlan: (planId) => {
+      setValues((current) => ({ ...current, id_activo: planId }));
+      setMessage('');
+      setError('');
+      setFieldErrors({});
+      setCurrentStep(0);
+      setIsOpen(true);
+    }
+  }));
 
   const selectedPlan = plans.find((plan) => String(getPlanId(plan)) === String(values.id_activo));
   const planYield = getPlanValue(selectedPlan, percentFields);
@@ -431,6 +442,6 @@ function InvestmentRequestForm({ onCreated, plans = [] }) {
       </GuidedRequestModal>
     </>
   );
-}
+});
 
 export default InvestmentRequestForm;

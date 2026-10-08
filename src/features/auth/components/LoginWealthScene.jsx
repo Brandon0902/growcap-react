@@ -282,7 +282,7 @@ function LoginWealthScene() {
 
       <div className="wealth-copy">
         <span>Caja de ahorro para empleados</span>
-        <h1>{import.meta.env.VITE_APP_NAME || 'Growcap'}</h1>
+        <h1>{import.meta.env.VITE_APP_NAME || 'Growcap'}</h1><br></br>
         <p>Ahorro, inversion y prestamos con una experiencia privada, clara y enfocada en crecimiento.</p>
       </div>
 

@@ -82,6 +82,39 @@ function buildBeneficiaries(profile, userData, personalData) {
   ].map(formatBeneficiary).filter(Boolean).join(', ');
 }
 
+export function getBeneficiariesList(profile, userData) {
+  const ud = userData || profile?.user_data || profile?.datos_usuario || {};
+  const list = [];
+
+  const b1Name = ud?.beneficiario || '';
+  const b1Phone = ud?.beneficiario_telefono || '';
+  const b1Pct = ud?.porcentaje_1 !== undefined && ud?.porcentaje_1 !== null ? Number(ud.porcentaje_1) : null;
+
+  if (b1Name || b1Pct !== null) {
+    list.push({
+      slot: 1,
+      nombre: b1Name,
+      telefono: b1Phone,
+      porcentaje: b1Pct ?? 0,
+    });
+  }
+
+  const b2Name = ud?.beneficiario_02 || '';
+  const b2Phone = ud?.beneficiario_telefono_02 || '';
+  const b2Pct = ud?.porcentaje_2 !== undefined && ud?.porcentaje_2 !== null ? Number(ud.porcentaje_2) : null;
+
+  if (b2Name || b2Pct !== null) {
+    list.push({
+      slot: 2,
+      nombre: b2Name,
+      telefono: b2Phone,
+      porcentaje: b2Pct ?? 0,
+    });
+  }
+
+  return list;
+}
+
 export function buildProfileViewData(profile, authUser) {
   const userData = profile?.user_data || profile?.datos_usuario || profile?.mis_datos || {};
   const personalData = {
@@ -91,13 +124,17 @@ export function buildProfileViewData(profile, authUser) {
   const addressData = profile?.direccion || profile?.domicilio || userData?.direccion_data || userData?.domicilio || userData;
   const bankData = profile?.banco || profile?.datos_bancarios || userData?.banco_data || userData?.datos_bancarios || userData;
   const beneficiariesText = buildBeneficiaries(profile, userData, personalData);
+  const beneficiariesList = getBeneficiariesList(profile, userData);
 
   return {
     addressData,
     bankData,
     beneficiariesText,
+    beneficiariesList,
+    laboralesData: profile?.laborales || null,
     personalData,
     userData,
     user: authUser || {},
   };
 }
+

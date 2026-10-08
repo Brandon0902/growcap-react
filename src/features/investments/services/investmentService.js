@@ -70,3 +70,24 @@ export async function payInvestmentWithBalance(id) {
     endpoint: ENDPOINTS.investments.payWithBalance(id),
   };
 }
+
+export async function getInvestmentMovements(id, params = {}) {
+  const { data } = await axiosClient.get(ENDPOINTS.investments.movements(id), { params });
+
+  return {
+    data: extractCollection(data),
+    endpoint: ENDPOINTS.investments.movements(id),
+    raw: data,
+  };
+}
+
+export async function getInvestmentStatement(id = null, params = {}) {
+  const endpoint = ENDPOINTS.investments.statement(id);
+  const { data } = await axiosClient.get(endpoint, { params });
+
+  return {
+    data,
+    endpoint,
+    raw: data,
+  };
+}

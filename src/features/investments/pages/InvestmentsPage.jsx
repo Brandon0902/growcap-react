@@ -1,4 +1,4 @@
-import { AlertCircle, ChartNoAxesColumnIncreasing, Eye, RefreshCw } from 'lucide-react';
+import { AlertCircle, ChartNoAxesColumnIncreasing, ChevronUp, Eye, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { normalizeApiError } from '../../../api/apiUtils.js';
@@ -6,7 +6,6 @@ import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import FinancialRequestList from '../../../components/common/FinancialRequestList.jsx';
 import PageHero from '../../../components/common/PageHero.jsx';
-import UserRecordsModal from '../../../components/common/UserRecordsModal.jsx';
 import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
 import InvestmentPlanCard from '../components/InvestmentPlanCard.jsx';
 import InvestmentRequestForm from '../components/InvestmentRequestForm.jsx';
@@ -40,6 +39,7 @@ function PlanCardsSkeleton() {
 
 function InvestmentsPage() {
   const pageRef = useRef(null);
+  const recordsRef = useRef(null);
   const handledStripeReturnRef = useRef('');
   const [searchParams, setSearchParams] = useSearchParams();
   const [investments, setInvestments] = useState([]);
@@ -128,6 +128,15 @@ function InvestmentsPage() {
     handleStripeReturn();
   }, [loadInvestmentsData, searchParams, setSearchParams]);
 
+  const requestFormRef = useRef(null);
+
+  const handlePlanClick = (plan) => {
+    const planId = plan?.id_activo || plan?.id_inversion || plan?.id || plan?.id_plan;
+    if (requestFormRef.current && planId) {
+      requestFormRef.current.openWithPlan(planId);
+    }
+  };
+
   return (
     <div className="page investments-page motion-page" ref={pageRef}>
       <PageHero
@@ -176,44 +185,103 @@ function InvestmentsPage() {
         {!isLoading && !error && plans.length > 0 && (
           <div className="savings-plans-grid">
             {plans.map((plan, index) => (
-              <InvestmentPlanCard key={plan?.id || plan?.id_inversion || plan?.label || `investment-plan-${index}`} plan={plan} />
+              <InvestmentPlanCard key={plan?.id || plan?.id_inversion || plan?.label || `investment-plan-${index}`} plan={plan} onClick={handlePlanClick} />
             ))}
           </div>
         )}
       </section>
 
-      <InvestmentRequestForm onCreated={loadInvestmentsData} plans={plans} />
+      <InvestmentRequestForm ref={requestFormRef} onCreated={loadInvestmentsData} plans={plans} />
 
       <div className="records-entry motion-immediate">
         <div>
           <span>Seguimiento</span>
-          <h2>Consulta tus inversiones sin saturar la vista</h2>
-          <p>El historial queda disponible en un modal con estados de pago y datos clave.</p>
+          <h2>Consulta tus inversiones cuando lo necesites</h2>
+          <p>Revisa rendimientos generados, plazos de maduración y el estado de cada póliza.</p>
         </div>
-        <Button className="button-secondary icon-button records-entry-button" onClick={() => setIsRecordsOpen(true)}>
-          <Eye size={18} aria-hidden="true" />
-          Ver mis inversiones
+        <Button
+          className="button-secondary icon-button records-entry-button"
+          onClick={() => {
+            setIsRecordsOpen((prev) => {
+              const nextState = !prev;
+              if (nextState) {
+                setTimeout(() => {
+                  recordsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+              }
+              return nextState;
+            });
+          }}
+          aria-expanded={isRecordsOpen}
+        >
+          {isRecordsOpen ? <ChevronUp size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+          {isRecordsOpen ? 'Ocultar mis inversiones' : 'Ver mis inversiones'}
         </Button>
       </div>
 
-      <UserRecordsModal
-        isOpen={isRecordsOpen}
-        onClose={() => setIsRecordsOpen(false)}
-        subtitle="Consulta monto invertido, plan, rendimiento, fecha y estado de pago."
-        title="Mis inversiones"
+      <div
+        ref={recordsRef}
+        style={{
+          overflow: 'hidden',
+          transition: 'max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, margin 0.35s ease',
+          maxHeight: isRecordsOpen ? '4000px' : '0px',
+          opacity: isRecordsOpen ? 1 : 0,
+          marginTop: isRecordsOpen ? '20px' : '0px',
+          pointerEvents: isRecordsOpen ? 'auto' : 'none',
+        }}
       >
-        <FinancialRequestList
-          emptyDescription="Cuando completes una solicitud, aparecera aqui."
-          emptyTitle="Aun no tienes inversiones registradas."
-          error={error}
-          isLoading={isLoading}
-          items={investments}
-          onRefresh={loadInvestmentsData}
-          searchable
-          title="Historial de inversiones"
-          type="investments"
-        />
-      </UserRecordsModal>
+        <div
+          style={{
+            background: 'var(--color-surface)',
+            border: '1px solid #E9D5FF',
+            borderRadius: 'var(--radius)',
+            boxShadow: '0 16px 38px rgba(17, 24, 39, 0.06)',
+            padding: 'clamp(16px, 2.5vw, 24px)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '16px',
+              flexWrap: 'wrap',
+              gap: '8px',
+            }}
+          >
+            <div>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Registros del cliente
+              </span>
+              <h2 style={{ fontSize: '1.4rem', color: 'var(--purple-950)', margin: '2px 0 0' }}>Mis inversiones</h2>
+              <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '3px 0 0' }}>
+                Monitorea el capital invertido, rendimientos acumulados, plazos de maduración y movimientos.
+              </p>
+            </div>
+            <Button
+              className="button-secondary icon-button"
+              style={{ fontSize: '0.78rem', padding: '6px 12px', minHeight: '34px' }}
+              onClick={() => setIsRecordsOpen(false)}
+            >
+              <ChevronUp size={16} aria-hidden="true" />
+              Ocultar
+            </Button>
+          </div>
+
+          <FinancialRequestList
+            emptyDescription="Cuando completes una solicitud, aparecera aqui."
+            emptyTitle="Aun no tienes inversiones registradas."
+            error={error}
+            isLoading={isLoading}
+            items={investments}
+            plans={plans}
+            onRefresh={loadInvestmentsData}
+            searchable
+            title="Historial de inversiones"
+            type="investments"
+          />
+        </div>
+      </div>
     </div>
   );
 }

@@ -48,21 +48,28 @@ function Input({ error, id, label, onBlur, onFocus, ...props }) {
           {label}
         </label>
       )}
-      <input
-        aria-invalid={Boolean(error)}
-        aria-describedby={error ? `${id}-error` : undefined}
-        className="input"
-        id={id}
-        onBlur={(event) => {
-          settleField();
-          onBlur?.(event);
-        }}
-        onFocus={(event) => {
-          liftField();
-          onFocus?.(event);
-        }}
-        {...props}
-      />
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <input
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? `${id}-error` : undefined}
+          className="input"
+          id={id}
+          onBlur={(event) => {
+            settleField();
+            onBlur?.(event);
+          }}
+          onFocus={(event) => {
+            liftField();
+            onFocus?.(event);
+          }}
+          {...props}
+        />
+        {props.action && (
+          <div style={{ position: 'absolute', right: '12px', display: 'flex' }}>
+            {props.action}
+          </div>
+        )}
+      </div>
       {error && (
         <p className="form-error" id={`${id}-error`}>
           {error}

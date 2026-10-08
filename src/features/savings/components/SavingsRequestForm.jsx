@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef, useImperativeHandle, useMemo } from 'react';
 import {
   extractCheckoutUrl,
   extractResourceId,
@@ -14,6 +14,8 @@ import WizardStep from '../../../components/common/WizardStep.jsx';
 import { createSavingsCheckout, createSavingsRequest } from '../services/savingsService.js';
 import { buildSavingsCheckoutPayload, buildSavingsRequestPayload, formatSavingsRequestError } from '../services/savingsRequest.js';
 import { getSavingsPlanPeriod } from '../services/savingsPlanDisplay.js';
+import { planDescriptions, generalNote } from './SavingsPlanCard.jsx';
+import { AlertCircle } from 'lucide-react';
 
 const initialValues = {
   ahorro_id: '',
@@ -156,7 +158,7 @@ function formatPercent(value) {
   return `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(numeric)}%`;
 }
 
-function SavingsRequestForm({ plans = [], suggestedFrequency }) {
+const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryCapacity }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [values, setValues] = useState(initialValues);
@@ -165,18 +167,94 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useImperativeHandle(ref, () => ({
+    openWithPlan: (planId, initialCuota = null) => {
+      const targetPlan = plans.find((p) => String(getPlanId(p)) === String(planId));
+      if (targetPlan && (Number(targetPlan?.status) === 0 || targetPlan?.status === false)) {
+        return;
+      }
+      setValues((current) => ({
+        ...current,
+        ahorro_id: planId,
+        ...(initialCuota ? { cuota: String(initialCuota) } : {}),
+      }));
+      setMessage('');
+      setError('');
+      setFieldErrors({});
+      setCurrentStep(1); // Skip plan selection step
+      setIsOpen(true);
+    },
+  }));
+
   const selectedPlan = plans.find((plan) => String(getPlanId(plan)) === String(values.ahorro_id));
+  const isCustomDatePlan = Boolean(selectedPlan?.permite_fecha_personalizada || selectedPlan?.es_escalonado);
+  const isSeasonal = isCustomDatePlan;
   const planYield = getPlanValue(selectedPlan, percentFields);
   const planPeriod = getSavingsPlanPeriod(selectedPlan);
   const minFee = getNumericValue(getPlanValue(selectedPlan, minFeeFields));
   const feeAmount = Number(values.cuota || 0);
   const initialAmount = Number(values.monto_inicial || 0);
   const totalNow = feeAmount + initialAmount;
-  const isSeasonal = isSeasonalPlan(selectedPlan);
-  const dateEndStep = 3;
-  const summaryStep = isSeasonal ? 4 : 3;
+  const dateEndStep = 2;
+  const summaryStep = isSeasonal ? 3 : 2;
   const totalSteps = summaryStep + 1;
 
+  const customPlanCalculation = useMemo(() => {
+    if (!isCustomDatePlan) return null;
+
+    const minMonths = Number(selectedPlan?.meses_minimos || 2);
+    const tasaMin = Number(selectedPlan?.tasa_min ?? 7.5);
+    const tasaMax = Number(selectedPlan?.tasa_max ?? 12.5);
+
+    if (!values.fecha_fin) {
+      return {
+        assignedRate: tasaMin,
+        totalMonths: 0,
+        gamification: null,
+        rateDisplay: `${tasaMin}% - ${tasaMax}% anual`,
+        periodDisplay: `Personalizado (mínimo ${minMonths} meses)`,
+      };
+    }
+
+    const start = new Date();
+    const end = new Date(values.fecha_fin + 'T00:00:00');
+    if (isNaN(end.getTime())) {
+      return {
+        assignedRate: tasaMin,
+        totalMonths: 0,
+        gamification: null,
+        rateDisplay: `${tasaMin}% - ${tasaMax}% anual`,
+        periodDisplay: `Personalizado (mínimo ${minMonths} meses)`,
+      };
+    }
+
+    const totalMonths = Math.max(0, (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()));
+
+    let assignedRate = 7.5;
+    let gamification = null;
+
+    if (totalMonths >= 24) {
+      assignedRate = 12.5;
+      gamification = '🏆 ¡Felicidades! Alcanzaste el plazo multianual con la máxima tasa de 12.5% anual.';
+    } else if (totalMonths >= 12) {
+      assignedRate = 11.5;
+      gamification = '💡 Llega a 24 meses para subir tu tasa a 12.5% (+1.0%)';
+    } else if (totalMonths >= 6) {
+      assignedRate = 9.5;
+      gamification = '💡 Llega a 12 meses para subir tu tasa a 11.5% (+2.0%)';
+    } else {
+      assignedRate = 7.5;
+      gamification = '💡 Llega a 6 meses para subir tu tasa a 9.5% (+2.0%)';
+    }
+
+    return {
+      assignedRate,
+      totalMonths,
+      gamification,
+      rateDisplay: `${assignedRate.toFixed(1)}% anual`,
+      periodDisplay: `${totalMonths} meses (hasta ${values.fecha_fin})`,
+    };
+  }, [isCustomDatePlan, selectedPlan, values.fecha_fin]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -192,7 +270,6 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
   const validateStep = (stepIndex) => {
     const nextErrors = {};
     const parsedFee = Number(values.cuota);
-    const parsedInitialAmount = values.monto_inicial === '' ? 0 : Number(values.monto_inicial);
 
     if (stepIndex === 0 && !values.ahorro_id) {
       nextErrors.ahorro_id = 'Selecciona un plan para continuar.';
@@ -206,12 +283,31 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
       nextErrors.cuota = 'La cuota debe ser mayor o igual al minimo del plan.';
     }
 
-    if (stepIndex === 2 && values.monto_inicial !== '' && (!Number.isFinite(parsedInitialAmount) || parsedInitialAmount < 0)) {
-      nextErrors.monto_inicial = 'El monto inicial debe ser 0 o mayor, o dejarse vacio.';
+    if (stepIndex === 1 && salaryCapacity && Number.isFinite(salaryCapacity.capacidad_disponible) && salaryCapacity.capacidad_disponible > 0) {
+      if (parsedFee > salaryCapacity.capacidad_disponible) {
+        nextErrors.cuota = `La cuota (${formatMoney(parsedFee)}) excede tu capacidad de ahorro disponible de ${formatMoney(salaryCapacity.capacidad_disponible)} (máximo 50% de tu salario por periodo).`;
+      }
     }
 
-    if (isSeasonal && stepIndex === dateEndStep && !values.fecha_fin) {
-      nextErrors.fecha_fin = 'Indica la fecha fin del ahorro de temporada.';
+    if (isSeasonal && stepIndex === dateEndStep) {
+      if (!values.fecha_fin) {
+        nextErrors.fecha_fin = 'Indica el día en el que deseas que se liquide tu ahorro.';
+      } else {
+        const minMonths = Number(selectedPlan?.meses_minimos || 0);
+        if (minMonths > 0) {
+          const selectedDate = new Date(values.fecha_fin + 'T00:00:00');
+          const now = new Date();
+          const totalMonths = (selectedDate.getFullYear() - now.getFullYear()) * 12 + (selectedDate.getMonth() - now.getMonth());
+
+          if (totalMonths < minMonths) {
+            nextErrors.fecha_fin = `El plazo mínimo para este plan es de ${minMonths} meses.`;
+          }
+        }
+      }
+    }
+    
+    if (stepIndex === summaryStep && !values.aceptado) {
+      nextErrors.aceptado = 'Debes aceptar las condiciones para enviar la solicitud.';
     }
 
 
@@ -242,10 +338,6 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
     setFieldErrors({});
 
     for (let step = 0; step < totalSteps; step += 1) {
-      if (step === summaryStep) {
-        continue;
-      }
-
       if (!validateStep(step)) {
         setCurrentStep(step);
         setError('Revisa este dato antes de enviar la solicitud.');
@@ -261,34 +353,26 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
 
       const savingsId = extractResourceId(created, ['id', 'id_ahorro', 'ahorro_id']);
 
-        if (!savingsId) {
-          throw new Error('No se pudo iniciar Stripe Checkout porque la API no devolvio el ID del ahorro.');
-        }
+      if (!savingsId) {
+        throw new Error('No se pudo confirmar la creación del ahorro en la base de datos.');
+      }
 
-        const action = created?.action ?? created?.data?.action ?? 'create';
-        requestStage = 'checkout';
-        const checkout = await createSavingsCheckout(savingsId, buildSavingsCheckoutPayload({
-          action,
-          savingsId,
-          cuota: values.cuota,
-          monto_inicial: values.monto_inicial,
-          oldSubscriptionId: created?.ahorro?.stripe_subscription_id ?? created?.data?.ahorro?.stripe_subscription_id,
-          origin: window.location.origin,
-        }));
-        const checkoutUrl = extractCheckoutUrl(checkout);
+      setMessage(created.message || '¡Solicitud creada! El descuento se procesará automáticamente en tu próxima nómina.');
+      
+      // We call onCreated to refresh the list of active savings
+      if (typeof onCreated === 'function') {
+        onCreated(created);
+      }
+      
+      setTimeout(() => {
+        setIsOpen(false);
+        setIsSubmitting(false);
+      }, 3000);
 
-        if (!checkoutUrl) {
-          throw new Error('La API no devolvio la URL de Stripe Checkout.');
-        }
-
-        setMessage('Te enviaremos a Stripe Checkout para completar el pago.');
-        window.location.href = checkoutUrl;
-        return;
     } catch (requestError) {
       const normalized = normalizeApiError(requestError, 'No fue posible enviar la solicitud de ahorro.');
       setFieldErrors(normalized.fieldErrors);
       setError(formatSavingsRequestError(requestStage, normalized.message));
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -301,11 +385,11 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
       </div>
       <div>
         <span>Periodo</span>
-        <strong>{formatPlanValue(planPeriod)}</strong>
+        <strong>{customPlanCalculation ? customPlanCalculation.periodDisplay : formatPlanValue(planPeriod)}</strong>
       </div>
       <div>
         <span>Rendimiento</span>
-        <strong>{formatPercent(planYield)}</strong>
+        <strong>{customPlanCalculation ? customPlanCalculation.rateDisplay : formatPercent(planYield)}</strong>
       </div>
       <div>
         <span>Cuota minima</span>
@@ -315,46 +399,65 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
   );
 
   const renderSummary = () => (
-    <dl className="guided-summary">
-      <div>
-        <dt>Plan seleccionado</dt>
-        <dd>{getPlanName(selectedPlan)}</dd>
-      </div>
-      <div>
-        <dt>Periodo</dt>
-        <dd>{formatPlanValue(planPeriod)}</dd>
-      </div>
-      <div>
-        <dt>Rendimiento</dt>
-        <dd>{formatPercent(planYield)}</dd>
-      </div>
-      <div>
-        <dt>Cuota obligatoria</dt>
-        <dd>{formatMoney(values.cuota)}</dd>
-      </div>
-      <div>
-        <dt>Monto inicial opcional</dt>
-        <dd>{initialAmount > 0 ? formatMoney(initialAmount) : '$0.00'}</dd>
-      </div>
-      {isSeasonal && (
+    <>
+      <dl className="guided-summary">
         <div>
-          <dt>Fecha fin</dt>
-          <dd>{values.fecha_fin || 'Sin capturar'}</dd>
+          <dt>Plan seleccionado</dt>
+          <dd>{getPlanName(selectedPlan)}</dd>
         </div>
-      )}
-      <div className="guided-summary-total">
-        <dt>Total estimado a pagar ahora con Stripe</dt>
-        <dd>{formatMoney(totalNow)}</dd>
+        <div>
+          <dt>Periodo</dt>
+          <dd>
+            {customPlanCalculation && values.fecha_fin
+              ? customPlanCalculation.periodDisplay
+              : formatPlanValue(planPeriod)}
+          </dd>
+        </div>
+        <div>
+          <dt>Rendimiento anual</dt>
+          <dd>
+            {customPlanCalculation && values.fecha_fin
+              ? customPlanCalculation.rateDisplay
+              : formatPercent(planYield)}
+          </dd>
+        </div>
+        {isSeasonal && (
+          <div>
+            <dt>Fecha fin</dt>
+            <dd>{values.fecha_fin || 'Sin capturar'}</dd>
+          </div>
+        )}
+        <div className="guided-summary-total">
+          <dt>Monto a procesar</dt>
+          <dd>{formatMoney(totalNow)}</dd>
+        </div>
+      </dl>
+      
+      <div className="form-field checkbox-field" style={{ marginTop: '20px', padding: '15px', background: '#1e293b', borderRadius: '8px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+        <input 
+          type="checkbox" 
+          id="accept-terms" 
+          name="aceptado"
+          checked={!!values.aceptado}
+          onChange={(e) => setValues(curr => ({ ...curr, aceptado: e.target.checked }))}
+          style={{ marginTop: '4px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+        />
+        <label htmlFor="accept-terms" style={{ cursor: 'pointer', fontSize: '0.85rem', color: '#cbd5e1', margin: 0, lineHeight: '1.4' }}>
+          <strong>Estoy de acuerdo</strong> con los parámetros definidos en mi solicitud y autorizo que el monto sea descontado periódicamente de mi nómina.
+        </label>
       </div>
-    </dl>
+      {fieldErrors.aceptado && (
+        <p className="form-error" style={{ marginTop: '5px' }}>{fieldErrors.aceptado}</p>
+      )}
+    </>
   );
 
   const renderStep = () => {
     if (currentStep === 0) {
       return (
         <WizardStep
-          description="Elige una opcion disponible. La cuota minima, periodo y rendimiento vienen del plan."
-          question="Que plan de ahorro quieres elegir?"
+          description="Selecciona el plan que mejor se adapte a tu estrategia. Te mostraremos los rendimientos proyectados para que tu dinero comience a trabajar por ti."
+          question="¿Cuál es tu próxima meta financiera?"
         >
           <div className="form-field">
             <label className="form-label" htmlFor="savings-plan">
@@ -370,10 +473,11 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
               <option value="">Selecciona un plan</option>
               {plans.map((plan, index) => {
                 const id = getPlanId(plan);
+                const isInactive = Number(plan?.status) === 0 || plan?.status === false;
 
                 return (
-                  <option key={id || index} value={id || ''}>
-                    {getPlanName(plan)}
+                  <option key={id || index} value={id || ''} disabled={isInactive}>
+                    {getPlanName(plan)}{isInactive ? ' (No disponible)' : ''}
                   </option>
                 );
               })}
@@ -388,16 +492,32 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
     }
 
     if (currentStep === 1) {
+      const planTitle = getPlanName(selectedPlan) || '';
+      const exactMatch = planDescriptions[planTitle];
+      const partialMatch = Object.entries(planDescriptions).find(([key]) => planTitle.toLowerCase().includes(key.toLowerCase()))?.[1];
+      const planExplanation = exactMatch || partialMatch || selectedPlan?.descripcion || '';
+      
+      const showGeneralNote = planTitle.toLowerCase() !== 'siempre disponible' && !selectedPlan?.permite_fecha_personalizada;
+
       return (
         <WizardStep
-          description="Esta cuota es obligatoria y se usara para el cobro automatico."
-          question="Cual sera tu cuota?"
+          description="Define el monto de tu aportación. Este importe será descontado automáticamente de tu nómina según el periodo acordado."
+          question="¿Cuánto deseas aportar?"
         >
+          {planExplanation && (
+            <div style={{ marginBottom: '20px' }}>
+              <Alert type="info">
+                <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: '600' }}>Sobre este plan: {planTitle}</h4>
+                <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>{planExplanation}</p>
+              </Alert>
+            </div>
+          )}
           <Input
             error={firstFieldError(fieldErrors, 'cuota')}
             id="savings-fee"
-            label="Cuota obligatoria"
+            label="Monto de aportación"
             min={minFee ?? 1}
+            max={salaryCapacity?.capacidad_disponible > 0 ? salaryCapacity.capacidad_disponible : undefined}
             name="cuota"
             onChange={handleChange}
             step="0.01"
@@ -405,40 +525,50 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
             value={values.cuota}
           />
           {minFee !== null && (
-            <p className="guided-help">Minimo del plan: {formatMoney(minFee)}</p>
+            <p className="guided-help">Mínimo del plan: {formatMoney(minFee)}</p>
+          )}
+          {salaryCapacity && salaryCapacity.salario_periodico > 0 && (
+            <div style={{ marginTop: '10px', padding: '10px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.84rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ color: '#64748b' }}>Límite máximo (50% de nómina):</span>
+                <strong style={{ color: '#0f172a' }}>{formatMoney(salaryCapacity.max_cuota_permitida)}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748b' }}>Capacidad disponible para este ahorro:</span>
+                <strong style={{ color: salaryCapacity.capacidad_disponible > 0 ? '#16a34a' : '#dc2626' }}>
+                  {formatMoney(salaryCapacity.capacidad_disponible)}</strong>
+              </div>
+              {salaryCapacity.cuota_comprometida > 0 && (
+                <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#64748b' }}>
+                  * Tienes {formatMoney(salaryCapacity.cuota_comprometida)} comprometido en otros planes activos.
+                </p>
+              )}
+            </div>
+          )}
+          {showGeneralNote && (
+            <div style={{ marginTop: '15px' }}>
+              <Alert type="warning">
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                  <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: '1.4' }}>{generalNote}</p>
+                </div>
+              </Alert>
+            </div>
           )}
         </WizardStep>
       );
     }
 
-    if (currentStep === 2) {
-      return (
-        <WizardStep
-          description="Este monto es opcional y se cobra adicional a la cuota. Puedes dejarlo vacio."
-          question="Quieres agregar un monto inicial?"
-        >
-          <Input
-            error={firstFieldError(fieldErrors, 'monto_inicial')}
-            id="savings-initial-amount"
-            label="Monto inicial opcional"
-            min="0"
-            name="monto_inicial"
-            onChange={handleChange}
-            placeholder="Opcional"
-            step="0.01"
-            type="number"
-            value={values.monto_inicial}
-          />
-          <p className="guided-help">Puede ser $0.00 o quedar vacio; no se compara contra el minimo del plan.</p>
-        </WizardStep>
-      );
-    }
-
     if (isSeasonal && currentStep === dateEndStep) {
+      const minMonths = Number(selectedPlan?.meses_minimos || 0);
+      const minDateObj = new Date();
+      if (minMonths > 0) minDateObj.setMonth(minDateObj.getMonth() + minMonths);
+      const minDateString = `${minDateObj.getFullYear()}-${String(minDateObj.getMonth() + 1).padStart(2, '0')}-${String(minDateObj.getDate()).padStart(2, '0')}`;
+
       return (
         <WizardStep
-          description="Esta fecha se enviara con la solicitud del ahorro de temporada."
-          question="Cuando termina tu ahorro de temporada?"
+          description="Indica el día en el que deseas que se liquide tu ahorro."
+          question="¿En qué fecha deseas alcanzar tu meta?"
         >
           <Input
             error={firstFieldError(fieldErrors, 'fecha_fin')}
@@ -447,8 +577,23 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
             name="fecha_fin"
             onChange={handleChange}
             type="date"
+            min={minDateString}
             value={values.fecha_fin}
           />
+          {customPlanCalculation && customPlanCalculation.totalMonths > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <Alert type="info">
+                <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: '600' }}>
+                  Tasa asignada actual: {customPlanCalculation.assignedRate}% anual por {customPlanCalculation.totalMonths} meses
+                </h4>
+                {customPlanCalculation.gamification && (
+                  <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>
+                    {customPlanCalculation.gamification}
+                  </p>
+                )}
+              </Alert>
+            </div>
+          )}
         </WizardStep>
       );
     }
@@ -456,7 +601,7 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
     if (currentStep === summaryStep) {
       return (
         <WizardStep
-          description="Confirma la cuota y el monto inicial antes de continuar a Stripe."
+          description="Confirma la aportación antes de enviar tu solicitud."
           question="Revisa tu solicitud"
         >
           {renderSummary()}
@@ -504,10 +649,11 @@ function SavingsRequestForm({ plans = [], suggestedFrequency }) {
           </>
         )}
       >
+        {message && <div style={{ marginBottom: '15px' }}><Alert type="success">{message}</Alert></div>}
         {renderStep()}
       </GuidedRequestModal>
     </>
   );
-}
+});
 
 export default SavingsRequestForm;

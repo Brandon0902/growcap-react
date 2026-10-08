@@ -11,6 +11,9 @@ import ProfilePage from '../features/profile/pages/ProfilePage.jsx';
 import useGrowcapPageMotion from '../hooks/useGrowcapPageMotion.js';
 import ProtectedRoute from './ProtectedRoute.jsx';
 
+import ForgotPasswordPage from '../features/auth/pages/ForgotPasswordPage.jsx';
+import ResetPasswordPage from '../features/auth/pages/ResetPasswordPage.jsx';
+
 function NotFoundPage() {
   const pageRef = useRef(null);
   useGrowcapPageMotion(pageRef, { desktopScroll: false });
@@ -36,6 +39,8 @@ function AppRouter() {
     <Routes>
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>

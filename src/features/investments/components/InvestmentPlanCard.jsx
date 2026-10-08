@@ -88,7 +88,7 @@ function formatStatus(value) {
   return formatText(value);
 }
 
-function InvestmentPlanCard({ description, name, plan }) {
+function InvestmentPlanCard({ description, name, plan, onClick }) {
   const planName = formatText(name || getValue(plan, ['nombre', 'name', 'titulo', 'title', 'plan', 'tipo']), 'Plan de inversion');
   const planDescription = formatText(description || getValue(plan, ['descripcion', 'description', 'detalle', 'detalles']), 'Plan activo disponible para solicitud.');
   const rate = getValue(plan, ['porcentaje', 'porcentaje_1', 'tasa', 'rendimiento', 'interes']);
@@ -97,7 +97,18 @@ function InvestmentPlanCard({ description, name, plan }) {
   const status = getValue(plan, ['estado', 'estatus', 'status', 'activo', 'active']);
 
   return (
-    <article className="savings-plan-card motion-item motion-plan-card" tabIndex={0}>
+    <article 
+      className="savings-plan-card motion-item motion-plan-card" 
+      tabIndex={0}
+      onClick={() => onClick && onClick(plan)}
+      style={{ cursor: onClick ? 'pointer' : 'default' }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick && onClick(plan);
+        }
+      }}
+    >
       <div className="savings-plan-card-top">
         <span className="savings-plan-icon investment-plan-icon" aria-hidden="true">
           <ChartNoAxesColumnIncreasing size={22} />
