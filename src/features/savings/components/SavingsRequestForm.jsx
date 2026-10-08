@@ -9,13 +9,10 @@ import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import GuidedRequestModal from '../../../components/common/GuidedRequestModal.jsx';
 import Input from '../../../components/common/Input.jsx';
-import RequestStartCard from '../../../components/common/RequestStartCard.jsx';
 import WizardStep from '../../../components/common/WizardStep.jsx';
 import { createSavingsCheckout, createSavingsRequest } from '../services/savingsService.js';
 import { buildSavingsCheckoutPayload, buildSavingsRequestPayload, formatSavingsRequestError } from '../services/savingsRequest.js';
 import { getSavingsPlanPeriod } from '../services/savingsPlanDisplay.js';
-import { planDescriptions, generalNote } from './SavingsPlanCard.jsx';
-import { AlertCircle } from 'lucide-react';
 
 const initialValues = {
   ahorro_id: '',
@@ -443,7 +440,7 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
           style={{ marginTop: '4px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
         />
         <label htmlFor="accept-terms" style={{ cursor: 'pointer', fontSize: '0.85rem', color: '#cbd5e1', margin: 0, lineHeight: '1.4' }}>
-          <strong>Estoy de acuerdo</strong> con los parámetros definidos en mi solicitud y autorizo que el monto sea descontado periódicamente de mi nómina.
+          <strong>Autorizo el descuento</strong> periódico vía nómina conforme a las condiciones de este plan.
         </label>
       </div>
       {fieldErrors.aceptado && (
@@ -456,8 +453,8 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
     if (currentStep === 0) {
       return (
         <WizardStep
-          description="Selecciona el plan que mejor se adapte a tu estrategia. Te mostraremos los rendimientos proyectados para que tu dinero comience a trabajar por ti."
-          question="¿Cuál es tu próxima meta financiera?"
+          description="Elige el plan de ahorro."
+          question="Selecciona tu plan"
         >
           <div className="form-field">
             <label className="form-label" htmlFor="savings-plan">
@@ -492,26 +489,11 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
     }
 
     if (currentStep === 1) {
-      const planTitle = getPlanName(selectedPlan) || '';
-      const exactMatch = planDescriptions[planTitle];
-      const partialMatch = Object.entries(planDescriptions).find(([key]) => planTitle.toLowerCase().includes(key.toLowerCase()))?.[1];
-      const planExplanation = exactMatch || partialMatch || selectedPlan?.descripcion || '';
-      
-      const showGeneralNote = planTitle.toLowerCase() !== 'siempre disponible' && !selectedPlan?.permite_fecha_personalizada;
-
       return (
         <WizardStep
-          description="Define el monto de tu aportación. Este importe será descontado automáticamente de tu nómina según el periodo acordado."
-          question="¿Cuánto deseas aportar?"
+          description="Descuento automático vía nómina."
+          question="Monto de aportación"
         >
-          {planExplanation && (
-            <div style={{ marginBottom: '20px' }}>
-              <Alert type="info">
-                <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: '600' }}>Sobre este plan: {planTitle}</h4>
-                <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>{planExplanation}</p>
-              </Alert>
-            </div>
-          )}
           <Input
             error={firstFieldError(fieldErrors, 'cuota')}
             id="savings-fee"
@@ -528,31 +510,11 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
             <p className="guided-help">Mínimo del plan: {formatMoney(minFee)}</p>
           )}
           {salaryCapacity && salaryCapacity.salario_periodico > 0 && (
-            <div style={{ marginTop: '10px', padding: '10px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.84rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ color: '#64748b' }}>Límite máximo (50% de nómina):</span>
-                <strong style={{ color: '#0f172a' }}>{formatMoney(salaryCapacity.max_cuota_permitida)}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748b' }}>Capacidad disponible para este ahorro:</span>
-                <strong style={{ color: salaryCapacity.capacidad_disponible > 0 ? '#16a34a' : '#dc2626' }}>
-                  {formatMoney(salaryCapacity.capacidad_disponible)}</strong>
-              </div>
-              {salaryCapacity.cuota_comprometida > 0 && (
-                <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#64748b' }}>
-                  * Tienes {formatMoney(salaryCapacity.cuota_comprometida)} comprometido en otros planes activos.
-                </p>
-              )}
-            </div>
-          )}
-          {showGeneralNote && (
-            <div style={{ marginTop: '15px' }}>
-              <Alert type="warning">
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                  <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: '1.4' }}>{generalNote}</p>
-                </div>
-              </Alert>
+            <div style={{ marginTop: '10px', padding: '8px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#64748b' }}>Disponible (máx 50% nómina):</span>
+              <strong style={{ color: salaryCapacity.capacidad_disponible > 0 ? '#16a34a' : '#dc2626' }}>
+                {formatMoney(salaryCapacity.capacidad_disponible)}
+              </strong>
             </div>
           )}
         </WizardStep>
@@ -567,8 +529,8 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
 
       return (
         <WizardStep
-          description="Indica el día en el que deseas que se liquide tu ahorro."
-          question="¿En qué fecha deseas alcanzar tu meta?"
+          description="Día en que se liquidará tu ahorro."
+          question="Fecha de liquidación"
         >
           <Input
             error={firstFieldError(fieldErrors, 'fecha_fin')}
@@ -581,18 +543,9 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
             value={values.fecha_fin}
           />
           {customPlanCalculation && customPlanCalculation.totalMonths > 0 && (
-            <div style={{ marginTop: '20px' }}>
-              <Alert type="info">
-                <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: '600' }}>
-                  Tasa asignada actual: {customPlanCalculation.assignedRate}% anual por {customPlanCalculation.totalMonths} meses
-                </h4>
-                {customPlanCalculation.gamification && (
-                  <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>
-                    {customPlanCalculation.gamification}
-                  </p>
-                )}
-              </Alert>
-            </div>
+            <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: '#16a34a', fontWeight: 600 }}>
+              Tasa asignada: {customPlanCalculation.assignedRate}% anual ({customPlanCalculation.totalMonths} meses)
+            </p>
           )}
         </WizardStep>
       );
@@ -601,8 +554,8 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
     if (currentStep === summaryStep) {
       return (
         <WizardStep
-          description="Confirma la aportación antes de enviar tu solicitud."
-          question="Revisa tu solicitud"
+          description="Revisa los datos antes de enviar tu solicitud."
+          question="Confirmación"
         >
           {renderSummary()}
         </WizardStep>
@@ -613,19 +566,7 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
   };
 
   return (
-    <>
-      <RequestStartCard
-        disabled={plans.length === 0}
-        onStart={() => {
-          setMessage('');
-          setIsOpen(true);
-        }}
-        title="Solicitar ahorro"
-      >
-        {message && <Alert type="success">{message}</Alert>}
-      </RequestStartCard>
-
-      <GuidedRequestModal
+    <GuidedRequestModal
         error={error}
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
@@ -652,7 +593,6 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
         {message && <div style={{ marginBottom: '15px' }}><Alert type="success">{message}</Alert></div>}
         {renderStep()}
       </GuidedRequestModal>
-    </>
   );
 });
 

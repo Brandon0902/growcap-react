@@ -78,6 +78,15 @@ function InvestmentsPage() {
   }, [loadInvestmentsData]);
 
   useEffect(() => {
+    if (searchParams.get('view') === 'my-records' || searchParams.get('tab') === 'records') {
+      setIsRecordsOpen(true);
+      setTimeout(() => {
+        recordsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     const stripeReturn = parseStripeReturn(searchParams, 'inversion_id');
     const returnKey = searchParams.toString();
 

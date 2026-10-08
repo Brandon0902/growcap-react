@@ -9,7 +9,6 @@ import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import GuidedRequestModal from '../../../components/common/GuidedRequestModal.jsx';
 import Input from '../../../components/common/Input.jsx';
-import RequestStartCard from '../../../components/common/RequestStartCard.jsx';
 import WizardStep from '../../../components/common/WizardStep.jsx';
 import { createInvestmentCheckout, createInvestmentRequest } from '../services/investmentService.js';
 
@@ -370,8 +369,7 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
           <div className="guided-choice-grid">
             {[
               { value: 'saldo', title: 'Saldo disponible', description: 'Usar mi saldo en Growcap.' },
-              { value: 'stripe', title: 'Stripe', description: 'Pagar con tarjeta o metodo externo.' },
-              { value: 'later', title: 'Definir despues', description: 'Enviar la solicitud sin pago ahora.' },
+              { value: 'later', title: 'Definir después', description: 'Enviar la solicitud sin pago ahora.' },
             ].map((option) => (
               <label className={values.pay_method === option.value ? 'guided-choice selected' : 'guided-choice'} key={option.value}>
                 <input
@@ -402,45 +400,33 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
   };
 
   return (
-    <>
-      <RequestStartCard
-        disabled={plans.length === 0}
-        onStart={() => {
-          setMessage('');
-          setIsOpen(true);
-        }}
-        title="Solicitar inversion"
-      >
-        {message && <Alert type="success">{message}</Alert>}
-      </RequestStartCard>
-
-      <GuidedRequestModal
-        error={error}
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        stepIndex={currentStep}
-        title="Solicitud de inversion"
-        totalSteps={totalSteps}
-        footer={(
-          <>
-            <Button className="button-secondary guided-action" disabled={currentStep === 0 || isSubmitting} onClick={goBack}>
-              Atras
+    <GuidedRequestModal
+      error={error}
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      stepIndex={currentStep}
+      title="Solicitud de inversión"
+      totalSteps={totalSteps}
+      footer={(
+        <>
+          <Button className="button-secondary guided-action" disabled={currentStep === 0 || isSubmitting} onClick={goBack}>
+            Atrás
+          </Button>
+          {currentStep === totalSteps - 1 ? (
+            <Button className="guided-action" disabled={isSubmitting} onClick={handleSubmit}>
+              {isSubmitting ? 'Enviando...' : 'Enviar solicitud'}
             </Button>
-            {currentStep === totalSteps - 1 ? (
-              <Button className="guided-action" disabled={isSubmitting} onClick={handleSubmit}>
-                {isSubmitting ? 'Enviando...' : 'Enviar solicitud'}
-              </Button>
-            ) : (
-              <Button className="guided-action" onClick={goNext}>
-                Siguiente
-              </Button>
-            )}
-          </>
-        )}
-      >
-        {renderStep()}
-      </GuidedRequestModal>
-    </>
+          ) : (
+            <Button className="guided-action" onClick={goNext}>
+              Siguiente
+            </Button>
+          )}
+        </>
+      )}
+    >
+      {message && <div style={{ marginBottom: '15px' }}><Alert type="success">{message}</Alert></div>}
+      {renderStep()}
+    </GuidedRequestModal>
   );
 });
 

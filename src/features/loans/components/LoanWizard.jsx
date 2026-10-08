@@ -5,7 +5,6 @@ import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import GuidedRequestModal from '../../../components/common/GuidedRequestModal.jsx';
 import Input from '../../../components/common/Input.jsx';
-import RequestStartCard from '../../../components/common/RequestStartCard.jsx';
 import WizardStep from '../../../components/common/WizardStep.jsx';
 import { guarantorDocumentFields } from '../constants/loanDocuments.js';
 import { createLoanRequest, simulateLoanRequest, validateLoanAvalToken } from '../services/loanService.js';
@@ -1004,20 +1003,7 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
   };
 
   return (
-    <>
-      <RequestStartCard
-        disabled={plans.length === 0}
-        onStart={() => {
-          resetWizard();
-          setMessage('');
-          setIsOpen(true);
-        }}
-        title="Solicitar préstamo"
-      >
-        {message && <Alert type="success">{message}</Alert>}
-      </RequestStartCard>
-
-      <GuidedRequestModal
+    <GuidedRequestModal
         error={error}
         isOpen={isOpen}
         onClose={() => {
@@ -1067,7 +1053,6 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
       >
         {renderStep()}
       </GuidedRequestModal>
-    </>
   );
 });
 

@@ -1,4 +1,4 @@
-import { AlertCircle, Banknote, ChevronUp, Eye, HandCoins, RefreshCw, Lock, ShieldCheck, XCircle } from 'lucide-react';
+import { AlertCircle, ArrowRight, Banknote, ChevronUp, Eye, HandCoins, RefreshCw, Lock, ShieldCheck, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { normalizeApiError } from '../../../api/apiUtils.js';
@@ -144,7 +144,7 @@ function LoanPlanCard({ index, plan, onClick }) {
       className={`savings-plan-card motion-item motion-plan-card ${isLocked ? 'locked' : ''}`} 
       tabIndex={0}
       onClick={() => onClick && onClick(plan)}
-      style={{ cursor: onClick ? 'pointer' : 'default', position: 'relative', opacity: isLocked ? 0.75 : 1 }}
+      style={{ cursor: onClick ? 'pointer' : 'default', position: 'relative' }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -153,17 +153,18 @@ function LoanPlanCard({ index, plan, onClick }) {
       }}
     >
       {isLocked && (
-        <div style={{ position: 'absolute', top: 16, right: 16, color: '#9ca3af' }}>
-          <Lock size={20} />
+        <div style={{ position: 'absolute', top: 16, right: 16, color: '#d97706', background: '#fef3c7', padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Lock size={14} />
+          <span>Requisitos</span>
         </div>
       )}
       <div className="savings-plan-card-top">
-        <span className="savings-plan-icon loan-card-icon" aria-hidden="true">
+        <span className="savings-plan-icon loan-card-icon" aria-hidden="true" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#ffffff', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)' }}>
           <HandCoins size={22} />
         </span>
         <div>
-          <h3>{name}</h3>
-          <p>{description}</p>
+          <h3 style={{ color: '#0f172a', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.01em', marginBottom: '4px' }}>{name}</h3>
+          <p style={{ color: '#475569', fontSize: '0.875rem', lineHeight: '1.4' }}>{description}</p>
         </div>
       </div>
 
@@ -183,6 +184,11 @@ function LoanPlanCard({ index, plan, onClick }) {
           <small>{abonosStr}</small>
           <strong style={{ color: '#059669' }}>{formatAmount(cuotaEjemplo)}</strong>
         </span>
+      </div>
+
+      <div className="plan-card-action">
+        <span>{isLocked ? 'Ver requisitos' : 'Solicitar préstamo'}</span>
+        <ArrowRight size={16} className="action-arrow" />
       </div>
     </article>
   );
@@ -251,6 +257,15 @@ function LoansPage() {
   useEffect(() => {
     loadLoansData();
   }, [loadLoansData]);
+
+  useEffect(() => {
+    if (searchParams.get('view') === 'my-records' || searchParams.get('tab') === 'records') {
+      setIsRecordsOpen(true);
+      setTimeout(() => {
+        recordsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    }
+  }, [searchParams]);
 
   // Mercado Pago Return Handler
   useEffect(() => {

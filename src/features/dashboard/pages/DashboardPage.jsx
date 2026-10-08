@@ -244,6 +244,8 @@ function DashboardPage() {
           label="Ahorro"
           status={savingsBalance === null ? 'Sin dato' : 'Saldo real'}
           value={isLoadingBalance ? 'Cargando...' : formatCurrency(savingsBalance)}
+          to="/ahorro?view=my-records"
+          actionLabel="Mis Ahorros"
         />
         <SummaryCard
           helper="Saldo real"
@@ -251,6 +253,8 @@ function DashboardPage() {
           label="Inversion"
           status={investmentBalance === null ? 'Sin dato' : 'Saldo real'}
           value={isLoadingBalance ? 'Cargando...' : formatCurrency(investmentBalance)}
+          to="/inversion?view=my-records"
+          actionLabel="Mis Inversiones"
         />
         <SummaryCard
           helper="Seguimiento de prestamos"
@@ -258,6 +262,8 @@ function DashboardPage() {
           label="Prestamos"
           status={loansBalance === null ? 'Sin prestamos activos' : 'Saldo real'}
           value={isLoadingBalance ? 'Cargando...' : (loansBalance === null ? 'No disponible' : formatCurrency(loansBalance))}
+          to="/prestamos?view=my-records"
+          actionLabel="Mis Préstamos"
         />
       </section>
 

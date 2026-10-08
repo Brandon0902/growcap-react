@@ -1,4 +1,5 @@
 import {
+  ArrowRight,
   CalendarClock,
   ChartNoAxesColumnIncreasing,
   Coins,
@@ -468,7 +469,12 @@ function SavingsPlanCard({ plan, index, onClick, disabled = false }) {
           <Lock size={13} aria-hidden="true" />
           <span>Ya estás ahorrando en este plan</span>
         </div>
-      ) : null}
+      ) : (
+        <div className="plan-card-action">
+          <span>Configurar ahorro</span>
+          <ArrowRight size={15} className="action-arrow" />
+        </div>
+      )}
     </article>
   );
 }

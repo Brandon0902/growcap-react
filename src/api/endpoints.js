@@ -64,4 +64,9 @@ export const ENDPOINTS = {
     movements: (id) => `/inversiones/${id}/movimientos`,
     statement: (id = null) => (id && id !== 'ALL' ? `/inversiones/${id}/estado-cuenta` : '/inversiones/estado-cuenta'),
   },
+  notifications: {
+    base: '/notificaciones',
+    markRead: (id) => `/notificaciones/${id}/leida`,
+    markAllRead: '/notificaciones/marcar-todas',
+  },
 };

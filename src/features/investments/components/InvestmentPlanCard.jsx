@@ -1,4 +1,4 @@
-import { ChartNoAxesColumnIncreasing } from 'lucide-react';
+import { ArrowRight, ChartNoAxesColumnIncreasing } from 'lucide-react';
 
 function getValue(item, fields) {
   const field = fields.find((key) => item?.[key] !== undefined && item?.[key] !== null && item?.[key] !== '');
@@ -133,6 +133,11 @@ function InvestmentPlanCard({ description, name, plan, onClick }) {
           <small>{term !== null ? 'Plazo' : 'Estado'}</small>
           <strong>{term !== null ? formatText(term) : formatStatus(status)}</strong>
         </span>
+      </div>
+
+      <div className="plan-card-action">
+        <span>Invertir en este plan</span>
+        <ArrowRight size={15} className="action-arrow" />
       </div>
     </article>
   );

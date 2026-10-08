@@ -234,227 +234,245 @@ function SavingsProjectionModal({
           flexDirection: 'column',
         }}
       >
-        {/* Header Minimalista */}
+        {/* Header sobrio y conciso per GEMINI.md */}
         <header
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '16px 20px',
+            padding: '14px 18px',
             borderBottom: '1px solid #f1f5f9',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <TrendingUp size={18} color="var(--color-primary)" aria-hidden="true" />
-            <h2 style={{ margin: 0, fontSize: '1.05rem', color: '#0f172a', fontWeight: 700 }}>
-              {viewMode === 'plans' ? 'Simulador de Planes de Ahorro' : 'Proyección de Ahorro'}
+            <h2 style={{ margin: 0, fontSize: '1rem', color: '#0f172a', fontWeight: 700 }}>
+              Simulador de Ahorro
             </h2>
           </div>
-          <Button
-            aria-label="Cerrar proyección"
-            className="button-secondary"
-            style={{ minHeight: '30px', padding: '5px', borderRadius: '6px' }}
+          <button
+            aria-label="Cerrar simulador"
+            type="button"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: '6px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              color: '#64748b',
+              display: 'flex',
+              alignItems: 'center',
+            }}
             onClick={onClose}
           >
-            <X size={16} aria-hidden="true" />
-          </Button>
+            <X size={18} aria-hidden="true" />
+          </button>
         </header>
 
-        {/* Body */}
-        <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Selector de categoría (si el usuario tiene ahorros activos Y además hay planes disponibles) */}
+        {/* Contenido Principal Simplificado */}
+        <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Selector de modo si tiene ambos */}
           {hasSavings && hasPlans && (
             <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '3px', gap: '2px' }}>
               <button
                 type="button"
                 style={{
                   flex: 1,
-                  padding: '5px 10px',
+                  padding: '6px 12px',
                   borderRadius: '6px',
                   border: 'none',
-                  fontSize: '0.74rem',
-                  fontWeight: viewMode === 'savings' ? 700 : 500,
-                  background: viewMode === 'savings' ? '#ffffff' : 'transparent',
-                  color: viewMode === 'savings' ? 'var(--color-primary)' : '#64748b',
-                  boxShadow: viewMode === 'savings' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-                onClick={() => setViewMode('savings')}
-              >
-                Mis Ahorros ({activeSavings.length})
-              </button>
-              <button
-                type="button"
-                style={{
-                  flex: 1,
-                  padding: '5px 10px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  fontSize: '0.74rem',
+                  fontSize: '0.8rem',
                   fontWeight: viewMode === 'plans' ? 700 : 500,
                   background: viewMode === 'plans' ? '#ffffff' : 'transparent',
                   color: viewMode === 'plans' ? 'var(--color-primary)' : '#64748b',
                   boxShadow: viewMode === 'plans' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease',
                 }}
                 onClick={() => setViewMode('plans')}
               >
-                Explorar Planes ({activePlans.length})
+                Explorar Planes
               </button>
-            </div>
-          )}
-
-          {/* Sub-selector de Cuenta o Plan */}
-          {viewMode === 'savings' && activeSavings.length > 1 && (
-            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
               <button
                 type="button"
                 style={{
-                  fontSize: '0.73rem',
-                  padding: '4px 10px',
-                  borderRadius: '16px',
-                  border: '1px solid',
-                  borderColor: selectedSavingsId === 'ALL' ? 'var(--color-primary)' : '#e2e8f0',
-                  background: selectedSavingsId === 'ALL' ? 'rgba(147, 51, 234, 0.08)' : '#ffffff',
-                  color: selectedSavingsId === 'ALL' ? 'var(--color-primary)' : '#64748b',
-                  fontWeight: selectedSavingsId === 'ALL' ? 600 : 400,
+                  flex: 1,
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  fontSize: '0.8rem',
+                  fontWeight: viewMode === 'savings' ? 700 : 500,
+                  background: viewMode === 'savings' ? '#ffffff' : 'transparent',
+                  color: viewMode === 'savings' ? 'var(--color-primary)' : '#64748b',
+                  boxShadow: viewMode === 'savings' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
                   cursor: 'pointer',
-                  whiteSpace: 'nowrap',
                 }}
-                onClick={() => setSelectedSavingsId('ALL')}
+                onClick={() => setViewMode('savings')}
               >
-                Consolidado ({activeSavings.length})
+                Mis Ahorros ({activeSavings.length})
               </button>
-              {activeSavings.map((s) => {
-                const isSelected = String(s.id) === String(selectedSavingsId);
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    style={{
-                      fontSize: '0.73rem',
-                      padding: '4px 10px',
-                      borderRadius: '16px',
-                      border: '1px solid',
-                      borderColor: isSelected ? 'var(--color-primary)' : '#e2e8f0',
-                      background: isSelected ? 'rgba(147, 51, 234, 0.08)' : '#ffffff',
-                      color: isSelected ? 'var(--color-primary)' : '#64748b',
-                      fontWeight: isSelected ? 600 : 400,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                    }}
-                    onClick={() => setSelectedSavingsId(String(s.id))}
-                  >
-                    {getTitle(s)}
-                  </button>
-                );
-              })}
             </div>
           )}
 
-          {/* Selector de Planes de Ahorro */}
-          {viewMode === 'plans' && activePlans.length > 1 && (
-            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
-              {activePlans.map((p) => {
-                const isSelected = String(p.id) === String(selectedPlanId);
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    style={{
-                      fontSize: '0.73rem',
-                      padding: '4px 10px',
-                      borderRadius: '16px',
-                      border: '1px solid',
-                      borderColor: isSelected ? 'var(--color-primary)' : '#e2e8f0',
-                      background: isSelected ? 'rgba(147, 51, 234, 0.08)' : '#ffffff',
-                      color: isSelected ? 'var(--color-primary)' : '#64748b',
-                      fontWeight: isSelected ? 600 : 400,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                    }}
-                    onClick={() => setSelectedPlanId(String(p.id))}
-                  >
-                    {getTitle(p)}
-                  </button>
-                );
-              })}
+          {/* 1. Selector de Plan o Cuenta */}
+          {viewMode === 'plans' ? (
+            <div>
+              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                Plan de ahorro:
+              </label>
+              <select
+                className="input"
+                value={selectedPlanId}
+                onChange={(e) => setSelectedPlanId(e.target.value)}
+                style={{ width: '100%', fontSize: '0.875rem', padding: '8px 12px', borderRadius: '8px' }}
+              >
+                {activePlans.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {getTitle(p)} ({p.rendimiento || p.porcentaje || p.tasa || '0'}% anual)
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
-
-          {/* Cifra Principal */}
-          <div style={{ textAlign: 'center', padding: '4px 0' }}>
-            {currentData.isConsolidated ? (
-              <span style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-                Meta Global Estimada
-              </span>
-            ) : currentData.isPermanente ? (
-              <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-                  Estimado a {horizonteMeses} {horizonteMeses === 1 ? 'mes' : 'meses'} {currentData.fechaFin ? `• ${formatDate(currentData.fechaFin)}` : ''}
-                </span>
-                {/* Selector Interactivo de Plazo */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {[3, 6, 12, 24, 36].map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      style={{
-                        fontSize: '0.67rem',
-                        padding: '2px 8px',
-                        borderRadius: '12px',
-                        border: '1px solid',
-                        borderColor: horizonteMeses === m ? 'var(--color-primary)' : '#e2e8f0',
-                        background: horizonteMeses === m ? 'rgba(147, 51, 234, 0.08)' : '#ffffff',
-                        color: horizonteMeses === m ? 'var(--color-primary)' : '#64748b',
-                        fontWeight: horizonteMeses === m ? 700 : 500,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
-                      onClick={() => setHorizonteMeses(m)}
-                    >
-                      {m < 12 ? `${m}m` : `${m / 12} ${m / 12 === 1 ? 'año' : 'años'}`}
-                    </button>
+          ) : (
+            activeSavings.length > 1 && (
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                  Cuenta a proyectar:
+                </label>
+                <select
+                  className="input"
+                  value={selectedSavingsId}
+                  onChange={(e) => setSelectedSavingsId(e.target.value)}
+                  style={{ width: '100%', fontSize: '0.875rem', padding: '8px 12px', borderRadius: '8px' }}
+                >
+                  <option value="ALL">Consolidado ({activeSavings.length} cuentas)</option>
+                  {activeSavings.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {getTitle(s)} - Actual: {formatMoney(s.total_acumulado || s.monto_acumulado || 0)}
+                    </option>
                   ))}
-                  {/* Entrada numérica de meses libre */}
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', marginLeft: '3px' }}>
-                    <input
-                      type="number"
-                      min="1"
-                      max="120"
-                      value={horizonteMeses}
-                      onChange={(e) => setHorizonteMeses(Math.max(1, Math.min(120, Number(e.target.value))))}
-                      style={{
-                        width: '42px',
-                        padding: '2px 3px',
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        borderRadius: '6px',
-                        border: '1px solid #cbd5e1',
-                        textAlign: 'center',
-                        color: '#0f172a',
-                        background: '#ffffff',
-                      }}
-                      title="Personalizar meses de proyección"
-                    />
-                    <span style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600 }}>m</span>
-                  </div>
-                </div>
+                </select>
               </div>
-            ) : (
-              <span style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-                Meta al Vencimiento ({formatDate(currentData.fechaFin)})
-              </span>
-            )}
+            )
+          )}
 
+          {/* 2. Cuota periódica */}
+          {!currentData.isConsolidated && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>
+                  Aportación por {(currentData.frecuenciaLabel || suggestedFrequency || 'período').toLowerCase()}:
+                </label>
+                {salaryCapacity?.max_cuota_permitida && Number(simulatedCuota) > salaryCapacity.max_cuota_permitida && (
+                  <span style={{ fontSize: '0.72rem', color: '#dc2626', fontWeight: 600 }}>
+                    Excede máx ${salaryCapacity.max_cuota_permitida}
+                  </span>
+                )}
+              </div>
+
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <span style={{ position: 'absolute', left: '12px', fontSize: '1.05rem', color: '#64748b', fontWeight: 600 }}>
+                  $
+                </span>
+                <input
+                  type="number"
+                  min="50"
+                  step="50"
+                  value={simulatedCuota}
+                  onChange={(e) => setSimulatedCuota(Math.max(0, Number(e.target.value)))}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px 8px 28px',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    color: '#0f172a',
+                  }}
+                />
+              </div>
+
+              {/* Botones de sugerencia rápida */}
+              <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                {[100, 200, 500, 1000].map((pill) => (
+                  <button
+                    key={pill}
+                    type="button"
+                    style={{
+                      flex: 1,
+                      padding: '4px 6px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      borderRadius: '6px',
+                      border: '1px solid #e2e8f0',
+                      background: simulatedCuota === pill ? 'var(--color-primary)' : '#f8fafc',
+                      color: simulatedCuota === pill ? '#ffffff' : '#475569',
+                      cursor: 'pointer',
+                      transition: 'all 0.1s ease',
+                    }}
+                    onClick={() => setSimulatedCuota(pill)}
+                  >
+                    ${pill}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 3. Selector de Plazo (si es plan permanente) */}
+          {currentData.isPermanente && (
+            <div>
+              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                Plazo estimado:
+              </label>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {[
+                  { m: 6, label: '6 meses' },
+                  { m: 12, label: '1 año' },
+                  { m: 24, label: '2 años' },
+                ].map((item) => (
+                  <button
+                    key={item.m}
+                    type="button"
+                    style={{
+                      flex: 1,
+                      padding: '6px 8px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      borderRadius: '6px',
+                      border: '1px solid',
+                      borderColor: horizonteMeses === item.m ? 'var(--color-primary)' : '#e2e8f0',
+                      background: horizonteMeses === item.m ? 'rgba(147, 51, 234, 0.08)' : '#f8fafc',
+                      color: horizonteMeses === item.m ? 'var(--color-primary)' : '#475569',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setHorizonteMeses(item.m)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 4. Tarjeta Hero con el Resultado Proyectado */}
+          <div
+            style={{
+              background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
+              border: '1px solid #bbf7d0',
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}
+          >
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              {currentData.fechaFin ? `Total a recibir (${formatDate(currentData.fechaFin)})` : 'Total proyectado a recibir'}
+            </span>
             <strong
               style={{
-                fontSize: '2.1rem',
-                color: '#0f172a',
-                fontWeight: 800,
                 display: 'block',
+                fontSize: '1.9rem',
+                color: '#14532d',
+                fontWeight: 800,
                 marginTop: '4px',
                 fontVariantNumeric: 'tabular-nums',
                 letterSpacing: '-0.02em',
@@ -462,192 +480,61 @@ function SavingsProjectionModal({
             >
               {formatMoney(currentData.montoProyectado)}
             </strong>
-            <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#64748b' }}>
-              {currentData.isConsolidated
-                ? `Proyección acumulada de tus ${currentData.totalCuentas} cuentas de ahorro activas.`
-                : `Aportando ${formatMoney(currentData.cuota)} ${(currentData.frecuenciaLabel || '').toLowerCase()} al ${currentData.tasaAnualPct}% anual.`}
-            </p>
-          </div>
 
-          {/* Simulación Sutil de Cuota */}
-          {!currentData.isConsolidated && (
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '9px 12px',
-                background: '#faf5ff',
-                borderRadius: '8px',
-                border: '1px solid #f3e8ff',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
                 gap: '8px',
-                flexWrap: 'wrap',
+                marginTop: '12px',
+                paddingTop: '10px',
+                borderTop: '1px solid #bbf7d0',
+                fontSize: '0.8rem',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.76rem', color: '#6b21a8', fontWeight: 600 }}>
-                  Simular cuota:
-                </span>
-                <div style={{ display: 'inline-flex', alignItems: 'center', position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '8px', fontSize: '0.78rem', color: '#9333ea', fontWeight: 600 }}>
-                    $
-                  </span>
-                  <input
-                    type="number"
-                    min="50"
-                    max={salaryCapacity?.max_cuota_permitida ? salaryCapacity.max_cuota_permitida : undefined}
-                    step="50"
-                    value={simulatedCuota}
-                    onChange={(e) => setSimulatedCuota(Math.max(0, Number(e.target.value)))}
-                    style={{
-                      width: '84px',
-                      padding: '3px 6px 3px 18px',
-                      fontSize: '0.82rem',
-                      fontWeight: 700,
-                      borderRadius: '6px',
-                      border: '1px solid #d8b4fe',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      textAlign: 'right',
-                      fontVariantNumeric: 'tabular-nums',
-                    }}
-                  />
-                </div>
-                <span style={{ fontSize: '0.72rem', color: '#7e22ce' }}>
-                  /{(currentData.frecuenciaLabel || '').toLowerCase()}
-                </span>
-                {salaryCapacity?.max_cuota_permitida && Number(simulatedCuota) > salaryCapacity.max_cuota_permitida && (
-                  <span style={{ fontSize: '0.72rem', color: '#dc2626', fontWeight: 600 }}>
-                    (Excede 50% nómina: máx ${salaryCapacity.max_cuota_permitida})
-                  </span>
-                )}
+              <div style={{ textAlign: 'left' }}>
+                <span style={{ display: 'block', fontSize: '0.7rem', color: '#166534' }}>Tu aportación</span>
+                <strong style={{ color: '#0f172a', fontWeight: 700 }}>
+                  {formatMoney(currentData.montoActual + currentData.aportacionesFuturas)}
+                </strong>
               </div>
-
-              {/* Botón Aplicar cuota en modo 'savings' */}
-              {isCuotaModified && onApplyCuota && (
-                <Button
-                  className="button-secondary icon-button"
-                  style={{
-                    fontSize: '0.74rem',
-                    padding: '4px 10px',
-                    height: '28px',
-                    minHeight: '28px',
-                    background: 'var(--color-primary)',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontWeight: 600,
-                  }}
-                  onClick={() => {
-                    onApplyCuota(currentData.item, simulatedCuota);
-                    onClose();
-                  }}
-                  title="Aplicar esta nueva cuota de nómina"
-                >
-                  Aplicar cuota
-                  <ArrowRight size={13} aria-hidden="true" style={{ marginLeft: '4px' }} />
-                </Button>
-              )}
-
-              {/* En modo 'plans': Botón Elegir este plan */}
-              {currentData.isPlanCatalog && onSelectPlan && (
-                <Button
-                  className="button-secondary icon-button"
-                  style={{
-                    fontSize: '0.74rem',
-                    padding: '4px 10px',
-                    height: '28px',
-                    minHeight: '28px',
-                    background: 'var(--color-primary)',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontWeight: 600,
-                  }}
-                  onClick={() => {
-                    onSelectPlan(currentData.plan, simulatedCuota);
-                    onClose();
-                  }}
-                  title="Comenzar solicitud con este plan y cuota"
-                >
-                  Elegir plan
-                  <ArrowRight size={13} aria-hidden="true" style={{ marginLeft: '4px' }} />
-                </Button>
-              )}
-            </div>
-          )}
-
-          {/* Barra de Progreso Fina */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#64748b', marginBottom: '5px' }}>
-              <span>{currentData.isPlanCatalog ? 'Meta de ahorro' : 'Avance del plazo'}</span>
-              <strong style={{ color: 'var(--color-primary)' }}>
-                {currentData.isPlanCatalog ? '100% al término' : `${currentData.progressPct}%`}
-              </strong>
-            </div>
-            <div style={{ width: '100%', height: '6px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
-              <div
-                style={{
-                  width: currentData.isPlanCatalog ? '100%' : `${currentData.progressPct}%`,
-                  height: '100%',
-                  background: 'linear-gradient(90deg, var(--color-primary) 0%, #16a34a 100%)',
-                  borderRadius: '4px',
-                  transition: 'width 0.35s ease',
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Desglose Contable Minimalista */}
-          <div
-            style={{
-              background: '#f8fafc',
-              border: '1px solid #f1f5f9',
-              borderRadius: '10px',
-              padding: '12px 14px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-              fontSize: '0.8rem',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b' }}>
-              <span>{currentData.isPlanCatalog ? 'Saldo inicial' : 'Ahorrado a la fecha'}</span>
-              <strong style={{ color: '#0f172a' }}>{formatMoney(currentData.montoActual)}</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b' }}>
-              <span>
-                {currentData.isPlanCatalog ? 'Total que aportarás' : 'Aportaciones de nómina restantes'}
-                {!currentData.isConsolidated && currentData.periodosRestantes !== undefined ? (
-                  ` (${currentData.periodosRestantes} ${(currentData.frecuenciaLabel || 'período').toLowerCase()}s)`
-                ) : ''}
-              </span>
-              <strong style={{ color: 'var(--color-primary)' }}>{formatMoney(currentData.aportacionesFuturas)}</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', paddingTop: '4px', borderTop: '1px solid #e2e8f0' }}>
-              <span>Rendimiento estimado a ganar</span>
-              <strong style={{ color: '#16a34a' }}>+{formatMoney(currentData.rendimientosProyectados)}</strong>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ display: 'block', fontSize: '0.7rem', color: '#166534' }}>Ganancia estimada</span>
+                <strong style={{ color: '#15803d', fontWeight: 800 }}>
+                  +{formatMoney(currentData.rendimientosProyectados)}
+                </strong>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer con llamada a la acción directa */}
         <footer
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '12px 20px',
+            padding: '12px 18px',
             borderTop: '1px solid #f1f5f9',
             background: '#fafafa',
+            gap: '10px',
           }}
         >
-          {currentData.isPlanCatalog && onSelectPlan ? (
+          <Button
+            type="button"
+            className="button-secondary"
+            style={{ fontSize: '0.8rem', padding: '6px 14px' }}
+            onClick={onClose}
+          >
+            Cerrar
+          </Button>
+
+          {viewMode === 'plans' && onSelectPlan ? (
             <Button
               type="button"
               style={{
-                fontSize: '0.78rem',
-                padding: '6px 14px',
+                fontSize: '0.8rem',
+                padding: '6px 16px',
                 background: 'var(--color-primary)',
                 color: '#ffffff',
                 fontWeight: 600,
@@ -662,20 +549,31 @@ function SavingsProjectionModal({
               }}
             >
               <Sparkles size={14} aria-hidden="true" />
-              Comenzar Ahorro
+              Solicitar este ahorro
             </Button>
-          ) : (
-            <div />
-          )}
-
-          <Button
-            type="button"
-            className="button-secondary"
-            style={{ fontSize: '0.78rem', padding: '6px 16px' }}
-            onClick={onClose}
-          >
-            {currentData.isPlanCatalog ? 'Cerrar' : 'Entendido'}
-          </Button>
+          ) : isCuotaModified && onApplyCuota ? (
+            <Button
+              type="button"
+              style={{
+                fontSize: '0.8rem',
+                padding: '6px 16px',
+                background: 'var(--color-primary)',
+                color: '#ffffff',
+                fontWeight: 600,
+                borderRadius: '6px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+              onClick={() => {
+                onApplyCuota(currentData.item, simulatedCuota);
+                onClose();
+              }}
+            >
+              Actualizar cuota
+              <ArrowRight size={14} aria-hidden="true" />
+            </Button>
+          ) : null}
         </footer>
       </section>
     </div>

@@ -1034,6 +1034,47 @@ h3 {
   margin-top: auto;
 }
 
+.plan-card-action {
+  align-items: center;
+  border-top: 1px dashed rgba(147, 51, 234, 0.2);
+  color: var(--color-primary);
+  display: flex;
+  font-size: 0.8rem;
+  font-weight: 700;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 10px;
+  transition: all 180ms ease;
+  width: 100%;
+}
+
+.plan-card-action .action-arrow {
+  color: var(--color-primary);
+  transition: transform 200ms ease;
+}
+
+.savings-plan-card:hover .plan-card-action .action-arrow,
+.savings-plan-card:focus-visible .plan-card-action .action-arrow {
+  transform: translateX(5px);
+}
+
+.summary-card-interactive {
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.summary-card-interactive:hover {
+  border-color: rgba(147, 51, 234, 0.35);
+  box-shadow: 0 12px 30px rgba(107, 33, 168, 0.12);
+  transform: translateY(-2px);
+}
+
+.summary-card-interactive:hover .summary-card-nav-badge {
+  background: rgba(147, 51, 234, 0.16) !important;
+  color: var(--purple-950) !important;
+}
+
+
 .savings-plan-tags span {
   background: #FFFBEB;
   border: 1px solid rgba(250, 204, 21, 0.45);

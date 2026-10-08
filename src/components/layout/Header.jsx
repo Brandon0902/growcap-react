@@ -5,6 +5,7 @@ import logoGrowcap from '../../assets/rombo_blanco.png';
 import useAuth from '../../features/auth/hooks/useAuth.js';
 import { getUserDisplayName, getUserInitials } from '../../utils/userFormatting.js';
 import ChangePasswordModal from '../../features/profile/components/ChangePasswordModal.jsx';
+import NotificationBell from './NotificationBell.jsx';
 
 function Header() {
   const navigate = useNavigate();
@@ -73,101 +74,105 @@ function Header() {
         </div>
       </div>
 
-      <div className="header-user-menu" ref={menuRef}>
-        <button
-          aria-expanded={isMenuOpen}
-          aria-haspopup="true"
-          aria-label={`Menú de usuario para ${displayName}`}
-          className={`user-avatar-trigger ${isMenuOpen ? 'is-active' : ''}`}
-          onClick={() => setIsMenuOpen((prev) => !prev)}
-          type="button"
-        >
-          <div className="user-avatar-badge" aria-hidden="true">
-            {initials}
-          </div>
-          <div className="user-avatar-meta">
-            <span className="user-avatar-name">{displayName}</span>
-            <span className="user-avatar-role">Mi cuenta</span>
-          </div>
-          <ChevronDown
-            aria-hidden="true"
-            className={`user-avatar-chevron ${isMenuOpen ? 'is-open' : ''}`}
-            size={16}
-          />
-        </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <NotificationBell />
 
-        {isMenuOpen && (
-          <div aria-label="Opciones de usuario" className="header-dropdown-menu" role="menu">
-            <div className="dropdown-user-header">
-              <div className="dropdown-user-avatar" aria-hidden="true">
-                {initials}
-              </div>
-              <div className="dropdown-user-meta">
-                <span className="dropdown-user-name">{displayName}</span>
-                <span className="dropdown-user-email">{user?.email || 'Cuenta activa'}</span>
-              </div>
+        <div className="header-user-menu" ref={menuRef}>
+          <button
+            aria-expanded={isMenuOpen}
+            aria-haspopup="true"
+            aria-label={`Menú de usuario para ${displayName}`}
+            className={`user-avatar-trigger ${isMenuOpen ? 'is-active' : ''}`}
+            onClick={() => setIsMenuOpen((prev) => !prev)}
+            type="button"
+          >
+            <div className="user-avatar-badge" aria-hidden="true">
+              {initials}
             </div>
+            <div className="user-avatar-meta">
+              <span className="user-avatar-name">{displayName}</span>
+              <span className="user-avatar-role">Mi cuenta</span>
+            </div>
+            <ChevronDown
+              aria-hidden="true"
+              className={`user-avatar-chevron ${isMenuOpen ? 'is-open' : ''}`}
+              size={16}
+            />
+          </button>
 
-            <div className="dropdown-divider" role="separator" />
+          {isMenuOpen && (
+            <div aria-label="Opciones de usuario" className="header-dropdown-menu" role="menu">
+              <div className="dropdown-user-header">
+                <div className="dropdown-user-avatar" aria-hidden="true">
+                  {initials}
+                </div>
+                <div className="dropdown-user-meta">
+                  <span className="dropdown-user-name">{displayName}</span>
+                  <span className="dropdown-user-email">{user?.email || 'Cuenta activa'}</span>
+                </div>
+              </div>
 
-            <button
-              className="dropdown-item"
-              onClick={() => {
-                setIsMenuOpen(false);
-                navigate('/perfil');
-              }}
-              role="menuitem"
-              type="button"
-            >
-              <span className="dropdown-item-icon" aria-hidden="true">
-                <User size={18} />
-              </span>
-              <span className="dropdown-item-content">
-                <strong>Ver perfil</strong>
-                <small>Información personal y bancaria</small>
-              </span>
-            </button>
+              <div className="dropdown-divider" role="separator" />
 
-            <button
-              className="dropdown-item"
-              onClick={() => {
-                setIsMenuOpen(false);
-                setIsPasswordModalOpen(true);
-              }}
-              role="menuitem"
-              type="button"
-            >
-              <span className="dropdown-item-icon" aria-hidden="true">
-                <KeyRound size={18} />
-              </span>
-              <span className="dropdown-item-content">
-                <strong>Cambiar contraseña</strong>
-                <small>Seguridad y clave de acceso</small>
-              </span>
-            </button>
+              <button
+                className="dropdown-item"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  navigate('/perfil');
+                }}
+                role="menuitem"
+                type="button"
+              >
+                <span className="dropdown-item-icon" aria-hidden="true">
+                  <User size={18} />
+                </span>
+                <span className="dropdown-item-content">
+                  <strong>Ver perfil</strong>
+                  <small>Información personal y bancaria</small>
+                </span>
+              </button>
 
-            <div className="dropdown-divider" role="separator" />
+              <button
+                className="dropdown-item"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setIsPasswordModalOpen(true);
+                }}
+                role="menuitem"
+                type="button"
+              >
+                <span className="dropdown-item-icon" aria-hidden="true">
+                  <KeyRound size={18} />
+                </span>
+                <span className="dropdown-item-content">
+                  <strong>Cambiar contraseña</strong>
+                  <small>Seguridad y clave de acceso</small>
+                </span>
+              </button>
 
-            <button
-              className="dropdown-item dropdown-item-danger"
-              disabled={isLoggingOut}
-              onClick={() => {
-                setIsMenuOpen(false);
-                handleLogout();
-              }}
-              role="menuitem"
-              type="button"
-            >
-              <span className="dropdown-item-icon" aria-hidden="true">
-                <LogOut size={18} />
-              </span>
-              <span className="dropdown-item-content">
-                <strong>{isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}</strong>
-                <small>Finalizar tu sesión en este equipo</small>
-              </span>
-            </button>
-          </div>
-        )}
+              <div className="dropdown-divider" role="separator" />
+
+              <button
+                className="dropdown-item dropdown-item-danger"
+                disabled={isLoggingOut}
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleLogout();
+                }}
+                role="menuitem"
+                type="button"
+              >
+                <span className="dropdown-item-icon" aria-hidden="true">
+                  <LogOut size={18} />
+                </span>
+                <span className="dropdown-item-content">
+                  <strong>{isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}</strong>
+                  <small>Finalizar tu sesión en este equipo</small>
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <ChangePasswordModal
