@@ -172,50 +172,18 @@ function NotificationBell() {
   };
 
   return (
-    <div className="header-notification-wrapper" ref={dropdownRef} style={{ position: 'relative' }}>
+    <div className="header-notification-wrapper" ref={dropdownRef}>
       <button
         aria-expanded={isOpen}
         aria-haspopup="true"
         aria-label={`Notificaciones ${unreadCount > 0 ? `(${unreadCount} no leídas)` : ''}`}
-        type="button"
+        className={`notification-bell-trigger ${isOpen ? 'is-active' : ''} ${unreadCount > 0 ? 'has-unread' : ''}`}
         onClick={handleToggle}
-        style={{
-          background: isOpen ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          color: '#ffffff',
-          borderRadius: '50%',
-          width: '38px',
-          height: '38px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          position: 'relative',
-          transition: 'all 0.15s ease',
-        }}
+        type="button"
       >
-        <Bell size={18} />
+        <Bell size={19} />
         {unreadCount > 0 && (
-          <span
-            style={{
-              position: 'absolute',
-              top: '-3px',
-              right: '-3px',
-              background: '#ef4444',
-              color: '#ffffff',
-              fontSize: '0.68rem',
-              fontWeight: 800,
-              minWidth: '18px',
-              height: '18px',
-              borderRadius: '9px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0 4px',
-              boxShadow: '0 2px 5px rgba(239, 68, 68, 0.5)',
-              border: '2px solid #ffffff',
-            }}
-          >
+          <span className="notification-badge-count">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -225,21 +193,7 @@ function NotificationBell() {
         <div
           role="region"
           aria-label="Panel de notificaciones"
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 8px)',
-            right: 0,
-            width: '340px',
-            maxWidth: 'calc(100vw - 24px)',
-            background: '#ffffff',
-            borderRadius: '12px',
-            boxShadow: '0 12px 30px -4px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(226, 232, 240, 0.8)',
-            zIndex: 9999,
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            maxHeight: '420px',
-          }}
+          className="notification-dropdown-menu"
         >
           {/* Header */}
           <div

@@ -3160,6 +3160,94 @@ h3 {
 }
 
 /* ==========================================================================
+   Header Notification Bell & Badge
+   ========================================================================== */
+.header-notification-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notification-bell-trigger {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(17, 24, 39, 0.04);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  height: 42px;
+  width: 42px;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.notification-bell-trigger:hover {
+  background: var(--color-primary-soft);
+  border-color: var(--purple-200);
+  box-shadow: 0 4px 12px rgba(107, 33, 168, 0.08);
+  color: var(--color-primary);
+}
+
+.notification-bell-trigger:focus-visible,
+.notification-bell-trigger.is-active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(107, 33, 168, 0.14);
+  color: var(--color-primary);
+}
+
+.notification-bell-trigger.has-unread {
+  color: var(--color-primary);
+}
+
+.notification-badge-count {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.45);
+  border: 2px solid #ffffff;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.notification-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(226, 232, 240, 0.85);
+  z-index: 9999;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 420px;
+}
+
+@media (max-width: 640px) {
+  .notification-dropdown-menu {
+    right: -55px;
+    width: min(calc(100vw - 24px), 320px);
+  }
+}
+
+/* ==========================================================================
    Header User Menu & Avatar Dropdown
    ========================================================================== */
 .header-user-menu {
