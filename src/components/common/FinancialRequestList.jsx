@@ -7,6 +7,7 @@ import {
   ArrowUpDown,
   Clock,
   CreditCard,
+  ChevronDown,
   ExternalLink,
   FileText,
   Filter,
@@ -625,6 +626,16 @@ function FinancialRequestList({
   const [statementInitialId, setStatementInitialId] = useState('ALL');
   const [voluntaryDepositAhorro, setVoluntaryDepositAhorro] = useState(null);
   const [selectedLoanForAbono, setSelectedLoanForAbono] = useState(null);
+  const [expandedItemIds, setExpandedItemIds] = useState(new Set());
+
+  const toggleItemExpanded = (id) => {
+    setExpandedItemIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const maxFeeAllowed = useMemo(() => {
     if (!salaryCapacity || !salaryCapacity.max_cuota_permitida || !activeAction?.item) return null;
@@ -1258,6 +1269,8 @@ function FinancialRequestList({
         type === 'savings' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
             {filteredItems.map((item, index) => {
+              const itemId = item?.id || item?.folio || item?.plan?.id || item?.ahorro?.id || index;
+              const isExpanded = expandedItemIds.has(itemId);
               const status = getStatus(item);
               const isActive = Number(item?.status) === 1 || String(status).toLowerCase().includes('activ');
               const saldoDisp = Number(item?.saldo_disponible ?? 0);
@@ -1274,334 +1287,258 @@ function FinancialRequestList({
 
               return (
                 <article
-                  className="savings-list-row financial-item-card"
-                  key={item?.id || item?.folio || item?.plan?.id || item?.ahorro?.id || index}
+                  className={`financial-compact-card ${isExpanded ? 'is-expanded' : ''}`}
+                  key={itemId}
                 >
-                  {/* 1. Plan Identity */}
-                  <div className="savings-identity-block">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                      <h3 style={{ margin: 0, fontSize: '0.98rem', color: 'var(--color-primary-dark)', fontWeight: 600 }}>
-                        {getTitle(item, `Ahorro ${index + 1}`)}
-                      </h3>
-                      {item.esta_pausado ? (
-                        <span
-                          style={{
-                            margin: 0,
-                            fontSize: '0.66rem',
-                            padding: '2px 8px',
-                            borderRadius: '10px',
-                            fontWeight: 600,
-                            background: '#fef3c7',
-                            color: '#b45309',
-                            border: '1px solid #fde68a',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            letterSpacing: '0.02em',
-                          }}
-                        >
-                          <Pause size={12} aria-hidden="true" />
-                          Pausado
-                        </span>
-                      ) : (
-                        <span className={`request-card-label status-${statusTone(status)}`} style={{ margin: 0, fontSize: '0.66rem', padding: '1px 7px', borderRadius: '10px' }}>
-                          {statusLabel(status)}
-                        </span>
-                      )}
-                      {isActive && (
-                        <button
-                          type="button"
-                          style={
-                            item.esta_pausado
-                              ? {
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  gap: '4px',
-                                  height: '22px',
-                                  padding: '0 8px',
-                                  borderRadius: '5px',
-                                  border: '1px solid #86efac',
-                                  background: '#f0fdf4',
-                                  color: '#15803d',
-                                  cursor: 'pointer',
-                                  fontSize: '0.68rem',
-                                  fontWeight: 600,
-                                  transition: 'all 0.15s ease',
-                                }
-                              : {
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  width: '22px',
-                                  height: '22px',
-                                  padding: 0,
-                                  borderRadius: '5px',
-                                  border: '1px solid #e2e8f0',
-                                  background: '#ffffff',
-                                  color: '#64748b',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.15s ease',
-                                }
-                          }
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = item.esta_pausado ? '#16a34a' : '#94a3b8';
-                            e.currentTarget.style.color = item.esta_pausado ? '#14532d' : '#0f172a';
-                            e.currentTarget.style.background = item.esta_pausado ? '#dcfce7' : '#f1f5f9';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = item.esta_pausado ? '#86efac' : '#e2e8f0';
-                            e.currentTarget.style.color = item.esta_pausado ? '#15803d' : '#64748b';
-                            e.currentTarget.style.background = item.esta_pausado ? '#f0fdf4' : '#ffffff';
-                          }}
-                          onClick={() => handleOpenAction(item.esta_pausado ? 'resume' : 'pause', item)}
-                          title={item.esta_pausado ? 'Reanudar aportaciones de nómina' : 'Pausar aportaciones temporalmente'}
-                          aria-label={item.esta_pausado ? 'Reanudar aportaciones' : 'Pausar aportaciones'}
-                        >
-                          {item.esta_pausado ? (
-                            <>
-                              <Play size={10} fill="currentColor" aria-hidden="true" />
-                              
-                            </>
-                          ) : (
-                            <Pause size={11} aria-hidden="true" />
-                          )}
-                        </button>
-                      )}
-                    </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '3px', fontWeight: 500 }}>
-                      {yieldText} • Nómina {frequency}
-                    </span>
-
-                    {/* Micro-indicador de maduración */}
-                    {isActive && (
-                      <div style={{ marginTop: '7px', maxWidth: '230px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.67rem', marginBottom: '3px' }}>
-                          <span style={{ color: '#64748b', fontWeight: 500 }}>
-                            Maduración: <strong style={{ color: '#0f172a' }}>{projection.progressPct}%</strong>
-                          </span>
-                          <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
-                            Meta: {formatMoney(projection.montoProyectado)}
-                          </span>
-                        </div>
-                        <div style={{ width: '100%', height: '5px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div
+                  {/* Encabezado interactivo de 2 Líneas */}
+                  <div
+                    className="financial-compact-header"
+                    onClick={() => toggleItemExpanded(itemId)}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleItemExpanded(itemId);
+                      }
+                    }}
+                  >
+                    {/* Línea 1: Nombre + Badge + Saldo Disponible + Chevron */}
+                    <div className="financial-compact-line-1">
+                      <div className="financial-compact-title-group">
+                        <h3 className="financial-compact-title">
+                          {getTitle(item, `Ahorro ${index + 1}`)}
+                        </h3>
+                        {item.esta_pausado ? (
+                          <span
                             style={{
-                              width: `${projection.progressPct}%`,
-                              height: '100%',
-                              background: 'linear-gradient(90deg, var(--color-primary) 0%, #16a34a 100%)',
-                              borderRadius: '4px',
-                              transition: 'width 0.4s ease',
+                              margin: 0,
+                              fontSize: '0.66rem',
+                              padding: '2px 8px',
+                              borderRadius: '10px',
+                              fontWeight: 600,
+                              background: '#fef3c7',
+                              color: '#b45309',
+                              border: '1px solid #fde68a',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
                             }}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {item.en_ventana_retiro && (
-                      <div
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          background: 'rgba(22, 163, 74, 0.08)',
-                          color: '#15803d',
-                          border: '1px solid rgba(22, 163, 74, 0.25)',
-                          padding: '2px 7px',
-                          borderRadius: '6px',
-                          fontSize: '0.67rem',
-                          fontWeight: 600,
-                          marginTop: '5px',
-                        }}
-                      >
-                        🎉 Meta cumplida • Límite retiro: {formatDate(item.fecha_limite_retiro)} ({item.dias_restantes_retiro}d)
-                      </div>
-                    )}
-
-                    {Number(item.monto_pendiente_validacion) > 0 && (
-                      <div
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          background: '#fef3c7',
-                          color: '#92400e',
-                          border: '1px solid #fde68a',
-                          padding: '2px 7px',
-                          borderRadius: '6px',
-                          fontSize: '0.67rem',
-                          fontWeight: 600,
-                          marginTop: '5px',
-                        }}
-                        title="Aportación voluntaria registrada en espera de validación bancaria por GrowCap"
-                      >
-                        <Clock size={11} aria-hidden="true" />
-                        Aportación en validación: +{formatMoney(item.monto_pendiente_validacion)}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Separador Vertical 1 (visible en desktop) */}
-                  <div className="financial-row-divider" aria-hidden="true" />
-
-                  {/* 2 & 3. Financial Metrics & Conditions Combined */}
-                  <div className="savings-combined-metrics">
-                    <div style={{ minWidth: '78px' }}>
-                      <span style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
-                        Ahorrado
-                      </span>
-                      <strong style={{ fontSize: '1.02rem', color: 'var(--color-primary)', fontWeight: 700, display: 'block', marginTop: '1px' }}>
-                        {formatMoney(item.monto_ahorro)}
-                      </strong>
-                    </div>
-
-                    <div className="financial-sub-divider" aria-hidden="true" />
-
-                    <div style={{ minWidth: '78px' }}>
-                      <span style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
-                        Disponible
-                      </span>
-                      <strong style={{ fontSize: '1.02rem', color: saldoDisp > 0 ? '#16a34a' : '#94a3b8', fontWeight: 700, display: 'block', marginTop: '1px' }}>
-                        {formatMoney(item.saldo_disponible)}
-                      </strong>
-                    </div>
-
-                    <div className="financial-sub-divider" aria-hidden="true" />
-
-                    <div style={{ minWidth: '65px' }}>
-                      <span style={{ display: 'block', fontSize: '0.65rem', color: item.esta_pausado ? '#d97706' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
-                        {item.esta_pausado ? 'Pausado' : 'Cuota'}
-                      </span>
-                      <span style={{ fontSize: '0.84rem', color: item.esta_pausado ? '#b45309' : '#334155', fontWeight: 600, display: 'block', marginTop: '1px' }}>
-                        {item.esta_pausado ? '$0.00' : formatMoney(item.cuota)}
-                        {item.esta_pausado && (
-                          <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 400, marginLeft: '4px' }}>
-                            ({formatMoney(item.cuota)})
+                          >
+                            <Pause size={11} aria-hidden="true" />
+                            Pausado
+                          </span>
+                        ) : (
+                          <span className={`request-card-label status-${statusTone(status)}`} style={{ margin: 0, fontSize: '0.66rem', padding: '1px 7px', borderRadius: '10px' }}>
+                            {statusLabel(status)}
                           </span>
                         )}
-                      </span>
+                      </div>
+                      <div className="financial-compact-amount-group">
+                        <span className="financial-compact-amount" style={{ color: saldoDisp > 0 ? '#16a34a' : 'var(--color-primary)' }}>
+                          {formatMoney(item.saldo_disponible)}
+                        </span>
+                        <span className="financial-compact-chevron" aria-hidden="true">
+                          <ChevronDown size={17} />
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="financial-sub-divider" aria-hidden="true" />
+                    {/* Línea 2: Cuota / Frecuencia + Tasa + Progreso */}
+                    <div className="financial-compact-line-2">
+                      <div className="financial-compact-subtext">
+                        <span>{item.esta_pausado ? 'Aportaciones pausadas' : `${formatMoney(item.cuota)} / ${frequency}`}</span>
+                        <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
+                        <span>{yieldText}</span>
+                        {item.en_ventana_retiro && (
+                          <>
+                            <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
+                            <span style={{ color: '#15803d', fontWeight: 600 }}>🎉 Meta cumplida</span>
+                          </>
+                        )}
+                        {Number(item.monto_pendiente_validacion) > 0 && (
+                          <>
+                            <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
+                            <span style={{ color: '#d97706', fontWeight: 600 }}>+{formatMoney(item.monto_pendiente_validacion)} en validación</span>
+                          </>
+                        )}
+                      </div>
 
-                    <div style={{ minWidth: '92px' }}>
-                      <span style={{ display: 'block', fontSize: '0.65rem', color: item.en_ventana_retiro ? '#16a34a' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
-                        {item.en_ventana_retiro ? 'Límite Retiro' : 'Vence / Corte'}
-                      </span>
-                      <span style={{ fontSize: '0.82rem', color: item.en_ventana_retiro ? '#15803d' : '#334155', fontWeight: 600, display: 'block', marginTop: '1px' }}>
-                        {item.en_ventana_retiro && item.fecha_limite_retiro
-                          ? formatDate(item.fecha_limite_retiro)
-                          : (endDate ? formatDate(endDate) : 'Permanente')}
-                      </span>
+                      {isActive && projection?.progressPct !== undefined && (
+                        <div className="financial-compact-progress-pill" title={`Meta: ${formatMoney(projection.montoProyectado)} (${projection.progressPct}%)`}>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--color-primary)' }}>
+                            {projection.progressPct}%
+                          </span>
+                          <div className="financial-compact-micro-bar">
+                            <div
+                              className="financial-compact-micro-fill"
+                              style={{
+                                width: `${Math.min(100, projection.progressPct)}%`,
+                                background: 'linear-gradient(90deg, var(--color-primary) 0%, #16a34a 100%)',
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Separador Vertical 2 (visible en desktop) */}
-                  <div className="financial-row-divider" aria-hidden="true" />
+                  {/* Drawer expandible al clic */}
+                  {isExpanded && (
+                    <div className="financial-expanded-drawer">
+                      <div className="financial-drawer-grid">
+                        <div className="financial-drawer-field">
+                          <span className="financial-drawer-label">Total Ahorrado</span>
+                          <span className="financial-drawer-val" style={{ color: 'var(--color-primary)' }}>{formatMoney(item.monto_ahorro)}</span>
+                        </div>
+                        <div className="financial-drawer-field">
+                          <span className="financial-drawer-label">Saldo Disponible</span>
+                          <span className="financial-drawer-val" style={{ color: saldoDisp > 0 ? '#16a34a' : '#64748b' }}>{formatMoney(item.saldo_disponible)}</span>
+                        </div>
+                        <div className="financial-drawer-field">
+                          <span className="financial-drawer-label">Cuota Periódica</span>
+                          <span className="financial-drawer-val">{item.esta_pausado ? '$0.00 (Pausado)' : `${formatMoney(item.cuota)} (${frequency})`}</span>
+                        </div>
+                        <div className="financial-drawer-field">
+                          <span className="financial-drawer-label">Rendimiento Anual</span>
+                          <span className="financial-drawer-val">{yieldText}</span>
+                        </div>
+                        <div className="financial-drawer-field">
+                          <span className="financial-drawer-label">{item.en_ventana_retiro ? 'Límite de Retiro' : 'Vence / Corte'}</span>
+                          <span className="financial-drawer-val">
+                            {item.en_ventana_retiro && item.fecha_limite_retiro
+                              ? formatDate(item.fecha_limite_retiro)
+                              : (endDate ? formatDate(endDate) : 'Permanente')}
+                          </span>
+                        </div>
+                        {isActive && projection?.montoProyectado && (
+                          <div className="financial-drawer-field">
+                            <span className="financial-drawer-label">Meta Proyectada</span>
+                            <span className="financial-drawer-val">{formatMoney(projection.montoProyectado)}</span>
+                          </div>
+                        )}
+                        {Number(item.monto_pendiente_validacion) > 0 && (
+                          <div className="financial-drawer-field">
+                            <span className="financial-drawer-label">En Validación</span>
+                            <span className="financial-drawer-val" style={{ color: '#d97706' }}>+{formatMoney(item.monto_pendiente_validacion)}</span>
+                          </div>
+                        )}
+                      </div>
 
-                  {/* 4. Action Buttons Group */}
-                  {isActive && (
-                    <div className="savings-actions-group">
-                      <Button
-                        className="button-secondary icon-button"
-                        style={{
-                          fontSize: '0.72rem',
-                          padding: '5px 8px',
-                          borderRadius: '6px',
-                          fontWeight: 500,
-                          minHeight: '29px',
-                          height: '29px',
-                        }}
-                        onClick={() => handleOpenAction('kardex', item)}
-                        title="Ver historial de movimientos y transacciones"
-                      >
-                        <History size={12} aria-hidden="true" />
-                        Movimientos
-                      </Button>
-                      <Button
-                        className="button-secondary icon-button"
-                        style={{
-                          fontSize: '0.72rem',
-                          padding: '5px 8px',
-                          borderRadius: '6px',
-                          fontWeight: 500,
-                          minHeight: '29px',
-                          height: '29px',
-                        }}
-                        onClick={() => handleOpenAction('fee', item)}
-                        title="Actualizar cuota periódica de nómina"
-                      >
-                        <Pencil size={12} aria-hidden="true" />
-                        Cuota
-                      </Button>
-                      <Button
-                        className="button-primary icon-button btn-action-primary"
-                        style={{
-                          fontSize: '0.72rem',
-                          padding: '5px 9px',
-                          borderRadius: '6px',
-                          fontWeight: 600,
-                          minHeight: '29px',
-                          height: '29px',
-                          background: '#16a34a',
-                          borderColor: '#15803d',
-                          color: '#ffffff',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                        }}
-                        onClick={() => setVoluntaryDepositAhorro(item)}
-                        title="Realizar una aportación voluntaria a este ahorro (SPEI)"
-                      >
-                        <PlusCircle size={12} aria-hidden="true" />
-                        Aportar
-                      </Button>
-                      <Button
-                        className="button-secondary icon-button"
-                        style={{
-                          fontSize: '0.72rem',
-                          padding: '5px 8px',
-                          borderRadius: '6px',
-                          fontWeight: 500,
-                          minHeight: '29px',
-                          height: '29px',
-                          opacity: canDebit ? 1 : 0.4,
-                          cursor: canDebit ? 'pointer' : 'not-allowed',
-                        }}
-                        disabled={!canDebit}
-                        title={
-                          isLockedByTerm
-                            ? `Meta con plazo: disponible al vencer (${formatDate(endDate)})`
-                            : (saldoDisp <= 0 ? 'Sin saldo disponible para transferir' : 'Transferir a otro ahorro')
-                        }
-                        onClick={() => handleOpenAction('transfer', item)}
-                      >
-                        <ArrowRightLeft size={12} aria-hidden="true" />
-                        Transferir
-                      </Button>
-                      <Button
-                        className="button-secondary icon-button"
-                        style={{
-                          fontSize: '0.72rem',
-                          padding: '5px 8px',
-                          borderRadius: '6px',
-                          fontWeight: 500,
-                          minHeight: '29px',
-                          height: '29px',
-                          opacity: canDebit ? 1 : 0.4,
-                          cursor: canDebit ? 'pointer' : 'not-allowed',
-                        }}
-                        disabled={!canDebit}
-                        title={
-                          isLockedByTerm
-                            ? `Meta con plazo: disponible al vencer (${formatDate(endDate)})`
-                            : (saldoDisp <= 0 ? 'Sin saldo disponible para retirar' : 'Solicitar retiro')
-                        }
-                        onClick={() => handleOpenAction('withdraw', item)}
-                      >
-                        <ArrowDownToLine size={12} aria-hidden="true" />
-                        Retirar
-                      </Button>
+                      {/* Botones de acción */}
+                      {isActive && (
+                        <div className="financial-drawer-actions">
+                          <Button
+                            className="button-secondary icon-button"
+                            style={{ fontSize: '0.74rem', padding: '6px 12px', minHeight: '32px' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenAction('kardex', item);
+                            }}
+                            title="Ver historial de movimientos y transacciones"
+                          >
+                            <History size={13} aria-hidden="true" />
+                            Movimientos
+                          </Button>
+                          <Button
+                            className="button-secondary icon-button"
+                            style={{ fontSize: '0.74rem', padding: '6px 12px', minHeight: '32px' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenAction('fee', item);
+                            }}
+                            title="Actualizar cuota periódica de nómina"
+                          >
+                            <Pencil size={13} aria-hidden="true" />
+                            Cuota
+                          </Button>
+                          <Button
+                            className="button-primary icon-button btn-action-primary"
+                            style={{
+                              fontSize: '0.74rem',
+                              padding: '6px 14px',
+                              minHeight: '32px',
+                              fontWeight: 600,
+                              background: '#16a34a',
+                              borderColor: '#15803d',
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setVoluntaryDepositAhorro(item);
+                            }}
+                            title="Realizar una aportación voluntaria a este ahorro (SPEI)"
+                          >
+                            <PlusCircle size={13} aria-hidden="true" />
+                            Aportar
+                          </Button>
+                          <Button
+                            className="button-secondary icon-button"
+                            style={{
+                              fontSize: '0.74rem',
+                              padding: '6px 12px',
+                              minHeight: '32px',
+                              opacity: canDebit ? 1 : 0.4,
+                              cursor: canDebit ? 'pointer' : 'not-allowed',
+                            }}
+                            disabled={!canDebit}
+                            title={
+                              isLockedByTerm
+                                ? `Meta con plazo: disponible al vencer (${formatDate(endDate)})`
+                                : (saldoDisp <= 0 ? 'Sin saldo disponible para transferir' : 'Transferir a otro ahorro')
+                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenAction('transfer', item);
+                            }}
+                          >
+                            <ArrowRightLeft size={13} aria-hidden="true" />
+                            Transferir
+                          </Button>
+                          <Button
+                            className="button-secondary icon-button"
+                            style={{
+                              fontSize: '0.74rem',
+                              padding: '6px 12px',
+                              minHeight: '32px',
+                              opacity: canDebit ? 1 : 0.4,
+                              cursor: canDebit ? 'pointer' : 'not-allowed',
+                            }}
+                            disabled={!canDebit}
+                            title={
+                              isLockedByTerm
+                                ? `Meta con plazo: disponible al vencer (${formatDate(endDate)})`
+                                : (saldoDisp <= 0 ? 'Sin saldo disponible para retirar' : 'Solicitar retiro')
+                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenAction('withdraw', item);
+                            }}
+                          >
+                            <ArrowDownToLine size={13} aria-hidden="true" />
+                            Retirar
+                          </Button>
+                          <Button
+                            className="button-secondary icon-button"
+                            style={{
+                              fontSize: '0.74rem',
+                              padding: '6px 12px',
+                              minHeight: '32px',
+                              color: item.esta_pausado ? '#15803d' : '#64748b',
+                              borderColor: item.esta_pausado ? '#86efac' : '#cbd5e1',
+                              background: item.esta_pausado ? '#f0fdf4' : '#ffffff',
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenAction(item.esta_pausado ? 'resume' : 'pause', item);
+                            }}
+                            title={item.esta_pausado ? 'Reanudar aportaciones' : 'Pausar aportaciones temporalmente'}
+                          >
+                            {item.esta_pausado ? <Play size={12} aria-hidden="true" /> : <Pause size={12} aria-hidden="true" />}
+                            {item.esta_pausado ? 'Reanudar' : 'Pausar'}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </article>
@@ -1703,6 +1640,8 @@ function FinancialRequestList({
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
                   {currentLoans.map((item, index) => {
+                    const itemId = item?.id || index;
+                    const isExpanded = expandedItemIds.has(itemId);
                     const status = getStatus(item);
                     const statusNum = Number(item?.status ?? item?.id_status ?? 0);
                     const statusStr = String(item?.status_label || status || item?.estado || '').toLowerCase();
@@ -1726,300 +1665,242 @@ function FinancialRequestList({
 
                     return (
                       <article
-                        className="loan-list-row financial-item-card"
-                        key={item?.id || index}
+                        className={`financial-compact-card ${isExpanded ? 'is-expanded' : ''}`}
+                        key={itemId}
                       >
-                        {/* Top Header Row */}
-                        <div className="loan-row-header">
-                          <div className="loan-identity-wrap">
-                            <div
-                              style={{
-                                width: '36px',
-                                height: '36px',
-                                borderRadius: '8px',
-                                background: isLiquidated ? '#f0fdf4' : isActive ? '#ecfdf5' : isDisbursementPending ? '#eef2ff' : '#f8fafc',
-                                color: isLiquidated ? '#15803d' : isActive ? '#059669' : isDisbursementPending ? '#4338ca' : '#64748b',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifySelf: 'center',
-                                justifyContent: 'center',
-                                border: `1px solid ${isLiquidated ? '#bbf7d0' : isActive ? '#a7f3d0' : isDisbursementPending ? '#c7d2fe' : '#e2e8f0'}`,
-                              }}
-                            >
-                              <Banknote size={18} />
+                        {/* Encabezado interactivo de 2 Líneas */}
+                        <div
+                          className="financial-compact-header"
+                          onClick={() => toggleItemExpanded(itemId)}
+                          role="button"
+                          tabIndex={0}
+                          aria-expanded={isExpanded}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              toggleItemExpanded(itemId);
+                            }
+                          }}
+                        >
+                          {/* Línea 1: Nombre + Badge + Adeudo Restante + Chevron */}
+                          <div className="financial-compact-line-1">
+                            <div className="financial-compact-title-group">
+                              <h3 className="financial-compact-title">
+                                {planNombre}
+                              </h3>
+                              <span
+                                style={{
+                                  fontSize: '0.66rem',
+                                  padding: '1px 8px',
+                                  borderRadius: '10px',
+                                  fontWeight: 600,
+                                  background: isLiquidated ? '#dcfce7' : (moraAcumulada > 0 ? '#fee2e2' : (isActive ? '#d1fae5' : isDisbursementPending ? '#e0e7ff' : isWaitingAval ? '#e0e7ff' : isPending ? '#fef3c7' : '#f1f5f9')),
+                                  color: isLiquidated ? '#166534' : (moraAcumulada > 0 ? '#991b1b' : (isActive ? '#065f46' : isDisbursementPending ? '#3730a3' : isWaitingAval ? '#3730a3' : isPending ? '#92400e' : '#475569')),
+                                  border: `1px solid ${isLiquidated ? '#86efac' : (moraAcumulada > 0 ? '#fca5a5' : (isActive ? '#6ee7b7' : isDisbursementPending ? '#c7d2fe' : isWaitingAval ? '#c7d2fe' : isPending ? '#fde68a' : '#cbd5e1'))}`,
+                                }}
+                              >
+                                {isWaitingAval ? 'Esperando confirmación de aval' : isDisbursementPending ? 'Aprobado • Por Dispersar' : (moraAcumulada > 0 ? 'Con atraso' : (item?.status_label || statusLabel(status)))}
+                              </span>
                             </div>
-                            <div className="loan-identity-text">
-                              <div className="loan-title-row">
-                                <h3 style={{ margin: 0, fontSize: '0.98rem', color: '#0f172a', fontWeight: 600 }}>
-                                  {planNombre}
-                                </h3>
-                                <span
-                                  style={{
-                                    fontSize: '0.66rem',
-                                    padding: '1px 8px',
-                                    borderRadius: '10px',
-                                    fontWeight: 600,
-                                    background: isLiquidated ? '#dcfce7' : (moraAcumulada > 0 ? '#fee2e2' : (isActive ? '#d1fae5' : isDisbursementPending ? '#e0e7ff' : isWaitingAval ? '#e0e7ff' : isPending ? '#fef3c7' : '#f1f5f9')),
-                                    color: isLiquidated ? '#166534' : (moraAcumulada > 0 ? '#991b1b' : (isActive ? '#065f46' : isDisbursementPending ? '#3730a3' : isWaitingAval ? '#3730a3' : isPending ? '#92400e' : '#475569')),
-                                    border: `1px solid ${isLiquidated ? '#86efac' : (moraAcumulada > 0 ? '#fca5a5' : (isActive ? '#6ee7b7' : isDisbursementPending ? '#c7d2fe' : isWaitingAval ? '#c7d2fe' : isPending ? '#fde68a' : '#cbd5e1'))}`,
-                                  }}
-                                >
-                                  {isWaitingAval ? 'Esperando confirmación de aval' : isDisbursementPending ? 'Aprobado • Por Dispersar' : (moraAcumulada > 0 ? 'Con atraso' : (item?.status_label || statusLabel(status)))}
-                                </span>
-                                {montoPendiente > 0 && (
-                                  <span
-                                    style={{
-                                      fontSize: '0.64rem',
-                                      padding: '1px 6px',
-                                      borderRadius: '6px',
-                                      fontWeight: 600,
-                                      background: '#fffbeb',
-                                      color: '#b45309',
-                                      border: '1px solid #fde68a',
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: '4px',
-                                    }}
-                                    title="Abono SPEI en revisión por administración"
-                                  >
-                                    <Clock size={11} />
-                                    {formatMoney(montoPendiente)} en validación
-                                  </span>
-                                )}
-                              </div>
-                              <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '2px' }}>
-                                Folio #{item?.id} • Fecha: {formatDate(item?.fecha || item?.fecha_creacion || getDate(item))}
-                                {item?.aval_nombre ? ` • Aval: ${item.aval_nombre}` : item?.aval ? ` • Aval: ${item.aval}` : ''}
+                            <div className="financial-compact-amount-group">
+                              <span
+                                className="financial-compact-amount"
+                                style={{ color: (isLiquidated || saldoRestante === 0) ? '#059669' : (moraAcumulada > 0 ? '#dc2626' : '#0f172a') }}
+                              >
+                                {formatMoney(saldoRestante)}
+                              </span>
+                              <span className="financial-compact-chevron" aria-hidden="true">
+                                <ChevronDown size={17} />
                               </span>
                             </div>
                           </div>
 
-                          {/* Action Button (visible on desktop) */}
-                          <div className="loan-actions-desktop">
-                            {isActive && saldoRestante > 0 && (
-                              <>
-                                <Button
-                                  className="button-secondary icon-button"
+                          {/* Línea 2: Cuota + Folio + Amortización % */}
+                          <div className="financial-compact-line-2">
+                            <div className="financial-compact-subtext">
+                              <span>Cuota: {formatMoney(cuotaFija)} ({frecuencia})</span>
+                              <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
+                              <span>Folio #{item?.id}</span>
+                              {moraAcumulada > 0 && (
+                                <>
+                                  <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
+                                  <span style={{ color: '#dc2626', fontWeight: 600 }}>Mora: {formatMoney(moraAcumulada)}</span>
+                                </>
+                              )}
+                              {montoPendiente > 0 && (
+                                <>
+                                  <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
+                                  <span style={{ color: '#d97706', fontWeight: 600 }}>+{formatMoney(montoPendiente)} en validación</span>
+                                </>
+                              )}
+                            </div>
+
+                            <div className="financial-compact-progress-pill" title={`Progreso: ${porcentajePagado}% (${formatMoney(montoPagado)} pagado de ${formatMoney(totalAdeudo)})`}>
+                              <span style={{ fontSize: '0.68rem', fontWeight: 600, color: isLiquidated ? '#10b981' : '#64748b' }}>
+                                {porcentajePagado}% pagado
+                              </span>
+                              <div className="financial-compact-micro-bar">
+                                <div
+                                  className="financial-compact-micro-fill"
                                   style={{
-                                    fontSize: '0.76rem',
-                                    padding: '6px 12px',
-                                    minHeight: '32px',
+                                    width: `${Math.min(100, Math.max(0, porcentajePagado))}%`,
+                                    background: isLiquidated
+                                      ? '#10b981'
+                                      : 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
                                   }}
-                                  onClick={() => handleOpenAction('kardex', item)}
-                                >
-                                  <History size={14} />
-                                  Movimientos
-                                </Button>
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Drawer expandible al clic */}
+                        {isExpanded && (
+                          <div className="financial-expanded-drawer">
+                            {/* Banner informativo de Dispersión en Curso */}
+                            {isDisbursementPending && (
+                              <div
+                                style={{
+                                  padding: '10px 14px',
+                                  background: '#f5f3ff',
+                                  border: '1px solid #ddd6fe',
+                                  borderRadius: '8px',
+                                  fontSize: '0.78rem',
+                                  color: '#4c1d95',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                }}
+                              >
+                                <AlertCircle size={15} style={{ color: '#6d28d9', flexShrink: 0 }} />
+                                <span>Crédito autorizado por comité. En proceso de dispersión bancaria.</span>
+                              </div>
+                            )}
+
+                            <div className="financial-drawer-grid">
+                              <div className="financial-drawer-field">
+                                <span className="financial-drawer-label">Total Adeudo</span>
+                                <span className="financial-drawer-val">{formatMoney(totalAdeudo)}</span>
+                              </div>
+                              <div className="financial-drawer-field">
+                                <span className="financial-drawer-label">Monto Pagado</span>
+                                <span className="financial-drawer-val" style={{ color: '#16a34a' }}>{formatMoney(montoPagado)}</span>
+                              </div>
+                              <div className="financial-drawer-field">
+                                <span className="financial-drawer-label">Saldo Restante</span>
+                                <span className="financial-drawer-val" style={{ color: (isLiquidated || saldoRestante === 0) ? '#059669' : (moraAcumulada > 0 ? '#dc2626' : '#0f172a') }}>
+                                  {formatMoney(saldoRestante)}
+                                </span>
+                              </div>
+                              <div className="financial-drawer-field">
+                                <span className="financial-drawer-label">Cuota Fija ({frecuencia})</span>
+                                <span className="financial-drawer-val">{formatMoney(cuotaFija)}</span>
+                              </div>
+                              <div className="financial-drawer-field">
+                                <span className="financial-drawer-label">Monto Original Solicitado</span>
+                                <span className="financial-drawer-val">{formatMoney(originalAmount)}</span>
+                              </div>
+                              <div className="financial-drawer-field">
+                                <span className="financial-drawer-label">Plazo / Semanas</span>
+                                <span className="financial-drawer-val">
+                                  {item?.plazo_semanas ? `${item.plazo_semanas} semanas` : (item?.cuotas_totales ? `${item.cuotas_totales} cuotas` : 'Estándar')}
+                                </span>
+                              </div>
+                              {item?.aval_nombre && (
+                                <div className="financial-drawer-field">
+                                  <span className="financial-drawer-label">Aval Asignado</span>
+                                  <span className="financial-drawer-val">{item.aval_nombre}</span>
+                                </div>
+                              )}
+                              {moraAcumulada > 0 && (
+                                <div className="financial-drawer-field">
+                                  <span className="financial-drawer-label">Mora Acumulada</span>
+                                  <span className="financial-drawer-val" style={{ color: '#dc2626' }}>
+                                    {formatMoney(moraAcumulada)} ({numAtrasos} atraso{numAtrasos !== 1 ? 's' : ''})
+                                  </span>
+                                </div>
+                              )}
+                              {montoPendiente > 0 && (
+                                <div className="financial-drawer-field">
+                                  <span className="financial-drawer-label">Abono en Validación</span>
+                                  <span className="financial-drawer-val" style={{ color: '#d97706' }}>
+                                    +{formatMoney(montoPendiente)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Botones de acción */}
+                            <div className="financial-drawer-actions">
+                              {isActive && saldoRestante > 0 && (
+                                <>
+                                  <Button
+                                    className="button-secondary icon-button"
+                                    style={{ fontSize: '0.74rem', padding: '6px 12px', minHeight: '32px' }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenAction('kardex', item);
+                                    }}
+                                  >
+                                    <History size={13} />
+                                    Movimientos
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    className="button-outline icon-button"
+                                    style={{ fontSize: '0.74rem', padding: '6px 12px', minHeight: '32px' }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenStatement(item.id);
+                                    }}
+                                    title="Generar Estado de Cuenta Oficial en PDF"
+                                  >
+                                    <FileText size={13} />
+                                    Estado de cuenta
+                                  </Button>
+                                  <Button
+                                    className="button-primary icon-button"
+                                    style={{
+                                      fontSize: '0.74rem',
+                                      padding: '6px 14px',
+                                      minHeight: '32px',
+                                      background: '#059669',
+                                      borderColor: '#047857',
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedLoanForAbono(item);
+                                    }}
+                                  >
+                                    <CreditCard size={13} />
+                                    Abonar / Liquidar
+                                  </Button>
+                                </>
+                              )}
+                              {isPending && onCancelLoan && (
                                 <Button
                                   variant="outline"
                                   className="button-outline icon-button"
                                   style={{
-                                    fontSize: '0.76rem',
+                                    fontSize: '0.74rem',
                                     padding: '6px 12px',
                                     minHeight: '32px',
+                                    color: '#dc2626',
+                                    borderColor: '#fca5a5',
+                                    background: '#ffffff',
                                   }}
-                                  onClick={() => handleOpenStatement(item.id)}
-                                  title="Generar Estado de Cuenta Oficial en PDF"
-                                >
-                                  <FileText size={14} />
-                                  Estado de cuenta
-                                </Button>
-                                <Button
-                                  className="button-primary icon-button"
-                                  style={{
-                                    fontSize: '0.76rem',
-                                    padding: '6px 14px',
-                                    minHeight: '32px',
-                                    background: '#059669',
-                                    borderColor: '#047857',
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onCancelLoan(item);
                                   }}
-                                  onClick={() => setSelectedLoanForAbono(item)}
                                 >
-                                  <CreditCard size={14} />
-                                  Abonar / Liquidar
+                                  <X size={13} />
+                                  Cancelar solicitud
                                 </Button>
-                              </>
-                            )}
-                            {isPending && onCancelLoan && (
-                              <Button
-                                variant="outline"
-                                className="button-outline icon-button"
-                                style={{
-                                  fontSize: '0.76rem',
-                                  padding: '6px 12px',
-                                  minHeight: '32px',
-                                  color: '#dc2626',
-                                  borderColor: '#fca5a5',
-                                  background: '#ffffff',
-                                }}
-                                onClick={() => onCancelLoan(item)}
-                              >
-                                <X size={14} />
-                                Cancelar solicitud
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Banner informativo de Dispersión en Curso */}
-                        {isDisbursementPending && (
-                          <div
-                            style={{
-                              padding: '10px 14px',
-                              background: '#f5f3ff',
-                              border: '1px solid #ddd6fe',
-                              borderRadius: '8px',
-                              fontSize: '0.78rem',
-                              color: '#4c1d95',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                            }}
-                          >
-                            <CheckCircle2 size={15} style={{ color: '#6d28d9', flexShrink: 0 }} />
-                            <span>Crédito autorizado por comité. En proceso de dispersión bancaria.</span>
+                              )}
+                            </div>
                           </div>
                         )}
-
-                        {/* Progress Bar */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '4px', fontSize: '0.72rem' }}>
-                            <span style={{ color: '#64748b' }}>
-                              Progreso: <strong style={{ color: '#0f172a' }}>{porcentajePagado}%</strong> ({formatMoney(montoPagado)} pagado)
-                            </span>
-                            <span style={{ color: '#64748b' }}>
-                              Total: <strong style={{ color: '#0f172a' }}>{formatMoney(totalAdeudo)}</strong>
-                            </span>
-                          </div>
-                          <div
-                            style={{
-                              height: '7px',
-                              borderRadius: '4px',
-                              background: '#e2e8f0',
-                              overflow: 'hidden',
-                              position: 'relative',
-                            }}
-                          >
-                            <div
-                              style={{
-                                height: '100%',
-                                width: `${Math.min(100, Math.max(0, porcentajePagado))}%`,
-                                background: isLiquidated
-                                  ? '#10b981'
-                                  : 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
-                                borderRadius: '4px',
-                                transition: 'width 0.5s ease',
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Financial Metrics Grid */}
-                        <div className="loan-metrics-box">
-                          <div>
-                            <small style={{ fontSize: '0.68rem', color: '#64748b', display: 'block' }}>Saldo restante:</small>
-                            <strong style={{ fontSize: '1rem', color: (isLiquidated || saldoRestante === 0) ? '#059669' : (moraAcumulada > 0 ? '#dc2626' : '#0f172a'), fontWeight: 700 }}>
-                              {formatMoney(saldoRestante)}
-                            </strong>
-                            {moraAcumulada > 0 && (
-                              <span style={{ display: 'block', fontSize: '0.66rem', color: '#dc2626', fontWeight: 600, marginTop: '2px' }}>
-                                Incluye {formatMoney(moraAcumulada)} mora ({numAtrasos} atraso{numAtrasos !== 1 ? 's' : ''})
-                              </span>
-                            )}
-                          </div>
-
-                          <div>
-                            <small style={{ fontSize: '0.68rem', color: '#64748b', display: 'block' }}>Cuota de nómina:</small>
-                            <strong style={{ fontSize: '0.92rem', color: '#0f172a', fontWeight: 600 }}>
-                              {formatMoney(cuotaFija)}
-                            </strong>
-                            <span style={{ fontSize: '0.66rem', color: '#64748b', marginLeft: '3px' }}>({frecuencia})</span>
-                          </div>
-
-                          <div>
-                            <small style={{ fontSize: '0.68rem', color: '#64748b', display: 'block' }}>Monto original:</small>
-                            <strong style={{ fontSize: '0.92rem', color: '#334155', fontWeight: 600 }}>
-                              {formatMoney(originalAmount)}
-                            </strong>
-                          </div>
-
-                          <div>
-                            <small style={{ fontSize: '0.68rem', color: '#64748b', display: 'block' }}>Plazo / Cuotas:</small>
-                            <span style={{ fontSize: '0.82rem', color: '#334155', fontWeight: 600 }}>
-                              {item?.plazo_semanas ? `${item.plazo_semanas} semanas` : 'Plazo estándar'}
-                            </span>
-                            <span style={{ fontSize: '0.66rem', color: '#64748b', display: 'block' }}>
-                              {item?.cuotas_totales ? `${item.cuotas_totales} cuotas (${frecuencia})` : ''}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Action Buttons for Mobile (visible on <= 768px) */}
-                        <div className="loan-actions-mobile">
-                          {isActive && saldoRestante > 0 && (
-                            <>
-                              <Button
-                                className="button-secondary icon-button"
-                                style={{
-                                  fontSize: '0.74rem',
-                                  padding: '6px 10px',
-                                  minHeight: '32px',
-                                }}
-                                onClick={() => handleOpenAction('kardex', item)}
-                              >
-                                <History size={14} />
-                                Movimientos
-                              </Button>
-                              <Button
-                                variant="outline"
-                                className="button-outline icon-button"
-                                style={{
-                                  fontSize: '0.74rem',
-                                  padding: '6px 10px',
-                                  minHeight: '32px',
-                                }}
-                                onClick={() => handleOpenStatement(item.id)}
-                                title="Generar Estado de Cuenta Oficial en PDF"
-                              >
-                                <FileText size={14} />
-                                Estado de cuenta
-                              </Button>
-                              <Button
-                                className="button-primary icon-button btn-full-width"
-                                style={{
-                                  fontSize: '0.76rem',
-                                  padding: '7px 14px',
-                                  minHeight: '34px',
-                                  background: '#059669',
-                                  borderColor: '#047857',
-                                  fontWeight: 600,
-                                }}
-                                onClick={() => setSelectedLoanForAbono(item)}
-                              >
-                                <CreditCard size={14} />
-                                Abonar / Liquidar
-                              </Button>
-                            </>
-                          )}
-                          {isPending && onCancelLoan && (
-                            <Button
-                              variant="outline"
-                              className="button-outline icon-button btn-full-width"
-                              style={{
-                                fontSize: '0.76rem',
-                                padding: '6px 12px',
-                                minHeight: '32px',
-                                color: '#dc2626',
-                                borderColor: '#fca5a5',
-                                background: '#ffffff',
-                              }}
-                              onClick={() => onCancelLoan(item)}
-                            >
-                              <X size={14} />
-                              Cancelar solicitud
-                            </Button>
-                          )}
-                        </div>
                       </article>
                     );
                   })}
@@ -2035,6 +1916,8 @@ function FinancialRequestList({
         ) : type === 'investments' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
             {filteredItems.map((item, index) => {
+              const itemId = item?.id || item?.folio || item?.plan?.id || index;
+              const isExpanded = expandedItemIds.has(itemId);
               const statusBadge = resolveMovementStatusBadge(item, 'investments');
               const capitalInicial = Number(item.cantidad || item.inversion || 0);
               const rendGenerado = Number(item.rendimiento_generado_hoy ?? item.rendimiento_generado ?? item.interes_acumulado ?? 0);
@@ -2043,6 +1926,7 @@ function FinancialRequestList({
                 ? Number(item.rendimiento)
                 : (item.plan?.rendimiento ? Number(item.plan.rendimiento) : null);
               const yieldText = tasaAnual !== null ? `${tasaAnual}% anual` : 'Rendimiento pactado';
+              const plazoText = item.tiempo ? `${item.tiempo} meses` : (item.plan?.periodo ? `${item.plan.periodo} meses` : 'Estándar');
               const endDate = item.fecha_fin || getEndDate(item);
               const checkoutUrl = getCheckoutUrl(item);
               const isPaymentPendingState = isPaymentPending(item);
@@ -2061,173 +1945,151 @@ function FinancialRequestList({
 
               return (
                 <article
-                  className="investment-list-row savings-list-row financial-item-card"
-                  key={item?.id || item?.folio || item?.plan?.id || index}
+                  className={`financial-compact-card ${isExpanded ? 'is-expanded' : ''}`}
+                  key={itemId}
                 >
-                  {/* 1. Plan Identity */}
-                  <div className="investment-identity-block">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <h3 style={{ margin: 0, fontSize: '0.98rem', color: 'var(--color-primary-dark)', fontWeight: 600 }}>
-                        {getTitle(item, `Póliza #${item.id || index + 1}`)}
-                      </h3>
-                      <span className={`request-card-label status-${statusBadge.tone}`} style={{ margin: 0, fontSize: '0.66rem', padding: '1px 7px', borderRadius: '10px' }}>
-                        {statusBadge.label}
-                      </span>
+                  {/* Encabezado interactivo de 2 Líneas */}
+                  <div
+                    className="financial-compact-header"
+                    onClick={() => toggleItemExpanded(itemId)}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleItemExpanded(itemId);
+                      }
+                    }}
+                  >
+                    {/* Línea 1: Nombre + Badge + Saldo Actual + Chevron */}
+                    <div className="financial-compact-line-1">
+                      <div className="financial-compact-title-group">
+                        <h3 className="financial-compact-title">
+                          {getTitle(item, `Póliza #${item.id || index + 1}`)}
+                        </h3>
+                        <span className={`request-card-label status-${statusBadge.tone}`} style={{ margin: 0, fontSize: '0.66rem', padding: '1px 7px', borderRadius: '10px' }}>
+                          {statusBadge.label}
+                        </span>
+                      </div>
+                      <div className="financial-compact-amount-group">
+                        <span className="financial-compact-amount" style={{ color: 'var(--color-primary)' }}>
+                          {formatMoney(capitalActual)}
+                        </span>
+                        <span className="financial-compact-chevron" aria-hidden="true">
+                          <ChevronDown size={17} />
+                        </span>
+                      </div>
                     </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '3px', fontWeight: 500 }}>
-                      {yieldText} • Póliza #{item.id}
-                    </span>
 
-                    {/* Micro-indicador de maduración */}
-                    {endDate && (
-                      <div style={{ marginTop: '7px', maxWidth: '230px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.67rem', marginBottom: '3px' }}>
-                          <span style={{ color: '#64748b', fontWeight: 500 }}>
-                            Maduración: <strong style={{ color: '#0f172a' }}>{progresoMaduracion}%</strong>
+                    {/* Línea 2: Tasa + Plazo + Ganancia + Micro-avance */}
+                    <div className="financial-compact-line-2">
+                      <div className="financial-compact-subtext">
+                        <span>{yieldText}</span>
+                        <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
+                        <span>{plazoText}</span>
+                        <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
+                        <span style={{ color: '#16a34a', fontWeight: 600 }}>+{formatMoney(rendGenerado)} ganancia</span>
+                      </div>
+                      {endDate && (
+                        <div className="financial-compact-progress-pill" title={`Maduración: ${progresoMaduracion}% (${diasRestantes !== null && diasRestantes <= 0 ? 'Plazo cumplido' : `${diasRestantes}d restantes`})`}>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 600, color: diasRestantes !== null && diasRestantes <= 0 ? '#10b981' : '#64748b' }}>
+                            {diasRestantes !== null && diasRestantes <= 0 ? 'Cumplido' : `${progresoMaduracion}%`}
                           </span>
-                          <span
-                            style={{
-                              color: diasRestantes !== null && diasRestantes <= 0 ? '#10b981' : (diasRestantes <= 30 ? '#d97706' : 'var(--color-primary)'),
-                              fontWeight: 600,
+                          <div className="financial-compact-micro-bar">
+                            <div
+                              className="financial-compact-micro-fill"
+                              style={{
+                                width: `${progresoMaduracion}%`,
+                                background: (diasRestantes !== null && diasRestantes <= 0) || progresoMaduracion >= 100
+                                  ? '#10b981'
+                                  : (diasRestantes <= 30 ? '#f59e0b' : 'var(--color-primary)'),
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Drawer expandible al clic */}
+                  {isExpanded && (
+                    <div className="financial-expanded-drawer">
+                      <div className="financial-drawer-grid">
+                        <div className="financial-drawer-field">
+                          <span className="financial-drawer-label">Inversión Inicial</span>
+                          <span className="financial-drawer-val">{formatMoney(capitalInicial)}</span>
+                        </div>
+                        <div className="financial-drawer-field">
+                          <span className="financial-drawer-label">Ganancia Acumulada</span>
+                          <span className="financial-drawer-val" style={{ color: '#16a34a' }}>+{formatMoney(rendGenerado)}</span>
+                        </div>
+                        <div className="financial-drawer-field">
+                          <span className="financial-drawer-label">Saldo Total Actual</span>
+                          <span className="financial-drawer-val" style={{ color: 'var(--color-primary)' }}>{formatMoney(capitalActual)}</span>
+                        </div>
+                        <div className="financial-drawer-field">
+                          <span className="financial-drawer-label">Plazo Contratado</span>
+                          <span className="financial-drawer-val">{plazoText}</span>
+                        </div>
+                        <div className="financial-drawer-field">
+                          <span className="financial-drawer-label">Fecha de Vencimiento</span>
+                          <span className="financial-drawer-val">{endDate ? formatDate(endDate) : 'Indefinido'}</span>
+                        </div>
+                        <div className="financial-drawer-field">
+                          <span className="financial-drawer-label">Folio / Póliza</span>
+                          <span className="financial-drawer-val">#{item.id}</span>
+                        </div>
+                        {item.payment_method && (
+                          <div className="financial-drawer-field">
+                            <span className="financial-drawer-label">Método de Pago</span>
+                            <span className="financial-drawer-val" style={{ textTransform: 'capitalize' }}>{item.payment_method}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Botones de acción */}
+                      <div className="financial-drawer-actions">
+                        <Button
+                          className="button-secondary icon-button"
+                          style={{ fontSize: '0.74rem', padding: '6px 12px', minHeight: '32px' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenAction('kardex', item);
+                          }}
+                          title="Ver historial de movimientos y transacciones"
+                        >
+                          <History size={13} aria-hidden="true" />
+                          Movimientos
+                        </Button>
+                        <Button
+                          className="button-secondary icon-button"
+                          style={{ fontSize: '0.74rem', padding: '6px 12px', minHeight: '32px' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenStatement(item.id);
+                          }}
+                          title="Descargar Estado de Cuenta Oficial de esta póliza en PDF"
+                        >
+                          <FileText size={13} aria-hidden="true" />
+                          Estado de Cuenta
+                        </Button>
+                        {isPaymentPendingState && checkoutUrl && (
+                          <Button
+                            className="button-primary icon-button btn-action-primary"
+                            style={{ fontSize: '0.74rem', padding: '6px 14px', minHeight: '32px', fontWeight: 600 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.href = checkoutUrl;
                             }}
                           >
-                            {diasRestantes !== null && diasRestantes <= 0 ? '🎉 Plazo cumplido' : `${diasRestantes}d restantes`}
-                          </span>
-                        </div>
-                        <div style={{ width: '100%', height: '5px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div
-                            style={{
-                              width: `${progresoMaduracion}%`,
-                              height: '100%',
-                              background: (diasRestantes !== null && diasRestantes <= 0) || progresoMaduracion >= 100
-                                ? 'linear-gradient(90deg, #10b981 0%, #8b5cf6 50%, #6d28d9 100%)'
-                                : (diasRestantes <= 30 ? '#f59e0b' : 'linear-gradient(90deg, var(--color-primary) 0%, #16a34a 100%)'),
-                              boxShadow: (diasRestantes !== null && diasRestantes <= 0) || progresoMaduracion >= 100
-                                ? '0 0 6px rgba(16, 185, 129, 0.35)'
-                                : 'none',
-                              borderRadius: '4px',
-                              transition: 'width 0.4s ease',
-                            }}
-                          />
-                        </div>
+                            <CreditCard size={13} aria-hidden="true" />
+                            Pagar con Stripe
+                          </Button>
+                        )}
                       </div>
-                    )}
-                  </div>
-
-                  {/* Separador Vertical 1 (visible en desktop) */}
-                  <div className="financial-row-divider" aria-hidden="true" />
-
-                  {/* 2 & 3. Financial Metrics & Conditions Combined */}
-                  <div className="investment-combined-metrics">
-                    <div style={{ minWidth: '82px' }}>
-                      <span style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
-                        Invertido
-                      </span>
-                      <strong style={{ fontSize: '1.02rem', color: '#0f172a', fontWeight: 700, display: 'block', marginTop: '1px' }}>
-                        {formatMoney(capitalInicial)}
-                      </strong>
                     </div>
-
-                    <div className="financial-sub-divider" aria-hidden="true" />
-
-                    <div style={{ minWidth: '82px' }}>
-                      <span style={{ display: 'block', fontSize: '0.65rem', color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
-                        Ganancia
-                      </span>
-                      <strong style={{ fontSize: '1.02rem', color: '#16a34a', fontWeight: 700, display: 'block', marginTop: '1px' }}>
-                        +{formatMoney(rendGenerado)}
-                      </strong>
-                    </div>
-
-                    <div className="financial-sub-divider" aria-hidden="true" />
-
-                    <div className="investment-saldo-actual-slot" style={{ minWidth: '88px' }}>
-                      <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--color-primary-dark)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
-                        Saldo Actual
-                      </span>
-                      <strong style={{ fontSize: '1.05rem', color: 'var(--color-primary)', fontWeight: 700, display: 'block', marginTop: '1px' }}>
-                        {formatMoney(capitalActual)}
-                      </strong>
-                    </div>
-
-                    <div className="financial-sub-divider" aria-hidden="true" />
-
-                    <div style={{ minWidth: '65px' }}>
-                      <span style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
-                        Plazo
-                      </span>
-                      <span style={{ fontSize: '0.84rem', color: '#334155', fontWeight: 600, display: 'block', marginTop: '1px' }}>
-                        {item.tiempo ? `${item.tiempo} meses` : (item.plan?.periodo || 'Estándar')}
-                      </span>
-                    </div>
-
-                    <div className="financial-sub-divider" aria-hidden="true" />
-
-                    <div style={{ minWidth: '92px' }}>
-                      <span style={{ display: 'block', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
-                        Vence
-                      </span>
-                      <span style={{ fontSize: '0.82rem', color: '#334155', fontWeight: 600, display: 'block', marginTop: '1px' }}>
-                        {endDate ? formatDate(endDate) : 'Indefinido'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Separador Vertical 2 (visible en desktop) */}
-                  <div className="financial-row-divider" aria-hidden="true" />
-
-                  {/* 4. Action Buttons Group */}
-                  <div className="investment-actions-group">
-                    <Button
-                      className="button-secondary icon-button"
-                      style={{
-                        fontSize: '0.72rem',
-                        padding: '5px 8px',
-                        borderRadius: '6px',
-                        fontWeight: 500,
-                        minHeight: '29px',
-                        height: '29px',
-                      }}
-                      onClick={() => handleOpenAction('kardex', item)}
-                      title="Ver historial de movimientos y transacciones"
-                    >
-                      <History size={12} aria-hidden="true" />
-                      Movimientos
-                    </Button>
-                    <Button
-                      className="button-secondary icon-button"
-                      style={{
-                        fontSize: '0.72rem',
-                        padding: '5px 8px',
-                        borderRadius: '6px',
-                        fontWeight: 500,
-                        minHeight: '29px',
-                        height: '29px',
-                      }}
-                      onClick={() => handleOpenStatement(item.id)}
-                      title="Descargar Estado de Cuenta Oficial de esta póliza en PDF"
-                    >
-                      <FileText size={12} aria-hidden="true" />
-                      Estado de Cuenta
-                    </Button>
-                    {isPaymentPendingState && checkoutUrl && (
-                      <Button
-                        className="button-primary icon-button btn-action-primary"
-                        style={{
-                          fontSize: '0.72rem',
-                          padding: '5px 9px',
-                          borderRadius: '6px',
-                          fontWeight: 600,
-                          minHeight: '29px',
-                          height: '29px',
-                        }}
-                        onClick={() => { window.location.href = checkoutUrl; }}
-                      >
-                        <CreditCard size={12} aria-hidden="true" />
-                        Pagar con Stripe
-                      </Button>
-                    )}
-                  </div>
+                  )}
                 </article>
               );
             })}
