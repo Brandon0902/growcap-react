@@ -13,6 +13,7 @@ import LoanAbonoModal from '../components/LoanAbonoModal.jsx';
 import LoanCancelModal from '../components/LoanCancelModal.jsx';
 import AvalCenterModal from '../components/AvalCenterModal.jsx';
 import AvalAuthorizeModal from '../components/AvalAuthorizeModal.jsx';
+import AvalSolidarioSection from '../components/AvalSolidarioSection.jsx';
 import { confirmLoanMercadoPago, getLoanPlans, getLoans, getPendingAvalRequests } from '../services/loanService.js';
 
 
@@ -197,6 +198,7 @@ function LoanPlanCard({ index, plan, onClick }) {
 function LoansPage() {
   const pageRef = useRef(null);
   const recordsRef = useRef(null);
+  const avalSectionRef = useRef(null);
   const handledMpReturnRef = useRef('');
   const [searchParams, setSearchParams] = useSearchParams();
   const [loans, setLoans] = useState([]);
@@ -389,7 +391,9 @@ function LoansPage() {
             <Button
               type="button"
               className="button-secondary"
-              onClick={() => setIsAvalCenterOpen(true)}
+              onClick={() => {
+                avalSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -592,6 +596,13 @@ function LoansPage() {
           />
         </div>
       </div>
+
+      <AvalSolidarioSection
+        ref={avalSectionRef}
+        requests={pendingAvalRequests}
+        onReview={(req) => setSelectedAvalRequestToReview(req)}
+        onReload={loadLoansData}
+      />
 
       {selectedLoanForAbono && (
         <LoanAbonoModal

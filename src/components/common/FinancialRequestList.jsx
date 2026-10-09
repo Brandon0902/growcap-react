@@ -1345,12 +1345,18 @@ function FinancialRequestList({
                       </div>
                     </div>
 
-                    {/* Línea 2: Cuota / Frecuencia + Tasa + Progreso */}
+                    {/* Línea 2: Cuota / Frecuencia + Tasa + Vencimiento + Progreso */}
                     <div className="financial-compact-line-2">
                       <div className="financial-compact-subtext">
                         <span>{item.esta_pausado ? 'Aportaciones pausadas' : `${formatMoney(item.cuota)} / ${frequency}`}</span>
                         <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
                         <span>{yieldText}</span>
+                        {endDate && (
+                          <>
+                            <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
+                            <span style={{ color: '#475569', fontWeight: 600 }}>Vence: {formatDate(endDate)}</span>
+                          </>
+                        )}
                         {item.en_ventana_retiro && (
                           <>
                             <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
@@ -1367,7 +1373,7 @@ function FinancialRequestList({
 
                       {isActive && projection?.progressPct !== undefined && (
                         <div className="financial-compact-progress-pill" title={`Meta: ${formatMoney(projection.montoProyectado)} (${projection.progressPct}%)`}>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--color-primary)' }}>
+                          <span style={{ fontSize: '0.70rem', fontWeight: 700, color: 'var(--color-primary)' }}>
                             {projection.progressPct}%
                           </span>
                           <div className="financial-compact-micro-bar">
@@ -1375,7 +1381,8 @@ function FinancialRequestList({
                               className="financial-compact-micro-fill"
                               style={{
                                 width: `${Math.min(100, projection.progressPct)}%`,
-                                background: 'linear-gradient(90deg, var(--color-primary) 0%, #16a34a 100%)',
+                                background: 'linear-gradient(90deg, #2563eb 0%, #10b981 100%)',
+                                boxShadow: '0 0 6px rgba(16, 185, 129, 0.35)',
                               }}
                             />
                           </div>
@@ -1662,6 +1669,17 @@ function FinancialRequestList({
                     const moraAcumulada = Number(item?.mora_acumulada ?? 0);
                     const numAtrasos = Number(item?.num_atrasos ?? 0);
                     const planNombre = item?.plan?.nombre || item?.plan?.descripcion || item?.tipo || `Préstamo #${item?.id ?? index + 1}`;
+                    const loanEndDate = item?.fecha_vencimiento || item?.fecha_fin || (() => {
+                      if (item?.fecha_inicio) {
+                        const semanas = Number(item?.semanas || item?.plazo_semanas || 0);
+                        if (semanas > 0) {
+                          const d = new Date(String(item.fecha_inicio).replace(' ', 'T'));
+                          d.setDate(d.getDate() + (semanas * 7));
+                          return d;
+                        }
+                      }
+                      return null;
+                    })();
 
                     return (
                       <article
@@ -1715,10 +1733,16 @@ function FinancialRequestList({
                             </div>
                           </div>
 
-                          {/* Línea 2: Cuota + Folio + Amortización % */}
+                          {/* Línea 2: Cuota + Vencimiento + Folio + Amortización % */}
                           <div className="financial-compact-line-2">
                             <div className="financial-compact-subtext">
                               <span>Cuota: {formatMoney(cuotaFija)} ({frecuencia})</span>
+                              {loanEndDate && (
+                                <>
+                                  <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
+                                  <span style={{ color: '#475569', fontWeight: 600 }}>Vence: {formatDate(loanEndDate)}</span>
+                                </>
+                              )}
                               <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
                               <span>Folio #{item?.id}</span>
                               {moraAcumulada > 0 && (
@@ -1736,7 +1760,7 @@ function FinancialRequestList({
                             </div>
 
                             <div className="financial-compact-progress-pill" title={`Progreso: ${porcentajePagado}% (${formatMoney(montoPagado)} pagado de ${formatMoney(totalAdeudo)})`}>
-                              <span style={{ fontSize: '0.68rem', fontWeight: 600, color: isLiquidated ? '#10b981' : '#64748b' }}>
+                              <span style={{ fontSize: '0.70rem', fontWeight: 700, color: isLiquidated ? '#10b981' : '#2563eb' }}>
                                 {porcentajePagado}% pagado
                               </span>
                               <div className="financial-compact-micro-bar">
@@ -1746,7 +1770,8 @@ function FinancialRequestList({
                                     width: `${Math.min(100, Math.max(0, porcentajePagado))}%`,
                                     background: isLiquidated
                                       ? '#10b981'
-                                      : 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                                      : 'linear-gradient(90deg, #3b82f6 0%, #10b981 100%)',
+                                    boxShadow: isLiquidated ? '0 0 6px rgba(16, 185, 129, 0.35)' : '0 0 6px rgba(59, 130, 246, 0.3)',
                                   }}
                                 />
                               </div>
@@ -1982,18 +2007,24 @@ function FinancialRequestList({
                       </div>
                     </div>
 
-                    {/* Línea 2: Tasa + Plazo + Ganancia + Micro-avance */}
+                    {/* Línea 2: Tasa + Plazo + Vencimiento + Ganancia + Micro-avance */}
                     <div className="financial-compact-line-2">
                       <div className="financial-compact-subtext">
                         <span>{yieldText}</span>
                         <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
                         <span>{plazoText}</span>
+                        {endDate && (
+                          <>
+                            <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
+                            <span style={{ color: '#475569', fontWeight: 600 }}>Vence: {formatDate(endDate)}</span>
+                          </>
+                        )}
                         <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
                         <span style={{ color: '#16a34a', fontWeight: 600 }}>+{formatMoney(rendGenerado)} ganancia</span>
                       </div>
                       {endDate && (
                         <div className="financial-compact-progress-pill" title={`Maduración: ${progresoMaduracion}% (${diasRestantes !== null && diasRestantes <= 0 ? 'Plazo cumplido' : `${diasRestantes}d restantes`})`}>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 600, color: diasRestantes !== null && diasRestantes <= 0 ? '#10b981' : '#64748b' }}>
+                          <span style={{ fontSize: '0.70rem', fontWeight: 700, color: diasRestantes !== null && diasRestantes <= 0 ? '#10b981' : 'var(--color-primary)' }}>
                             {diasRestantes !== null && diasRestantes <= 0 ? 'Cumplido' : `${progresoMaduracion}%`}
                           </span>
                           <div className="financial-compact-micro-bar">
@@ -2003,7 +2034,10 @@ function FinancialRequestList({
                                 width: `${progresoMaduracion}%`,
                                 background: (diasRestantes !== null && diasRestantes <= 0) || progresoMaduracion >= 100
                                   ? '#10b981'
-                                  : (diasRestantes <= 30 ? '#f59e0b' : 'var(--color-primary)'),
+                                  : (diasRestantes <= 30 ? 'linear-gradient(90deg, #f59e0b 0%, #ef4444 100%)' : 'linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%)'),
+                                boxShadow: (diasRestantes !== null && diasRestantes <= 0) || progresoMaduracion >= 100
+                                  ? '0 0 6px rgba(16, 185, 129, 0.35)'
+                                  : '0 0 6px rgba(79, 70, 229, 0.3)',
                               }}
                             />
                           </div>

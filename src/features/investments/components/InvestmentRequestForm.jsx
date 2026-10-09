@@ -265,7 +265,11 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
         return;
       }
 
-      setMessage('Solicitud de inversion enviada correctamente.');
+      if (values.pay_method === 'saldo') {
+        setMessage('Inversión creada y activada con saldo disponible exitosamente.');
+      } else {
+        setMessage('Solicitud de inversion enviada correctamente.');
+      }
       setIsOpen(false);
       resetWizard();
       onCreated?.();

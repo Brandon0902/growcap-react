@@ -4994,17 +4994,19 @@ h3 {
 }
 
 .financial-compact-micro-bar {
-  width: 75px;
-  height: 5px;
-  background: #f1f5f9;
-  border-radius: 4px;
+  width: 82px;
+  height: 7px;
+  background: #e2e8f0;
+  border-radius: 999px;
   overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .financial-compact-micro-fill {
   height: 100%;
-  border-radius: 4px;
-  transition: width 0.3s ease;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .financial-expanded-drawer {
@@ -5091,7 +5093,8 @@ h3 {
   }
 
   .financial-compact-micro-bar {
-    width: 50px;
+    width: 58px;
+    height: 6px;
   }
 
   .financial-expanded-drawer {
