@@ -39,7 +39,7 @@ function InvestmentLifecycleAlertBanner({
       const planNombre = it.plan?.nombre || it.nombre || it.plan?.label || `Inversión #${it.id}`;
 
       // Caso 1: Ventana de Retiro / Gracia Activa (Prioridad Alta)
-      if (it.en_ventana_retiro || Number(it.saldo_disponible ?? 0) > 0) {
+      if (Number(it.saldo_disponible ?? 0) > 0) {
         alerts.push({
           id: `window-${it.id}`,
           type: 'window',

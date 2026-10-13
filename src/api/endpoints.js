@@ -9,6 +9,8 @@ export const ENDPOINTS = {
   },
   client: {
     availableBalance: '/cliente/saldo-disponible',
+    movements: '/cliente/movimientos-saldo',
+    solicitarRetiroGeneral: '/cliente/retiros/general',
     myData: '/cliente/mis-datos',
     password: '/cliente/password',
     resetNip: '/cliente/nip/reset',

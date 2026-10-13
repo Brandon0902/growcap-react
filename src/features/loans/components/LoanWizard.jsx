@@ -23,6 +23,7 @@ const initialValues = {
   cantidad: '',
   garantia_tipo: 'AVAL', // 'AHORRO' or 'AVAL'
   id_ahorro_garantia: '',
+  tolerancia_mora_garantia: '1',
   codigo_aval: '',
 };
 
@@ -92,11 +93,12 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
   else if (frequency.toLowerCase().includes('quincenal')) periodicSalary = salary / 2;
   const maxAllowedRetention = Number((periodicSalary * 0.30).toFixed(2));
 
-  // Compute estimated installment
+  // Compute estimated installment and totalAdeudo (préstamo + intereses)
   let estimatedFee = 0;
+  let totalAdeudo = amountNum;
   if (selectedPlan && amountNum > 0) {
     const planInteres = Number(selectedPlan.interes ?? 0);
-    const totalAdeudo = amountNum * (1 + (planInteres / 100));
+    totalAdeudo = Number((amountNum * (1 + (planInteres / 100))).toFixed(2));
     const baseSemanas = Number(selectedPlan.semanas ?? 1);
     let numPagos = baseSemanas;
     if (frequency.toLowerCase().includes('quincenal')) numPagos = Math.max(1, Math.ceil(baseSemanas / 2));
@@ -105,9 +107,9 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
   }
   const isFeeOverLimit = salary > 0 && estimatedFee > maxAllowedRetention;
 
-  // Eligible fixed-term savings accounts with sufficient balance
+  // Eligible fixed-term savings accounts with sufficient balance to cover totalAdeudo
   const eligibleAhorros = (prerequisites?.ahorrosPlazo || []).filter(
-    (a) => Number(a.saldo_disponible ?? 0) >= amountNum
+    (a) => Number(a.saldo_garantizable ?? a.saldo_total ?? a.saldo_disponible ?? 0) >= totalAdeudo
   );
 
   const resetWizard = () => {
@@ -309,6 +311,7 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
 
     if (values.garantia_tipo === 'AHORRO') {
       payload.id_ahorro_garantia = Number(values.id_ahorro_garantia);
+      payload.tolerancia_mora_garantia = Number(values.tolerancia_mora_garantia || 1);
       return payload;
     }
 
@@ -580,12 +583,6 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
                 <strong style={{ color: '#0f172a' }}>${estimatedFee.toFixed(2)} / pago</strong>
               </div>
 
-              {salary > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.85rem' }}>
-                  <span style={{ color: '#0f172a', fontWeight: '600' }}>${maxAllowedRetention.toFixed(2)} MXN</span>
-                </div>
-              )}
-
               {isFeeOverLimit ? (
                 <div style={{ padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '0.85rem' }}>
                   ⚠️ La cuota estimada supera el 30% permitido de tu salario de nómina (${maxAllowedRetention.toFixed(2)}). Reduce el monto o solicita un plan con mayor plazo.
@@ -651,8 +648,8 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
                 </span>
                 <span style={{ fontSize: '0.78rem', color: eligibleAhorros.length > 0 ? '#166534' : '#b91c1c', marginTop: '6px' }}>
                   {eligibleAhorros.length > 0
-                    ? `✓ Tienes ${eligibleAhorros.length} cuenta(s) a plazo con saldo disponible $\\ge$ $${amountNum.toFixed(2)}.`
-                    : 'No tienes cuentas de ahorro a plazo con saldo suficiente para auto-garantía.'}
+                    ? `✓ Tienes ${eligibleAhorros.length} cuenta(s) a plazo con saldo suficiente (adeudo total requerido: $${totalAdeudo.toFixed(2)} MXN).`
+                    : `No tienes cuentas de ahorro a plazo con saldo suficiente para cubrir el adeudo total ($${totalAdeudo.toFixed(2)} MXN).`}
                 </span>
               </label>
 
@@ -735,7 +732,7 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
                 <option value="">Selecciona una cuenta</option>
                 {eligibleAhorros.map((a) => (
                   <option key={a.id} value={a.id}>
-                    Ahorro #{a.id} ({a.plan_nombre || a.tipo_ahorro}) — Saldo disponible: ${Number(a.saldo_disponible).toFixed(2)} MXN
+                    Ahorro #{a.id} ({a.plan_nombre || a.tipo_ahorro}) — Saldo disponible: ${Number(a.saldo_garantizable ?? a.saldo_total ?? a.saldo_disponible).toFixed(2)} MXN
                   </option>
                 ))}
               </select>
@@ -744,9 +741,28 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
               )}
             </div>
 
+            <div className="form-field" style={{ marginTop: '16px' }}>
+              <label className="form-label" htmlFor="tolerancia-mora">
+                Tolerancia de mora para cargo automático a garantía
+              </label>
+              <select
+                className="input"
+                id="tolerancia-mora"
+                name="tolerancia_mora_garantia"
+                onChange={handleChange}
+                value={values.tolerancia_mora_garantia || '1'}
+              >
+                <option value="1">1 abono en mora (máxima puntualidad)</option>
+                <option value="2">2 abonos en mora</option>
+              </select>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px', marginBottom: 0 }}>
+                Al acumular esta cantidad de abonos vencidos, el sistema cubrirá automáticamente las cuotas desde tu ahorro.
+              </p>
+            </div>
+
             <div style={{ marginTop: '16px', padding: '12px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', fontSize: '0.85rem', color: '#166534' }}>
               🔒 <strong>Compromiso de garantía:</strong> Al autorizarse tu préstamo, se retendrán en garantía $
-              {amountNum.toFixed(2)} MXN de esta cuenta. Podrás disponer de tu ahorro una vez liquidado el adeudo.
+              {totalAdeudo.toFixed(2)} MXN (capital + intereses) de esta cuenta. Podrás disponer de tu ahorro una vez liquidado el adeudo.
             </div>
           </WizardStep>
         );
@@ -872,6 +888,12 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
                 : `Aval Digital (${values.codigo_aval || 'Pendiente'})`}
             </dd>
           </div>
+          {isUnderTwoThousand && values.garantia_tipo === 'AHORRO' && (
+            <div>
+              <dt>Cargo automático por mora</dt>
+              <dd>Al acumular {values.tolerancia_mora_garantia || 1} abono(s) vencido(s)</dd>
+            </div>
+          )}
           {verifiedAval && (
             <div>
               <dt>Aval registrado</dt>

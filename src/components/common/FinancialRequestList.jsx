@@ -728,6 +728,7 @@ function FinancialRequestList({
     filteredItems.forEach((item) => {
       const cap = Number(item.cantidad || item.inversion || item.monto || 0);
       const rend = Number(item.rendimiento_generado_hoy ?? item.rendimiento_generado ?? item.interes_acumulado ?? 0);
+      const saldoDisp = Number(item.saldo_disponible ?? 0);
       const saldo = Number(item.capital_actual_hoy ?? item.capital_actual ?? (cap + rend));
       const statusRaw = getValue(item, ['estado', 'estatus', 'status', 'activo']);
       const statusNum = Number(statusRaw ?? 0);
@@ -739,28 +740,48 @@ function FinancialRequestList({
         diasRestantes = Math.ceil((endMs - todayMs) / 86400000);
       }
 
-      const isApprovedActive = (statusNum === 1 || statusNum === 2) && item.payment_status !== 'pending' && Boolean(item.fecha_inicio);
+      // 1. En periodo de gracia / saldo liberado aún en la línea
+      const isInGrace = Boolean(item.en_ventana_retiro) || saldoDisp > 0;
+      // 2. Activa en curso antes de vencer
+      const isOngoingActive = (statusNum === 1 || statusNum === 2) && item.payment_status !== 'pending' && Boolean(item.fecha_inicio) && (diasRestantes === null || diasRestantes >= 0);
+      // 3. Activa en gracia con saldo disponible liberado
+      const isInGraceActive = (statusNum === 1 || statusNum === 2 || isInGrace) && saldoDisp > 0;
 
-      if (isApprovedActive) {
-        if (diasRestantes !== null && diasRestantes < 0) {
-          concludedCount += 1;
-        } else {
-          activeCount += 1;
-          totalCapital += cap;
-          totalRendimientos += rend;
-          totalSaldoVivo += saldo;
+      const tasa = item.rendimiento !== null && item.rendimiento !== undefined
+        ? Number(item.rendimiento)
+        : (item.plan?.rendimiento ? Number(item.plan.rendimiento) : null);
 
-          const tasa = item.rendimiento !== null && item.rendimiento !== undefined
-            ? Number(item.rendimiento)
-            : (item.plan?.rendimiento ? Number(item.plan.rendimiento) : null);
+      if (isOngoingActive) {
+        activeCount += 1;
+        totalCapital += cap;
+        totalRendimientos += rend;
+        totalSaldoVivo += saldo;
 
-          if (tasa !== null && cap > 0) {
-            weightedYieldSum += cap * tasa;
-            totalCapitalForYield += cap;
-          }
+        if (tasa !== null && cap > 0) {
+          weightedYieldSum += cap * tasa;
+          totalCapitalForYield += cap;
         }
-      } else if (statusNum === 3 || statusNum === 4) {
+      } else if (isInGraceActive) {
+        activeCount += 1;
+        totalCapital += cap;
+        totalRendimientos += rend;
+        totalSaldoVivo += saldoDisp;
+
+        if (tasa !== null && cap > 0) {
+          weightedYieldSum += cap * tasa;
+          totalCapitalForYield += cap;
+        }
+      } else {
         concludedCount += 1;
+        // Pólizas liquidadas / concluidas: el capital y devengos formaron parte de la cartera
+        totalCapital += cap;
+        totalRendimientos += rend;
+        // totalSaldoVivo es 0 porque los fondos ya salieron a saldo general o retiro
+
+        if (tasa !== null && cap > 0 && activeCount === 0) {
+          weightedYieldSum += cap * tasa;
+          totalCapitalForYield += cap;
+        }
       }
     });
 
@@ -1246,15 +1267,6 @@ function FinancialRequestList({
           items={items}
           onWithdraw={(item) => handleOpenAction('retirar', item)}
           onTransfer={(item) => handleOpenAction('transferir', item)}
-        />
-      )}
-
-      {type === 'investments' && items.length > 0 && (
-        <InvestmentLifecycleAlertBanner
-          items={items}
-          onMoverSaldo={(item) => handleOpenInvestmentAction('mover_saldo', item)}
-          onRetirar={(item) => handleOpenInvestmentAction('retirar', item)}
-          onReinvertir={(item) => handleOpenInvestmentAction('reinvertir', item)}
         />
       )}
 
@@ -2059,34 +2071,35 @@ function FinancialRequestList({
                           </span>
                         )}
                       </div>
-                      <div className="financial-compact-amount-group">
-                        <span className="financial-compact-amount" style={{ color: 'var(--color-primary)' }}>
-                          {formatMoney(capitalActual)}
-                        </span>
-                        <span className="financial-compact-chevron" aria-hidden="true">
-                          <ChevronDown size={17} />
-                        </span>
+                      <div className="financial-compact-line-1-right">
+                        {endDate && (
+                          <span className="financial-compact-expire-tag">
+                            Vence: {formatDate(endDate)}
+                          </span>
+                        )}
+                        <div className="financial-compact-amount-group">
+                          <span className="financial-compact-amount" style={{ color: 'var(--color-primary)' }}>
+                            {formatMoney(capitalActual)}
+                          </span>
+                          <span className="financial-compact-chevron" aria-hidden="true">
+                            <ChevronDown size={17} />
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Línea 2: Tasa + Plazo + Vencimiento + Ganancia + Micro-avance */}
+                    {/* Línea 2: Tasa + Plazo + Ganancia + Barra de avance adaptativa */}
                     <div className="financial-compact-line-2">
                       <div className="financial-compact-subtext">
                         <span>{yieldText}</span>
                         <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
                         <span>{plazoText}</span>
-                        {endDate && (
-                          <>
-                            <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
-                            <span style={{ color: '#475569', fontWeight: 600 }}>Vence: {formatDate(endDate)}</span>
-                          </>
-                        )}
                         <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
                         <span style={{ color: '#16a34a', fontWeight: 600 }}>+{formatMoney(rendGenerado)} ganancia</span>
                       </div>
                       {endDate && (
                         <div className="financial-compact-progress-pill" title={`Maduración: ${progresoMaduracion}% (${diasRestantes !== null && diasRestantes <= 0 ? 'Plazo cumplido' : `${diasRestantes}d restantes`})`}>
-                          <span style={{ fontSize: '0.70rem', fontWeight: 700, color: diasRestantes !== null && diasRestantes <= 0 ? '#10b981' : 'var(--color-primary)' }}>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: diasRestantes !== null && diasRestantes <= 0 ? '#10b981' : 'var(--color-primary)' }}>
                             {diasRestantes !== null && diasRestantes <= 0 ? 'Cumplido' : `${progresoMaduracion}%`}
                           </span>
                           <div className="financial-compact-micro-bar">
@@ -2106,6 +2119,77 @@ function FinancialRequestList({
                         </div>
                       )}
                     </div>
+
+                    {/* Línea de Acciones de Gracia cuando hay saldo liberado */}
+                    {Number(item.saldo_disponible ?? 0) > 0 && (
+                      <div
+                        className="financial-compact-grace-strip"
+                        style={{
+                          marginTop: '8px',
+                          paddingTop: '8px',
+                          borderTop: '1px solid #dcfce7',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap',
+                          gap: '8px',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span
+                            style={{
+                              fontSize: '0.70rem',
+                              fontWeight: 700,
+                              color: '#15803d',
+                              background: '#dcfce7',
+                              padding: '2px 8px',
+                              borderRadius: '10px',
+                            }}
+                          >
+                            {item.dias_restantes_retiro !== null && item.dias_restantes_retiro !== undefined
+                              ? `${item.dias_restantes_retiro}d de gracia`
+                              : 'Periodo cumplido'}
+                          </span>
+                          <span style={{ fontSize: '0.74rem', color: '#166534', fontWeight: 600 }}>
+                            Saldo liberado: {formatMoney(item.saldo_disponible)}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Button
+                            type="button"
+                            style={{
+                              fontSize: '0.72rem',
+                              padding: '4px 10px',
+                              background: '#16a34a',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '6px',
+                              fontWeight: 700,
+                            }}
+                            onClick={() => handleOpenInvestmentAction('mover_saldo', item)}
+                          >
+                            Mover a saldo
+                          </Button>
+                          <Button
+                            type="button"
+                            className="button-secondary"
+                            style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: '6px' }}
+                            onClick={() => handleOpenInvestmentAction('retirar', item)}
+                          >
+                            Retirar
+                          </Button>
+                          <Button
+                            type="button"
+                            className="button-secondary"
+                            style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: '6px' }}
+                            onClick={() => handleOpenInvestmentAction('reinvertir', item)}
+                          >
+                            Reinvertir
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Drawer expandible al clic */}

@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
+  KeyRound,
   Loader2,
   RefreshCw,
   WalletCards,
@@ -20,6 +21,7 @@ import {
   reinvertirInversion,
   solicitarRetiroInversion,
 } from '../services/investmentService.js';
+import { resetClientNip } from '../../profile/services/profileService.js';
 
 function formatMoney(amount) {
   const num = Number(amount ?? 0);
@@ -49,6 +51,16 @@ export default function InvestmentActionModal({
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Modo Recuperación / Cambio de NIP
+  const [isResettingNip, setIsResettingNip] = useState(false);
+  const [resetPassword, setResetPassword] = useState('');
+  const [showResetPass, setShowResetPass] = useState(false);
+  const [resetNewNip, setResetNewNip] = useState('');
+  const [resetConfirmNip, setResetConfirmNip] = useState('');
+  const [isResetSubmitting, setIsResetSubmitting] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState('');
+
   useEffect(() => {
     if (isOpen && item) {
       setAmount(String(saldoDisponible > 0 ? saldoDisponible : ''));
@@ -57,8 +69,55 @@ export default function InvestmentActionModal({
       setSelectedPlanId(item.id_activo ? String(item.id_activo) : (plans[0]?.id ? String(plans[0].id) : ''));
       setError('');
       setSuccessMsg('');
+      setIsResettingNip(false);
+      setResetPassword('');
+      setResetNewNip('');
+      setResetConfirmNip('');
+      setResetError('');
+      setResetSuccess('');
     }
   }, [isOpen, item, saldoDisponible, plans]);
+
+  const handleResetNipSubmit = async (e) => {
+    if (e) e.preventDefault();
+    setResetError('');
+    setResetSuccess('');
+
+    if (!resetPassword) {
+      setResetError('Ingresa tu contraseña actual.');
+      return;
+    }
+    if (!resetNewNip || resetNewNip.length < 4) {
+      setResetError('El nuevo NIP debe tener entre 4 y 6 dígitos.');
+      return;
+    }
+    if (resetNewNip !== resetConfirmNip) {
+      setResetError('Los NIPs no coinciden.');
+      return;
+    }
+
+    setIsResetSubmitting(true);
+    try {
+      const res = await resetClientNip({
+        current_password: resetPassword,
+        nip: resetNewNip,
+      });
+      setNip(resetNewNip);
+      setResetSuccess(res?.message || 'NIP actualizado exitosamente.');
+      setTimeout(() => {
+        setIsResettingNip(false);
+        setResetPassword('');
+        setResetNewNip('');
+        setResetConfirmNip('');
+        setResetSuccess('');
+      }, 1000);
+    } catch (err) {
+      const normalized = normalizeApiError(err, 'No fue posible actualizar el NIP.');
+      setResetError(normalized.message);
+    } finally {
+      setIsResetSubmitting(false);
+    }
+  };
 
   const selectedPlan = useMemo(() => {
     if (!selectedPlanId || !plans?.length) return item?.plan || null;
@@ -408,59 +467,205 @@ export default function InvestmentActionModal({
 
             {mode === 'retirar' && (
               <div>
-                <label
-                  htmlFor={`${modalId}-nip`}
-                  style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155', display: 'block', marginBottom: '6px' }}
-                >
-                  NIP de seguridad
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    id={`${modalId}-nip`}
-                    type={showNip ? 'text' : 'password'}
-                    inputMode="numeric"
-                    autoComplete="off"
-                    maxLength={6}
-                    value={nip}
-                    onChange={(e) => setNip(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="••••"
-                    disabled={isSubmitting}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '9px 40px 9px 12px',
-                      borderRadius: '8px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '1rem',
-                      fontFamily: 'monospace',
-                      letterSpacing: showNip ? '0.1em' : '0.25em',
-                      outline: 'none',
-                    }}
-                  />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label
+                    htmlFor={`${modalId}-nip`}
+                    style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155' }}
+                  >
+                    NIP de seguridad
+                  </label>
                   <button
                     type="button"
-                    onClick={() => setShowNip(!showNip)}
-                    tabIndex={-1}
-                    style={{
-                      position: 'absolute',
-                      right: '8px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#64748b',
-                      cursor: 'pointer',
-                      padding: '4px',
-                      display: 'flex',
+                    onClick={() => {
+                      setIsResettingNip(!isResettingNip);
+                      setResetError('');
+                      setResetSuccess('');
                     }}
-                    aria-label={showNip ? 'Ocultar NIP' : 'Mostrar NIP'}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      fontSize: '0.72rem',
+                      color: 'var(--color-primary)',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      textDecoration: 'underline',
+                    }}
                   >
-                    {showNip ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {isResettingNip ? 'Volver al retiro' : '¿Olvidaste tu NIP?'}
                   </button>
                 </div>
-                <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '4px', display: 'block' }}>
-                  Ingresa tu NIP confidencial de 4 a 6 dígitos para validar la operación.
-                </span>
+
+                {!isResettingNip ? (
+                  <>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        id={`${modalId}-nip`}
+                        type={showNip ? 'text' : 'password'}
+                        inputMode="numeric"
+                        autoComplete="off"
+                        maxLength={6}
+                        value={nip}
+                        onChange={(e) => setNip(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="••••"
+                        disabled={isSubmitting}
+                        required
+                        style={{
+                          width: '100%',
+                          padding: '9px 40px 9px 12px',
+                          borderRadius: '8px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '1rem',
+                          fontFamily: 'monospace',
+                          letterSpacing: showNip ? '0.1em' : '0.25em',
+                          outline: 'none',
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNip(!showNip)}
+                        tabIndex={-1}
+                        style={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#64748b',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          display: 'flex',
+                        }}
+                        aria-label={showNip ? 'Ocultar NIP' : 'Mostrar NIP'}
+                      >
+                        {showNip ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                      Ingresa tu NIP confidencial de 4 a 6 dígitos para validar la operación.
+                    </span>
+                  </>
+                ) : (
+                  <div
+                    style={{
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
+                    {resetError && <Alert type="danger" message={resetError} />}
+                    {resetSuccess && <Alert type="success" message={resetSuccess} />}
+
+                    <div>
+                      <label style={{ fontSize: '0.74rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '3px' }}>
+                        Contraseña actual de la cuenta
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type={showResetPass ? 'text' : 'password'}
+                          value={resetPassword}
+                          onChange={(e) => setResetPassword(e.target.value)}
+                          placeholder="Tu contraseña"
+                          disabled={isResetSubmitting}
+                          style={{
+                            width: '100%',
+                            padding: '7px 32px 7px 10px',
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            fontSize: '0.82rem',
+                            outline: 'none',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowResetPass(!showResetPass)}
+                          style={{
+                            position: 'absolute',
+                            right: '6px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            padding: '2px',
+                            color: '#94a3b8',
+                            cursor: 'pointer',
+                            display: 'flex',
+                          }}
+                        >
+                          {showResetPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <div>
+                        <label style={{ fontSize: '0.74rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '3px' }}>
+                          Nuevo NIP (4-6 dígitos)
+                        </label>
+                        <input
+                          type="password"
+                          inputMode="numeric"
+                          maxLength={6}
+                          value={resetNewNip}
+                          onChange={(e) => setResetNewNip(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          placeholder="••••"
+                          disabled={isResetSubmitting}
+                          style={{
+                            width: '100%',
+                            padding: '7px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            fontSize: '0.85rem',
+                            fontFamily: 'monospace',
+                            letterSpacing: '0.2em',
+                            outline: 'none',
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.74rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '3px' }}>
+                          Confirmar NIP
+                        </label>
+                        <input
+                          type="password"
+                          inputMode="numeric"
+                          maxLength={6}
+                          value={resetConfirmNip}
+                          onChange={(e) => setResetConfirmNip(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          placeholder="••••"
+                          disabled={isResetSubmitting}
+                          style={{
+                            width: '100%',
+                            padding: '7px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            fontSize: '0.85rem',
+                            fontFamily: 'monospace',
+                            letterSpacing: '0.2em',
+                            outline: 'none',
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '2px' }}>
+                      <Button
+                        type="button"
+                        className="button-primary"
+                        onClick={handleResetNipSubmit}
+                        disabled={isResetSubmitting || !resetPassword || resetNewNip.length < 4}
+                        style={{ fontSize: '0.75rem', padding: '5px 12px', minHeight: '30px' }}
+                      >
+                        {isResetSubmitting ? 'Guardando...' : 'Guardar NIP'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

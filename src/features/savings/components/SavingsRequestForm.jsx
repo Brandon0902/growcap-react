@@ -155,6 +155,58 @@ function formatPercent(value) {
   return `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(numeric)}%`;
 }
 
+function formatExpirationDate(date) {
+  if (!date) return 'Sin fecha fija';
+  if (date instanceof Date) {
+    return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  const str = String(date).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    const [y, m, d] = str.slice(0, 10).split('-').map(Number);
+    const localDate = new Date(y, m - 1, d);
+    return localDate.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  const parsed = new Date(str.replace(' ', 'T'));
+  if (isNaN(parsed.getTime())) return str;
+  return parsed.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function getPlanExpirationDate(selectedPlan, values) {
+  if (!selectedPlan) return 'No especificado';
+
+  // 1. Si el usuario definió una fecha personalizada (ej. Meta Libre)
+  if (values?.fecha_fin) {
+    return formatExpirationDate(values.fecha_fin);
+  }
+
+  // 2. Si el plan tiene mes_corte y dia_corte fijados (ej. Verano, Meta Navideña)
+  const mesCorte = Number(selectedPlan.mes_corte ?? selectedPlan.plan_mes_corte);
+  const diaCorte = Number(selectedPlan.dia_corte ?? selectedPlan.plan_dia_corte ?? 1);
+
+  if (mesCorte && diaCorte) {
+    const start = new Date();
+    let targetYear = start.getFullYear();
+    const targetMonth = mesCorte - 1; // 0-indexed en JS
+    const currentYearTarget = new Date(targetYear, targetMonth, diaCorte);
+    if (currentYearTarget <= start) {
+      targetYear += 1;
+    }
+    const targetDate = new Date(targetYear, targetMonth, diaCorte);
+    return formatExpirationDate(targetDate);
+  }
+
+  // 3. Si el plan tiene meses_minimos definidos (ej. 12 meses)
+  const mesesMinimos = Number(selectedPlan.meses_minimos ?? 0);
+  if (mesesMinimos > 0) {
+    const start = new Date();
+    start.setMonth(start.getMonth() + mesesMinimos);
+    return formatExpirationDate(start);
+  }
+
+  // 4. Si es plan sin plazo forzoso (ej. Siempre disponible)
+  return 'Disponible en cualquier momento (Retiro libre)';
+}
+
 const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryCapacity }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -381,8 +433,8 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
         <strong>{getPlanName(selectedPlan)}</strong>
       </div>
       <div>
-        <span>Periodo</span>
-        <strong>{customPlanCalculation ? customPlanCalculation.periodDisplay : formatPlanValue(planPeriod)}</strong>
+        <span>Fecha de vencimiento</span>
+        <strong>{getPlanExpirationDate(selectedPlan, values)}</strong>
       </div>
       <div>
         <span>Rendimiento</span>
@@ -403,11 +455,9 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
           <dd>{getPlanName(selectedPlan)}</dd>
         </div>
         <div>
-          <dt>Periodo</dt>
-          <dd>
-            {customPlanCalculation && values.fecha_fin
-              ? customPlanCalculation.periodDisplay
-              : formatPlanValue(planPeriod)}
+          <dt>Fecha de vencimiento del plan</dt>
+          <dd style={{ fontWeight: 600, color: 'var(--color-primary-dark)' }}>
+            {getPlanExpirationDate(selectedPlan, values)}
           </dd>
         </div>
         <div>
@@ -418,12 +468,6 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
               : formatPercent(planYield)}
           </dd>
         </div>
-        {isSeasonal && (
-          <div>
-            <dt>Fecha fin</dt>
-            <dd>{values.fecha_fin || 'Sin capturar'}</dd>
-          </div>
-        )}
         <div className="guided-summary-total">
           <dt>Monto a procesar</dt>
           <dd>{formatMoney(totalNow)}</dd>

@@ -110,6 +110,55 @@ function formatPercent(value) {
   return `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(numeric)}%`;
 }
 
+function getPlanMonths(plan) {
+  if (!plan) return 12;
+  const rawPeriod = plan.periodo ?? plan.plazo ?? plan.tiempo ?? plan.duracion ?? plan.meses;
+  if (typeof rawPeriod === 'number' && rawPeriod > 0) return rawPeriod;
+  if (typeof rawPeriod === 'string') {
+    const rawLower = rawPeriod.toLowerCase();
+    if (rawLower.includes('semana')) {
+      const match = rawLower.match(/(\d+)/);
+      if (match) return Number(match[1]) / 4.33;
+    }
+    if (rawLower.includes('año')) {
+      const match = rawLower.match(/(\d+)/);
+      if (match) return Number(match[1]) * 12;
+    }
+    const match = rawPeriod.match(/(\d+)/);
+    if (match) return Number(match[1]);
+  }
+  return 12;
+}
+
+function calculateProjections(amount, annualRatePercent, months) {
+  const numAmount = Number(amount || 0);
+  const rate = Number(annualRatePercent || 0);
+  const numMonths = Number(months || 12);
+
+  if (numAmount <= 0 || rate <= 0) {
+    return {
+      amount: numAmount,
+      gain: 0,
+      total: numAmount,
+      endDate: null,
+    };
+  }
+
+  const monthlyRate = rate / 100 / 12;
+  const gain = Number((numAmount * monthlyRate * numMonths).toFixed(2));
+  const total = Number((numAmount + gain).toFixed(2));
+
+  const end = new Date();
+  end.setMonth(end.getMonth() + Math.round(numMonths));
+
+  return {
+    amount: numAmount,
+    gain,
+    total,
+    endDate: end.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }),
+  };
+}
+
 const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -139,11 +188,17 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
 
   useImperativeHandle(ref, () => ({
     openWithPlan: (planId) => {
-      setValues((current) => ({ ...current, id_activo: planId }));
+      const targetPlan = plans.find((p) => String(getPlanId(p)) === String(planId));
+      const minAmt = getNumericValue(getPlanValue(targetPlan, minAmountFields));
+      setValues((current) => ({
+        ...current,
+        id_activo: planId,
+        cantidad: current.cantidad && Number(current.cantidad) > 0 ? current.cantidad : (minAmt ? String(minAmt) : '10000'),
+      }));
       setMessage('');
       setError('');
       setFieldErrors({});
-      setCurrentStep(0);
+      setCurrentStep(1); // Inicia directamente en el paso de "¿Cuánto quieres invertir?"
       setIsOpen(true);
     }
   }));
@@ -153,6 +208,13 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
   const planPeriod = getPlanValue(selectedPlan, periodFields);
   const minAmount = getNumericValue(getPlanValue(selectedPlan, minAmountFields));
   const maxAmount = getNumericValue(getPlanValue(selectedPlan, maxAmountFields));
+
+  const planMonths = getPlanMonths(selectedPlan);
+  const projections = calculateProjections(values.cantidad, planYield, planMonths);
+
+  const sliderMin = minAmount ?? 10000;
+  const sliderMax = maxAmount ?? Math.max(sliderMin * 10, 300000);
+  const sliderStep = sliderMax > 50000 ? 1000 : 500;
 
   const resetWizard = () => {
     setCurrentStep(0);
@@ -332,10 +394,12 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
     }
 
     if (currentStep === 1) {
+      const currentAmountNum = Number(values.cantidad || sliderMin);
+
       return (
         <WizardStep
-          description="Escribe la cantidad que quieres poner a trabajar."
-          question="Cuanto quieres invertir?"
+          description="Ajusta la cantidad a invertir con el teclado o deslizando la barra."
+          question="¿Cuánto quieres invertir?"
         >
           <Input
             error={firstFieldError(fieldErrors, 'cantidad') || firstFieldError(fieldErrors, 'monto')}
@@ -345,17 +409,65 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
             max={maxAmount ?? undefined}
             name="cantidad"
             onChange={handleChange}
-            step="0.01"
+            step="100"
             type="number"
             value={values.cantidad}
           />
-          {(minAmount !== null || maxAmount !== null) && (
-            <p className="guided-help">
-              {minAmount !== null && `Minimo ${formatMoney(minAmount)}`}
-              {minAmount !== null && maxAmount !== null ? ' - ' : ''}
-              {maxAmount !== null && `Maximo ${formatMoney(maxAmount)}`}
-            </p>
-          )}
+
+          <div style={{ marginTop: '14px', marginBottom: '8px' }}>
+            <input
+              type="range"
+              min={sliderMin}
+              max={sliderMax}
+              step={sliderStep}
+              value={Math.min(sliderMax, Math.max(sliderMin, currentAmountNum))}
+              onChange={(e) => {
+                setValues((curr) => ({ ...curr, cantidad: e.target.value }));
+                setFieldErrors((curr) => ({ ...curr, cantidad: undefined, monto: undefined }));
+                setError('');
+              }}
+              style={{
+                width: '100%',
+                accentColor: 'var(--color-primary, #9333ea)',
+                cursor: 'pointer',
+                height: '6px',
+              }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+              <span>Mín. {formatMoney(sliderMin)}</span>
+              <span>Máx. {formatMoney(sliderMax)}</span>
+            </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '12px 14px',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '10px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                Tu ganancia estimada ({formatPercent(planYield)} anual)
+              </span>
+              <strong style={{ fontSize: '0.92rem', color: '#166534', fontWeight: 600 }}>
+                +{formatMoney(projections.gain)} MXN
+              </strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid #e2e8f0' }}>
+              <span style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 600 }}>
+                Total a recibir al término
+              </span>
+              <strong style={{ fontSize: '1.12rem', color: 'var(--color-primary-dark, #581c87)', fontWeight: 700 }}>
+                {formatMoney(projections.total)} MXN
+              </strong>
+            </div>
+          </div>
         </WizardStep>
       );
     }
@@ -363,7 +475,7 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
     if (currentStep === 2) {
       return (
         <WizardStep
-          description="Estos datos vienen del plan seleccionado. Tu solo confirmas que todo este correcto."
+          description="Verifica los parámetros y la proyección estimada antes de continuar."
           question="Revisa tu solicitud"
         >
           <dl className="guided-summary">
@@ -376,12 +488,28 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
               <dd>{formatPlanValue(planPeriod)}</dd>
             </div>
             <div>
-              <dt>Rendimiento del plan</dt>
+              <dt>Rendimiento anual</dt>
               <dd>{formatPercent(planYield)}</dd>
             </div>
             <div>
-              <dt>Monto</dt>
-              <dd>{values.cantidad || 'Sin capturar'}</dd>
+              <dt>Monto a invertir</dt>
+              <dd>{formatMoney(projections.amount) || 'Sin capturar'}</dd>
+            </div>
+            <div>
+              <dt>Ganancia estimada</dt>
+              <dd style={{ color: '#166534', fontWeight: 600 }}>
+                +{formatMoney(projections.gain)} MXN
+              </dd>
+            </div>
+            {projections.endDate && (
+              <div>
+                <dt>Fecha estimada de vencimiento</dt>
+                <dd>{projections.endDate}</dd>
+              </div>
+            )}
+            <div className="guided-summary-total">
+              <dt>Total a recibir</dt>
+              <dd>{formatMoney(projections.total)} MXN</dd>
             </div>
           </dl>
         </WizardStep>
@@ -465,7 +593,7 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
             <div>
               <dt>Resumen</dt>
               <dd>
-                {getPlanName(selectedPlan)} - {formatMoney(values.cantidad) || 'Sin monto'} - {formatPlanValue(planPeriod)}
+                {getPlanName(selectedPlan)} • Inversión: {formatMoney(values.cantidad) || 'Sin monto'} • Retorno: {formatMoney(projections.total)} MXN
               </dd>
             </div>
           </dl>
