@@ -582,7 +582,6 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
 
               {salary > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.85rem' }}>
-                  <span style={{ color: '#64748b' }}>Tope de descuento ({frequency}) permitido:</span>
                   <span style={{ color: '#0f172a', fontWeight: '600' }}>${maxAllowedRetention.toFixed(2)} MXN</span>
                 </div>
               )}
