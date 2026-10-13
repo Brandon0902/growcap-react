@@ -43,7 +43,12 @@ import SavingsStatementModal from '../../features/savings/components/SavingsStat
 import SavingsLifecycleAlertBanner from '../../features/savings/components/SavingsLifecycleAlertBanner.jsx';
 import SavingsVoluntaryDepositModal from '../../features/savings/components/SavingsVoluntaryDepositModal.jsx';
 import InvestmentStatementModal from '../../features/investments/components/InvestmentStatementModal.jsx';
-import { getInvestmentMovements } from '../../features/investments/services/investmentService.js';
+import InvestmentLifecycleAlertBanner from '../../features/investments/components/InvestmentLifecycleAlertBanner.jsx';
+import InvestmentActionModal from '../../features/investments/components/InvestmentActionModal.jsx';
+import {
+  getInvestmentMovements,
+  toggleAutoReinvertirInversion,
+} from '../../features/investments/services/investmentService.js';
 import LoanLifecycleAlertBanner from '../../features/loans/components/LoanLifecycleAlertBanner.jsx';
 import LoanAbonoModal from '../../features/loans/components/LoanAbonoModal.jsx';
 import LoanKardexTable from '../../features/loans/components/LoanKardexTable.jsx';
@@ -627,6 +632,38 @@ function FinancialRequestList({
   const [voluntaryDepositAhorro, setVoluntaryDepositAhorro] = useState(null);
   const [selectedLoanForAbono, setSelectedLoanForAbono] = useState(null);
   const [expandedItemIds, setExpandedItemIds] = useState(new Set());
+  const [investmentActionModal, setInvestmentActionModal] = useState({
+    isOpen: false,
+    mode: 'mover_saldo',
+    item: null,
+  });
+  const [togglingAutoReinvertirId, setTogglingAutoReinvertirId] = useState(null);
+
+  const handleOpenInvestmentAction = (mode, item) => {
+    setInvestmentActionModal({
+      isOpen: true,
+      mode,
+      item,
+    });
+  };
+
+  const handleToggleAutoReinvertir = async (item) => {
+    if (togglingAutoReinvertirId) return;
+    setTogglingAutoReinvertirId(item.id);
+    setActionError('');
+    setActionSuccess('');
+    try {
+      const nextVal = !item.auto_reinvertir;
+      const res = await toggleAutoReinvertirInversion(item.id, nextVal);
+      setActionSuccess(res?.data?.message || (nextVal ? 'Auto-reinversión activada.' : 'Auto-reinversión desactivada.'));
+      onRefresh?.();
+    } catch (err) {
+      const normalized = normalizeApiError(err, 'No fue posible actualizar la auto-reinversión.');
+      setActionError(normalized.message);
+    } finally {
+      setTogglingAutoReinvertirId(null);
+    }
+  };
 
   const toggleItemExpanded = (id) => {
     setExpandedItemIds((prev) => {
@@ -1209,6 +1246,15 @@ function FinancialRequestList({
           items={items}
           onWithdraw={(item) => handleOpenAction('retirar', item)}
           onTransfer={(item) => handleOpenAction('transferir', item)}
+        />
+      )}
+
+      {type === 'investments' && items.length > 0 && (
+        <InvestmentLifecycleAlertBanner
+          items={items}
+          onMoverSaldo={(item) => handleOpenInvestmentAction('mover_saldo', item)}
+          onRetirar={(item) => handleOpenInvestmentAction('retirar', item)}
+          onReinvertir={(item) => handleOpenInvestmentAction('reinvertir', item)}
         />
       )}
 
@@ -1996,6 +2042,22 @@ function FinancialRequestList({
                         <span className={`request-card-label status-${statusBadge.tone}`} style={{ margin: 0, fontSize: '0.66rem', padding: '1px 7px', borderRadius: '10px' }}>
                           {statusBadge.label}
                         </span>
+                        {Number(item.saldo_disponible ?? 0) > 0 && (
+                          <span
+                            style={{
+                              margin: 0,
+                              fontSize: '0.66rem',
+                              padding: '1px 7px',
+                              borderRadius: '10px',
+                              background: '#dcfce7',
+                              color: '#15803d',
+                              border: '1px solid #bbf7d0',
+                              fontWeight: 700,
+                            }}
+                          >
+                            Disponible: {formatMoney(item.saldo_disponible)}
+                          </span>
+                        )}
                       </div>
                       <div className="financial-compact-amount-group">
                         <span className="financial-compact-amount" style={{ color: 'var(--color-primary)' }}>
@@ -2062,6 +2124,14 @@ function FinancialRequestList({
                           <span className="financial-drawer-label">Saldo Total Actual</span>
                           <span className="financial-drawer-val" style={{ color: 'var(--color-primary)' }}>{formatMoney(capitalActual)}</span>
                         </div>
+                        {Number(item.saldo_disponible ?? 0) > 0 && (
+                          <div className="financial-drawer-field">
+                            <span className="financial-drawer-label">Saldo Liberado Disponible</span>
+                            <span className="financial-drawer-val" style={{ color: '#16a34a', fontWeight: 700 }}>
+                              {formatMoney(item.saldo_disponible)}
+                            </span>
+                          </div>
+                        )}
                         <div className="financial-drawer-field">
                           <span className="financial-drawer-label">Plazo Contratado</span>
                           <span className="financial-drawer-val">{plazoText}</span>
@@ -2070,6 +2140,15 @@ function FinancialRequestList({
                           <span className="financial-drawer-label">Fecha de Vencimiento</span>
                           <span className="financial-drawer-val">{endDate ? formatDate(endDate) : 'Indefinido'}</span>
                         </div>
+                        {item.fecha_limite_retiro && (
+                          <div className="financial-drawer-field">
+                            <span className="financial-drawer-label">Límite Días de Gracia</span>
+                            <span className="financial-drawer-val" style={{ color: '#15803d', fontWeight: 600 }}>
+                              {formatDate(item.fecha_limite_retiro)}
+                              {item.dias_restantes_retiro !== null && ` (${item.dias_restantes_retiro}d restantes)`}
+                            </span>
+                          </div>
+                        )}
                         <div className="financial-drawer-field">
                           <span className="financial-drawer-label">Folio / Póliza</span>
                           <span className="financial-drawer-val">#{item.id}</span>
@@ -2080,6 +2159,124 @@ function FinancialRequestList({
                             <span className="financial-drawer-val" style={{ textTransform: 'capitalize' }}>{item.payment_method}</span>
                           </div>
                         )}
+                      </div>
+
+                      {/* Callout de Saldo Liberado y Acciones de Autoservicio */}
+                      {Number(item.saldo_disponible ?? 0) > 0 && (
+                        <div
+                          style={{
+                            margin: '12px 0',
+                            padding: '12px 16px',
+                            background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
+                            border: '1px solid #bbf7d0',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '12px',
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div>
+                            <span style={{ fontSize: '0.72rem', color: '#15803d', fontWeight: 700, textTransform: 'uppercase' }}>
+                              Saldo liberado disponible
+                            </span>
+                            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#166534' }}>
+                              {formatMoney(item.saldo_disponible)}
+                            </div>
+                            <span style={{ fontSize: '0.73rem', color: '#166534' }}>
+                              {item.dias_restantes_retiro !== null && item.dias_restantes_retiro !== undefined
+                                ? `${item.dias_restantes_retiro} días de gracia para operar`
+                                : 'Disponible para retiro o reinversión'}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <Button
+                              type="button"
+                              style={{
+                                fontSize: '0.74rem',
+                                padding: '6px 12px',
+                                background: '#16a34a',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontWeight: 700,
+                              }}
+                              onClick={() => handleOpenInvestmentAction('mover_saldo', item)}
+                            >
+                              Mover a saldo
+                            </Button>
+                            <Button
+                              type="button"
+                              className="button-secondary"
+                              style={{ fontSize: '0.74rem', padding: '6px 12px', borderRadius: '8px' }}
+                              onClick={() => handleOpenInvestmentAction('retirar', item)}
+                            >
+                              Retirar
+                            </Button>
+                            <Button
+                              type="button"
+                              className="button-secondary"
+                              style={{ fontSize: '0.74rem', padding: '6px 12px', borderRadius: '8px' }}
+                              onClick={() => handleOpenInvestmentAction('reinvertir', item)}
+                            >
+                              Reinvertir
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Control de Auto-reinversión */}
+                      <div
+                        style={{
+                          margin: '8px 0 12px',
+                          padding: '10px 14px',
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '10px',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#1e293b' }}>
+                            Auto-reinversión al vencer el plazo de gracia
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                            {item.auto_reinvertir
+                              ? 'Activada: Se renueva automáticamente al concluir el periodo de gracia.'
+                              : 'Desactivada: Se traspasa a saldo disponible general en caja al vencer la gracia.'}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={togglingAutoReinvertirId === item.id}
+                          onClick={() => handleToggleAutoReinvertir(item)}
+                          style={{
+                            border: 'none',
+                            background: item.auto_reinvertir ? '#16a34a' : '#cbd5e1',
+                            color: '#ffffff',
+                            borderRadius: '16px',
+                            padding: '4px 12px',
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {togglingAutoReinvertirId === item.id ? (
+                            <RefreshCw size={12} className="animate-spin" />
+                          ) : (
+                            item.auto_reinvertir ? 'Activa' : 'Inactiva'
+                          )}
+                        </button>
                       </div>
 
                       {/* Botones de acción */}
@@ -3001,6 +3198,21 @@ function FinancialRequestList({
           isOpen={Boolean(selectedLoanForAbono)}
           onClose={() => setSelectedLoanForAbono(null)}
           prestamo={selectedLoanForAbono}
+          onSuccess={(msg) => {
+            setActionSuccess(msg);
+            if (onRefresh) onRefresh();
+          }}
+        />
+      )}
+
+      {/* Modal de Acciones de Inversión (Mover a saldo, Retirar, Reinvertir) */}
+      {investmentActionModal.isOpen && (
+        <InvestmentActionModal
+          isOpen={investmentActionModal.isOpen}
+          mode={investmentActionModal.mode}
+          item={investmentActionModal.item}
+          plans={plans}
+          onClose={() => setInvestmentActionModal({ isOpen: false, mode: 'mover_saldo', item: null })}
           onSuccess={(msg) => {
             setActionSuccess(msg);
             if (onRefresh) onRefresh();

@@ -123,10 +123,29 @@ function DashboardPage() {
   }, [loadBalance]);
 
   const generalBalance = getDashboardAmount(balance, ['saldo_disponible', 'saldo_general', 'saldo', 'total']);
-  const savingsBalance = getDashboardAmount(balance, ['sd_ahorros', 'saldo_ahorro', 'saldo_ahorros', 'monto_ahorro', 'ahorros']);
-  const investmentBalance = getDashboardAmount(balance, ['sd_inversiones', 'saldo_inversion', 'saldo_inversiones', 'monto_inversion', 'inversiones']);
+  const savingsColocado = getNumericValue(getDashboardAmount(balance, ['sd_ahorros_colocado'])) ?? 0;
+  const savingsDisponible = getNumericValue(getDashboardAmount(balance, ['sd_ahorros_disponible', 'sd_ahorros'])) ?? 0;
+  const savingsBalance = savingsColocado + savingsDisponible;
+  const investmentColocado = getNumericValue(getDashboardAmount(balance, ['sd_inversiones_colocado', 'sd_inversiones'])) ?? 0;
+  const investmentDisponible = getNumericValue(getDashboardAmount(balance, ['sd_inversiones_disponible', 'sd_inversiones_disponibles'])) ?? 0;
+  const investmentBalance = investmentColocado + investmentDisponible;
   const loansBalance = getDashboardAmount(balance, ['sd_prestamos', 'saldo_prestamos', 'saldo_prestamo', 'deuda_prestamos', 'prestamos', 'solicitudes_prestamos']);
   const balanceDate = getDashboardDate(balance);
+
+  const buildBreakdown = (colocado, disponible) => (isLoadingBalance ? null : [
+    { label: 'Colocado', value: formatCurrency(colocado), tone: 'growing', tooltip: 'Capital activo colocado' },
+    { label: 'Disponible', value: formatCurrency(disponible), tone: 'available', tooltip: 'Saldo liberado disponible cobrable' },
+  ]);
+
+  const loansNumber = getNumericValue(loansBalance);
+  const loansBreakdown = isLoadingBalance ? null : [
+    {
+      label: loansNumber && loansNumber > 0 ? 'Saldo deudor' : 'Estado',
+      value: loansNumber && loansNumber > 0 ? formatCurrency(loansNumber) : 'Al corriente',
+      tone: loansNumber && loansNumber > 0 ? 'warning' : 'available',
+      tooltip: loansNumber && loansNumber > 0 ? 'Compromiso financiero pendiente de liquidación' : 'Sin créditos adeudados',
+    },
+  ];
 
   return (
     <div className="page dashboard-page" ref={pageRef}>
@@ -259,26 +278,29 @@ function DashboardPage() {
 
       <section className="portfolio-ledger-grid motion-immediate" aria-label="Resumen de productos financieros">
         <SummaryCard
-          helper="Saldo acumulado en planes de ahorro"
+          helper="Disponible: fondos liberados listos para cobro o reinversión."
           icon={HandCoins}
           label="Mis Ahorros"
           value={isLoadingBalance ? 'Cargando...' : formatCurrency(savingsBalance)}
+          breakdown={buildBreakdown(savingsColocado, savingsDisponible)}
           to="/ahorro?view=my-records"
           actionLabel="Ver activos"
         />
         <SummaryCard
-          helper="Capital colocado en inversiones vigentes"
+          helper="Disponible: inversiones con plazo de maduración concluido."
           icon={ChartNoAxesColumnIncreasing}
           label="Mis Inversiones"
           value={isLoadingBalance ? 'Cargando...' : formatCurrency(investmentBalance)}
+          breakdown={buildBreakdown(investmentColocado, investmentDisponible)}
           to="/inversion?view=my-records"
           actionLabel="Ver activos"
         />
         <SummaryCard
-          helper={loansBalance === null ? 'Sin préstamos activos' : 'Seguimiento de saldo deudor'}
+          helper={loansNumber && loansNumber > 0 ? 'Saldo adeudado activo.' : 'Sin compromisos financieros pendientes.'}
           icon={Banknote}
           label="Mis Préstamos"
           value={isLoadingBalance ? 'Cargando...' : (loansBalance === null ? 'No disponible' : formatCurrency(loansBalance))}
+          breakdown={loansBreakdown}
           to="/prestamos?view=my-records"
           actionLabel="Ver activos"
         />

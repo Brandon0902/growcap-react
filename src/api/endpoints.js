@@ -63,6 +63,10 @@ export const ENDPOINTS = {
     payWithBalance: (id) => `/inversiones/${id}/pay-saldo`,
     movements: (id) => `/inversiones/${id}/movimientos`,
     statement: (id = null) => (id && id !== 'ALL' ? `/inversiones/${id}/estado-cuenta` : '/inversiones/estado-cuenta'),
+    moverSaldo: (id) => `/inversiones/${id}/mover-saldo`,
+    solicitarRetiro: (id) => `/inversiones/${id}/solicitar-retiro`,
+    reinvertir: (id) => `/inversiones/${id}/reinvertir`,
+    toggleAutoReinvertir: (id) => `/inversiones/${id}/toggle-auto-reinvertir`,
   },
   notifications: {
     base: '/notificaciones',

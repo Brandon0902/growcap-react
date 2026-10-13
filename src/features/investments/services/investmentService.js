@@ -91,3 +91,37 @@ export async function getInvestmentStatement(id = null, params = {}) {
     raw: data,
   };
 }
+
+export async function moverSaldoInversion(id, payload = {}) {
+  const { data } = await axiosClient.post(ENDPOINTS.investments.moverSaldo(id), payload);
+  return {
+    data,
+    endpoint: ENDPOINTS.investments.moverSaldo(id),
+  };
+}
+
+export async function solicitarRetiroInversion(id, payload = {}) {
+  const { data } = await axiosClient.post(ENDPOINTS.investments.solicitarRetiro(id), payload);
+  return {
+    data,
+    endpoint: ENDPOINTS.investments.solicitarRetiro(id),
+  };
+}
+
+export async function reinvertirInversion(id, payload = {}) {
+  const { data } = await axiosClient.post(ENDPOINTS.investments.reinvertir(id), payload);
+  return {
+    data,
+    endpoint: ENDPOINTS.investments.reinvertir(id),
+  };
+}
+
+export async function toggleAutoReinvertirInversion(id, autoReinvertir) {
+  const { data } = await axiosClient.patch(ENDPOINTS.investments.toggleAutoReinvertir(id), {
+    auto_reinvertir: autoReinvertir,
+  });
+  return {
+    data,
+    endpoint: ENDPOINTS.investments.toggleAutoReinvertir(id),
+  };
+}

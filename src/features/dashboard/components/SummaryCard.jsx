@@ -1,9 +1,12 @@
 import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-function SummaryCard({ helper, icon: Icon, label, value, to, onClick, actionLabel = 'Ver activos' }) {
+function SummaryCard({ helper, icon: Icon, label, value, to, onClick, actionLabel = 'Ver activos', breakdown = null }) {
   const cardContent = (
-    <div className={`balance-hero-card portfolio-item-card ${to || onClick ? 'balance-hero-card-interactive' : ''}`}>
+    <div
+      className={`balance-hero-card portfolio-item-card ${to || onClick ? 'balance-hero-card-interactive' : ''}`}
+      title={helper || undefined}
+    >
       <div className="portfolio-card-header">
         <span className="page-kicker">
           {Icon && <Icon size={14} aria-hidden="true" />}
@@ -17,9 +20,25 @@ function SummaryCard({ helper, icon: Icon, label, value, to, onClick, actionLabe
         )}
       </div>
 
-      <strong className="portfolio-card-value">{value}</strong>
+      <span className="portfolio-card-value">{value}</span>
 
-      {helper && <p className="portfolio-card-helper">{helper}</p>}
+      {Array.isArray(breakdown) && breakdown.length > 0 ? (
+        <div className="portfolio-card-chips">
+          {breakdown.map((item) => (
+            <div
+              key={item.label}
+              className={`portfolio-chip is-${item.tone || 'neutral'}`}
+              title={item.tooltip || helper || undefined}
+            >
+              <span className="portfolio-chip-dot" aria-hidden="true" />
+              <span className="portfolio-chip-label">{item.label}:</span>
+              <span className="portfolio-chip-val">{item.value}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="portfolio-card-chips portfolio-card-chips-empty" />
+      )}
     </div>
   );
 
@@ -43,4 +62,3 @@ function SummaryCard({ helper, icon: Icon, label, value, to, onClick, actionLabe
 }
 
 export default SummaryCard;
-

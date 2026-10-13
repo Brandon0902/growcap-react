@@ -483,9 +483,92 @@ h3 {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 140px;
-  padding: 20px 22px;
-  gap: 10px;
+  min-height: 122px;
+  height: 100%;
+  padding: 16px 18px;
+  gap: 8px;
+  border-radius: 14px;
+}
+
+.portfolio-card-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+  min-height: 28px;
+}
+
+.portfolio-card-chips-empty {
+  border-top: none;
+  min-height: 0;
+  padding-top: 0;
+}
+
+.portfolio-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  line-height: 1.2;
+}
+
+.portfolio-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.portfolio-chip-label {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.portfolio-chip-val {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.74rem;
+}
+
+/* Tone variants */
+.portfolio-chip.is-growing {
+  background: #f5f3ff;
+  border: 1px solid #e9d5ff;
+  color: #6b21a8;
+}
+.portfolio-chip.is-growing .portfolio-chip-dot {
+  background: #7c3aed;
+}
+
+.portfolio-chip.is-available {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+.portfolio-chip.is-available .portfolio-chip-dot {
+  background: #16a34a;
+}
+
+.portfolio-chip.is-warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
+}
+.portfolio-chip.is-warning .portfolio-chip-dot {
+  background: #d97706;
+}
+
+.portfolio-chip.is-neutral {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+.portfolio-chip.is-neutral .portfolio-chip-dot {
+  background: #94a3b8;
 }
 
 .portfolio-card-header {
@@ -543,18 +626,27 @@ h3 {
 
 .portfolio-card-value {
   color: var(--color-primary-dark);
-  font-size: clamp(1.85rem, 3.8vw, 2.4rem);
-  font-weight: 600;
-  line-height: 1;
+  font-size: clamp(1.45rem, 2.8vw, 1.8rem);
+  font-weight: 700;
+  line-height: 1.1;
   font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
   display: block;
+  margin: 3px 0;
+}
+
+.balance-hero-card .portfolio-chip-val,
+.balance-hero-card strong.portfolio-chip-val {
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  color: inherit !important;
 }
 
 .portfolio-card-helper {
   color: var(--color-text-muted);
-  font-size: 0.86rem;
+  font-size: 0.75rem;
   margin-bottom: 0;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .card {
@@ -2811,12 +2903,12 @@ h3 {
   }
 
   .portfolio-item-card {
-    padding: 18px 16px;
-    min-height: auto;
+    padding: 14px 16px;
+    min-height: 118px;
   }
 
   .portfolio-card-value {
-    font-size: 1.85rem;
+    font-size: 1.5rem;
   }
 
   .hero-stat-stack {
