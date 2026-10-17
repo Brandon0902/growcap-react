@@ -154,24 +154,24 @@ function LoanPlanCard({ index, plan, onClick }) {
       }}
     >
       {isLocked && (
-        <div style={{ position: 'absolute', top: 16, right: 16, color: '#d97706', background: '#fef3c7', padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <Lock size={14} />
+        <div className="plan-locked-badge">
+          <Lock size={12} />
           <span>Requisitos</span>
         </div>
       )}
       <div className="savings-plan-card-top">
         <span className="savings-plan-icon loan-card-icon" aria-hidden="true" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#ffffff', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)' }}>
-          <HandCoins size={22} />
+          <HandCoins size={20} />
         </span>
-        <div>
-          <h3 style={{ color: '#0f172a', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.01em', marginBottom: '4px' }}>{name}</h3>
-          <p style={{ color: '#475569', fontSize: '0.875rem', lineHeight: '1.4' }}>{description}</p>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <h3 style={{ color: '#0f172a', fontWeight: 800, letterSpacing: '-0.01em' }}>{name}</h3>
+          <p style={{ color: '#475569' }}>{description}</p>
         </div>
       </div>
 
       <div className="savings-plan-rate loan-plan-rate" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
         <span style={{ color: '#15803d' }}>Monto máximo hasta</span>
-        <strong style={{ fontSize: '1.4rem', marginTop: '4px', color: '#166534' }}>
+        <strong style={{ color: '#166534' }}>
           {amountMax !== null && amountMax > 0 ? formatAmount(amountMax) : 'Flexible'}
         </strong>
       </div>
@@ -189,7 +189,7 @@ function LoanPlanCard({ index, plan, onClick }) {
 
       <div className="plan-card-action">
         <span>{isLocked ? 'Ver requisitos' : 'Solicitar préstamo'}</span>
-        <ArrowRight size={16} className="action-arrow" />
+        <ArrowRight size={15} className="action-arrow" />
       </div>
     </article>
   );
@@ -207,7 +207,13 @@ function LoansPage() {
   const [error, setError] = useState('');
   const [lockedPlan, setLockedPlan] = useState(null);
   const [plansError, setPlansError] = useState('');
-  const [isRecordsOpen, setIsRecordsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(() => {
+    const viewParam = searchParams.get('view');
+    const tabParam = searchParams.get('tab');
+    if (viewParam === 'my-records' || tabParam === 'records') return 'records';
+    if (tabParam === 'aval') return 'aval';
+    return 'plans';
+  });
   const [checkoutNotice, setCheckoutNotice] = useState({ message: '', type: 'info' });
   const [selectedLoanForAbono, setSelectedLoanForAbono] = useState(null);
   const [selectedLoanForCancel, setSelectedLoanForCancel] = useState(null);
@@ -261,11 +267,14 @@ function LoansPage() {
   }, [loadLoansData]);
 
   useEffect(() => {
-    if (searchParams.get('view') === 'my-records' || searchParams.get('tab') === 'records') {
-      setIsRecordsOpen(true);
-      setTimeout(() => {
-        recordsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 300);
+    const viewParam = searchParams.get('view');
+    const tabParam = searchParams.get('tab');
+    if (viewParam === 'my-records' || tabParam === 'records') {
+      setActiveTab('records');
+    } else if (tabParam === 'aval') {
+      setActiveTab('aval');
+    } else if (tabParam === 'plans') {
+      setActiveTab('plans');
     }
   }, [searchParams]);
 
@@ -309,7 +318,8 @@ function LoansPage() {
             message: `¡Pago confirmado por Mercado Pago! Tu abono extraordinario${montoStr} fue acreditado en tiempo real a tu préstamo.${liquidadoStr}`,
             type: 'success',
           });
-          setIsRecordsOpen(true);
+          setActiveTab('records');
+          setActiveLoanTab('current');
         } else if (res?.status === 'rejected' || res?.status === 'cancelled') {
           setCheckoutNotice({
             message: 'El pago no fue aprobado o fue cancelado por Mercado Pago. Tu saldo no fue modificado.',
@@ -360,16 +370,14 @@ function LoansPage() {
         title="Línea de Financiamiento y Préstamos"
         actions={
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-            {loans.length > 0 && (
+            {activeTab !== 'records' ? (
               <Button
                 type="button"
                 className="button-secondary"
                 onClick={() => {
+                  setActiveTab('records');
                   setActiveLoanTab(currentLoansCount > 0 ? 'current' : 'history');
-                  setIsRecordsOpen(true);
-                  setTimeout(() => {
-                    recordsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }, 50);
+                  setSearchParams({ tab: 'records' });
                 }}
                 style={{
                   display: 'inline-flex',
@@ -381,47 +389,72 @@ function LoansPage() {
                   fontSize: '0.86rem',
                 }}
               >
-                <Eye size={18} style={{ color: '#059669' }} />
+                <Eye size={17} style={{ color: '#059669' }} />
                 <span>
                   Mis préstamos ({loans.length})
                   {currentLoansCount > 0 ? ` · ${currentLoansCount} activo` : ''}
                 </span>
               </Button>
+            ) : (
+              <Button
+                type="button"
+                className="button-secondary"
+                onClick={() => {
+                  setActiveTab('plans');
+                  setSearchParams({ tab: 'plans' });
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 16px',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  fontSize: '0.86rem',
+                }}
+              >
+                <Banknote size={17} style={{ color: '#059669' }} />
+                <span>Ver planes disponibles</span>
+              </Button>
             )}
-            <Button
-              type="button"
-              className="button-secondary"
-              onClick={() => {
-                avalSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 16px',
-                borderRadius: '10px',
-                fontWeight: 600,
-                fontSize: '0.86rem',
-              }}
-            >
-              <ShieldCheck size={18} style={{ color: '#2563eb' }} />
-              <span>Sección de aval solidario</span>
-              {pendingAvalRequests.length > 0 && (
-                <span
-                  style={{
-                    background: '#dc2626',
-                    color: '#ffffff',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    padding: '1px 7px',
-                    borderRadius: '10px',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {pendingAvalRequests.length}
-                </span>
-              )}
-            </Button>
+
+            {activeTab !== 'aval' && (
+              <Button
+                type="button"
+                className="button-secondary"
+                onClick={() => {
+                  setActiveTab('aval');
+                  setSearchParams({ tab: 'aval' });
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 16px',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  fontSize: '0.86rem',
+                }}
+              >
+                <ShieldCheck size={17} style={{ color: '#2563eb' }} />
+                <span>Aval solidario</span>
+                {pendingAvalRequests.length > 0 && (
+                  <span
+                    style={{
+                      background: '#dc2626',
+                      color: '#ffffff',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '1px 7px',
+                      borderRadius: '10px',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {pendingAvalRequests.length}
+                  </span>
+                )}
+              </Button>
+            )}
           </div>
         }
       >
@@ -434,175 +467,243 @@ function LoansPage() {
         </div>
       )}
 
-      {loans.length > 0 && (
-        <LoanLifecycleAlertBanner
-          items={loans}
-          onAbonar={(loan) => setSelectedLoanForAbono(loan)}
-          onCancel={(loan) => setSelectedLoanForCancel(loan)}
-          onViewRecords={() => {
-            setActiveLoanTab('current');
-            setIsRecordsOpen(true);
-            setTimeout(() => {
-              recordsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 50);
+      {/* Segmented Top Navigation */}
+      <div className="module-nav-tabs" role="tablist" aria-label="Secciones de Préstamos">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'plans'}
+          className={`module-nav-btn ${activeTab === 'plans' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('plans');
+            setSearchParams({ tab: 'plans' });
           }}
-        />
+        >
+          <Banknote size={16} />
+          <span>Planes y solicitud</span>
+          <span className={`module-nav-badge ${activeTab === 'plans' ? 'active' : 'inactive'}`}>
+            {plans.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'records'}
+          className={`module-nav-btn ${activeTab === 'records' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('records');
+            setSearchParams({ tab: 'records' });
+          }}
+        >
+          <Eye size={16} />
+          <span>Mis préstamos</span>
+          <span className={`module-nav-badge ${activeTab === 'records' ? 'active' : 'inactive'}`}>
+            {loans.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'aval'}
+          className={`module-nav-btn ${activeTab === 'aval' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('aval');
+            setSearchParams({ tab: 'aval' });
+          }}
+        >
+          <ShieldCheck size={16} />
+          <span>Aval solidario</span>
+          {pendingAvalRequests.length > 0 && (
+            <span
+              style={{
+                background: '#dc2626',
+                color: '#ffffff',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                padding: '1px 6px',
+                borderRadius: '8px',
+              }}
+            >
+              {pendingAvalRequests.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === 'records' && (
+        <>
+          {loans.length > 0 && (
+            <LoanLifecycleAlertBanner
+              items={loans}
+              onAbonar={(loan) => setSelectedLoanForAbono(loan)}
+              onCancel={(loan) => setSelectedLoanForCancel(loan)}
+              onViewRecords={() => {
+                setActiveLoanTab('current');
+              }}
+            />
+          )}
+
+          <section className="section-block records-main-section motion-immediate" ref={recordsRef}>
+            <div
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid #E9D5FF',
+                borderRadius: 'var(--radius)',
+                boxShadow: '0 16px 38px rgba(17, 24, 39, 0.06)',
+                padding: 'clamp(16px, 2.5vw, 24px)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '16px',
+                  flexWrap: 'wrap',
+                  gap: '8px',
+                }}
+              >
+                <div>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Registros del colaborador
+                  </span>
+                  <h2 style={{ fontSize: '1.4rem', color: 'var(--purple-950)', margin: '2px 0 0' }}>Mis préstamos</h2>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '3px 0 0' }}>
+                    Revisa saldos restantes, cuotas de nómina, progreso de liquidación y opciones para abonar.
+                  </p>
+                </div>
+                <Button
+                  className="button-secondary icon-button"
+                  style={{ fontSize: '0.78rem', padding: '6px 14px', minHeight: '34px' }}
+                  onClick={() => {
+                    setActiveTab('plans');
+                    setSearchParams({ tab: 'plans' });
+                  }}
+                >
+                  <Banknote size={16} aria-hidden="true" />
+                  Solicitar nuevo préstamo
+                </Button>
+              </div>
+
+              <FinancialRequestList
+                emptyDescription="Cuando completes una solicitud, aparecerá aquí."
+                emptyTitle="Aún no tienes préstamos registrados."
+                error={error}
+                isLoading={isLoading}
+                items={loans}
+                onRefresh={loadLoansData}
+                onCancelLoan={(loan) => setSelectedLoanForCancel(loan)}
+                activeLoanTab={activeLoanTab}
+                onLoanTabChange={setActiveLoanTab}
+                searchable
+                title="Historial de préstamos"
+                type="loans"
+              />
+            </div>
+          </section>
+        </>
       )}
 
-      <section className="section-block savings-plans-section motion-immediate">
-        <div className="section-heading savings-plans-heading">
-          <div>
-            <span>Opciones disponibles</span>
-            <h2>Planes de préstamo</h2>
-          </div>
-        </div>
-        {isLoading && <PlanCardsSkeleton />}
-        {!isLoading && plansError && (
-          <div className="savings-plans-state savings-plans-error" role="alert">
-            <AlertCircle size={34} aria-hidden="true" />
-            <div>
-              <h3>No se pudieron cargar los planes</h3>
-              <p>{plansError}</p>
+      {activeTab === 'plans' && (
+        <>
+          {loans.length > 0 && (
+            <LoanLifecycleAlertBanner
+              items={loans}
+              onAbonar={(loan) => setSelectedLoanForAbono(loan)}
+              onCancel={(loan) => setSelectedLoanForCancel(loan)}
+              onViewRecords={() => {
+                setActiveTab('records');
+                setActiveLoanTab('current');
+                setSearchParams({ tab: 'records' });
+              }}
+            />
+          )}
+
+          <section className="section-block savings-plans-section motion-immediate">
+            <div className="section-heading savings-plans-heading">
+              <div>
+                <span>Opciones disponibles</span>
+                <h2>Planes de préstamo</h2>
+              </div>
             </div>
-            <Button className="button-secondary icon-button" onClick={loadLoansData}>
-              <RefreshCw size={18} aria-hidden="true" />
-              Reintentar
-            </Button>
-          </div>
-        )}
-        {!isLoading && !plansError && plans.length === 0 && (
-          <div className="savings-plans-state">
+            {isLoading && <PlanCardsSkeleton />}
+            {!isLoading && plansError && (
+              <div className="savings-plans-state savings-plans-error" role="alert">
+                <AlertCircle size={34} aria-hidden="true" />
+                <div>
+                  <h3>No se pudieron cargar los planes</h3>
+                  <p>{plansError}</p>
+                </div>
+                <Button className="button-secondary icon-button" onClick={loadLoansData}>
+                  <RefreshCw size={18} aria-hidden="true" />
+                  Reintentar
+                </Button>
+              </div>
+            )}
+            {!isLoading && !plansError && plans.length === 0 && (
+              <div className="savings-plans-state">
+                <div>
+                  <h3>Aún no hay planes disponibles</h3>
+                  <p>Cuando haya planes de préstamo activos, aparecerán aquí.</p>
+                </div>
+              </div>
+            )}
+            {!isLoading && !plansError && plans.length > 0 && (
+              <div className="savings-plans-grid">
+                {plans.map((plan, index) => (
+                  <LoanPlanCard key={plan?.id || plan?.id_prestamo || plan?.label || `loan-plan-${index}`} index={index} plan={plan} onClick={handlePlanClick} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="guided-request-section">
+            {!plansError && (
+              <LoanWizard
+                ref={wizardRef}
+                onCreated={() => {
+                  setActiveTab('records');
+                  setActiveLoanTab('current');
+                  setSearchParams({ tab: 'records' });
+                  loadLoansData();
+                }}
+                plans={plans}
+                prerequisites={prerequisites}
+              />
+            )}
+          </section>
+
+          <div className="records-entry motion-immediate">
             <div>
-              <h3>Aun no hay planes disponibles</h3>
-              <p>Cuando haya planes de préstamo activos, apareceran aquí.</p>
-            </div>
-          </div>
-        )}
-        {!isLoading && !plansError && plans.length > 0 && (
-          <div className="savings-plans-grid">
-            {plans.map((plan, index) => (
-              <LoanPlanCard key={plan?.id || plan?.id_prestamo || plan?.label || `loan-plan-${index}`} index={index} plan={plan} onClick={handlePlanClick} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="guided-request-section">
-        {!plansError && (
-          <LoanWizard
-            ref={wizardRef}
-            onCreated={() => {
-              setActiveLoanTab('current');
-              setIsRecordsOpen(true);
-              loadLoansData();
-              setTimeout(() => {
-                recordsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }, 100);
-            }}
-            plans={plans}
-            prerequisites={prerequisites}
-          />
-        )}
-      </section>
-
-      <div className="records-entry motion-immediate">
-        <div>
-          <span>Seguimiento</span>
-          <h2>Consulta tus préstamos cuando lo necesites</h2>
-          <p>Revisa cuotas, saldos restantes, progreso de pago y realiza abonos en cualquier momento.</p>
-        </div>
-        <Button
-          className="button-secondary icon-button records-entry-button"
-          onClick={() => {
-            setIsRecordsOpen((prev) => {
-              const nextState = !prev;
-              if (nextState) {
-                setTimeout(() => {
-                  recordsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
-              }
-              return nextState;
-            });
-          }}
-          aria-expanded={isRecordsOpen}
-        >
-          {isRecordsOpen ? <ChevronUp size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
-          {isRecordsOpen ? 'Ocultar mis préstamos' : 'Ver mis préstamos'}
-        </Button>
-      </div>
-
-      <div
-        ref={recordsRef}
-        style={{
-          overflow: 'hidden',
-          transition: 'max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, margin 0.35s ease',
-          maxHeight: isRecordsOpen ? '4000px' : '0px',
-          opacity: isRecordsOpen ? 1 : 0,
-          marginTop: isRecordsOpen ? '20px' : '0px',
-          pointerEvents: isRecordsOpen ? 'auto' : 'none',
-        }}
-      >
-        <div
-          style={{
-            background: 'var(--color-surface)',
-            border: '1px solid #E9D5FF',
-            borderRadius: 'var(--radius)',
-            boxShadow: '0 16px 38px rgba(17, 24, 39, 0.06)',
-            padding: 'clamp(16px, 2.5vw, 24px)',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '16px',
-              flexWrap: 'wrap',
-              gap: '8px',
-            }}
-          >
-            <div>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Registros del colaborador
-              </span>
-              <h2 style={{ fontSize: '1.4rem', color: 'var(--purple-950)', margin: '2px 0 0' }}>Mis préstamos</h2>
-              <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '3px 0 0' }}>
-                Revisa saldos restantes, cuotas de nómina, progreso de liquidación y opciones para abonar.
-              </p>
+              <span>Seguimiento</span>
+              <h2>¿Ya tienes préstamos activos?</h2>
+              <p>Revisa cuotas, saldos restantes, progreso de pago y realiza abonos en cualquier momento.</p>
             </div>
             <Button
-              className="button-secondary icon-button"
-              style={{ fontSize: '0.78rem', padding: '6px 12px', minHeight: '34px' }}
-              onClick={() => setIsRecordsOpen(false)}
+              className="button-secondary icon-button records-entry-button"
+              onClick={() => {
+                setActiveTab('records');
+                setSearchParams({ tab: 'records' });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
             >
-              <ChevronUp size={16} aria-hidden="true" />
-              Ocultar
+              <Eye size={18} aria-hidden="true" />
+              Ver mis préstamos ({loans.length})
             </Button>
           </div>
+        </>
+      )}
 
-          <FinancialRequestList
-            emptyDescription="Cuando completes una solicitud, aparecerá aquí."
-            emptyTitle="Aún no tienes préstamos registrados."
-            error={error}
-            isLoading={isLoading}
-            items={loans}
-            onRefresh={loadLoansData}
-            onCancelLoan={(loan) => setSelectedLoanForCancel(loan)}
-            activeLoanTab={activeLoanTab}
-            onLoanTabChange={setActiveLoanTab}
-            searchable
-            title="Historial de préstamos"
-            type="loans"
-          />
-        </div>
-      </div>
-
-      <AvalSolidarioSection
-        ref={avalSectionRef}
-        requests={pendingAvalRequests}
-        onReview={(req) => setSelectedAvalRequestToReview(req)}
-        onReload={loadLoansData}
-      />
+      {activeTab === 'aval' && (
+        <AvalSolidarioSection
+          ref={avalSectionRef}
+          requests={pendingAvalRequests}
+          onReview={(req) => setSelectedAvalRequestToReview(req)}
+          onReload={loadLoansData}
+        />
+      )}
 
       {selectedLoanForAbono && (
         <LoanAbonoModal

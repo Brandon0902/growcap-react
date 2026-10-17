@@ -11,23 +11,24 @@ function AuthLayout() {
       const mm = gsap.matchMedia();
 
       mm.add('(prefers-reduced-motion: no-preference)', () => {
-        gsap
-          .timeline({
-            defaults: {
-              duration: 0.58,
-              ease: 'power3.out',
-            },
-          })
-          .from('.auth-panel', { autoAlpha: 0, x: 24, scale: 0.99 }, '<0.12')
-          .from('.auth-panel .form-intro, .auth-panel .form-field, .auth-panel .button, .auth-panel .helper-text', {
-            autoAlpha: 0,
-            y: 14,
-            stagger: 0.07,
+        gsap.fromTo(
+          '.auth-panel',
+          { autoAlpha: 0, x: 20, scale: 0.99 },
+          {
+            autoAlpha: 1,
+            x: 0,
+            scale: 1,
             duration: 0.42,
-          }, '<0.18');
+            ease: 'power3.out',
+            clearProps: 'all',
+          },
+        );
       });
 
-      return () => mm.revert();
+      return () => {
+        gsap.set('.auth-panel', { clearProps: 'all' });
+        mm.revert();
+      };
     },
     { scope: authRef },
   );
@@ -37,7 +38,7 @@ function AuthLayout() {
       <section className="auth-story" aria-label="Resumen Growcap">
         <LoginWealthScene />
       </section>
-      <section className="auth-panel">
+      <section className="auth-panel" style={{ opacity: 1, visibility: 'visible' }}>
         <Outlet />
       </section>
     </main>

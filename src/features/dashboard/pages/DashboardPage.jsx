@@ -161,7 +161,7 @@ function DashboardPage() {
         ]}
         title={greetingText}
       >
-        Monitorea el crecimiento de tu capital, rendimientos acumulados y compromisos activos.
+        Monitorea el crecimiento de tu capital.
       </PageHero>
 
       {notice.message && (
@@ -407,6 +407,12 @@ function DashboardPage() {
         isOpen={isWithdrawalModalOpen}
         onClose={() => setIsWithdrawalModalOpen(false)}
         availableBalance={Number(generalBalance ?? 0)}
+        availableAccounts={
+          balance?.cuentas_disponibles
+          || balance?.data?.cuentas_disponibles
+          || balance?.detalle?.cuentas_disponibles
+          || []
+        }
         onSuccess={(msg) => {
           setNotice({ message: msg, type: 'success' });
           loadBalance();

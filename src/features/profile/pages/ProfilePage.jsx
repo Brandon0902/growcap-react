@@ -8,6 +8,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import BeneficiariesEditModal from '../components/BeneficiariesEditModal.jsx';
 import BeneficiariesTermsModal from '../components/BeneficiariesTermsModal.jsx';
 import ChangePasswordModal from '../components/ChangePasswordModal.jsx';
@@ -60,6 +61,21 @@ function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'beneficiarios') return 'beneficiarios';
+    return 'general';
+  });
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'beneficiarios' && activeTab !== 'beneficiarios') {
+      setActiveTab('beneficiarios');
+    } else if (tabParam === 'general' && activeTab !== 'general') {
+      setActiveTab('general');
+    }
+  }, [searchParams]);
 
   // Modales
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -109,9 +125,70 @@ function ProfilePage() {
           { label: 'Sesion', value: error ? 'Revisar' : 'Activa' },
           { label: 'Cuenta', value: 'Growcap' },
         ]}
-        title="Mis datos"
+        title={activeTab === 'beneficiarios' ? 'Beneficiarios Legales' : 'Mis datos'}
+        actions={
+          activeTab === 'general' ? (
+            <Button
+              className="button-secondary icon-button"
+              onClick={() => {
+                setActiveTab('beneficiarios');
+                setSearchParams({ tab: 'beneficiarios' });
+              }}
+              type="button"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                borderRadius: '10px',
+                fontWeight: 600,
+                fontSize: '0.86rem',
+              }}
+            >
+              <Users size={17} style={{ color: '#2563eb' }} />
+              <span>Beneficiarios</span>
+              {hasBeneficiaries && (
+                <span
+                  style={{
+                    background: '#16a34a',
+                    color: '#ffffff',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    padding: '1px 7px',
+                    borderRadius: '10px',
+                  }}
+                >
+                  {beneficiariesList.filter((b) => b.nombre).length}
+                </span>
+              )}
+            </Button>
+          ) : (
+            <Button
+              className="button-secondary icon-button"
+              onClick={() => {
+                setActiveTab('general');
+                setSearchParams({ tab: 'general' });
+              }}
+              type="button"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                borderRadius: '10px',
+                fontWeight: 600,
+                fontSize: '0.86rem',
+              }}
+            >
+              <CircleUserRound size={17} style={{ color: '#6B21A8' }} />
+              <span>Ver datos personales</span>
+            </Button>
+          )
+        }
       >
-        Consulta tu expediente digital, gestiona tus beneficiarios legales y mantén actualizada tu información.
+        {activeTab === 'beneficiarios'
+          ? 'Personas designadas para recibir tus fondos y rendimientos acumulados en caso de fallecimiento (distribución obligatoria al 100%).'
+          : 'Consulta tu expediente digital, mantén actualizada tu información y gestiona la seguridad de tu cuenta.'}
       </PageHero>
 
       {error && (
@@ -128,167 +205,230 @@ function ProfilePage() {
 
       {!isLoading && !error && (
         <>
-          {/* Datos personales con desglose de Apellidos y botón para solicitar corrección */}
-          <ProfileSection
-            headerAction={
-              <Button
-                className="button-secondary icon-button"
-                onClick={() => handleOpenCorrection('apellido')}
-                type="button"
-              >
-                <FileEdit size={16} aria-hidden="true" />
-                Solicitar corrección
-              </Button>
-            }
-            items={[
-              { label: 'Nombre(s)', value: getNestedValue([personalData, user], ['nombre', 'name']) },
-              { label: 'Apellidos', value: getNestedValue([personalData, user], ['apellido', 'apellidos', 'last_name']) },
-              { label: 'Correo', value: getNestedValue([personalData, user], ['email', 'correo', 'correo_electronico']) },
-              { label: 'Telefono', value: getValue(personalData, ['telefono', 'phone', 'celular']) },
-              { label: 'RFC', value: getValue(personalData, ['rfc', 'RFC']) },
-              ...(getValue(personalData, ['numero_empleado'], '')
-                ? [{ label: 'No. Empleado', value: getValue(personalData, ['numero_empleado']) }]
-                : []),
-              ...(getValue(personalData, ['codigo_cliente'], '')
-                ? [{ label: 'Código de Cliente', value: getValue(personalData, ['codigo_cliente']) }]
-                : []),
-            ]}
-            subtitle="Identidad oficial y datos fiscales registrados en tu cuenta."
-            title="Datos personales"
-          />
+          {/* Segmented Top Navigation */}
+          <div className="module-nav-tabs" role="tablist" aria-label="Secciones de Perfil">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'general'}
+              className={`module-nav-btn ${activeTab === 'general' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('general');
+                setSearchParams({ tab: 'general' });
+              }}
+            >
+              <CircleUserRound size={16} />
+              <span>Datos personales</span>
+            </button>
 
-          {/* Domicilio */}
-          <ProfileSection
-            title="Dirección residencial"
-            items={[
-              { label: 'Estado', value: getNestedValue([addressData, personalData], ['estado', 'estado_nombre', 'nombre_estado', 'id_estado']) },
-              { label: 'Municipio', value: getNestedValue([addressData, personalData], ['municipio', 'municipio_nombre', 'nombre_municipio', 'ciudad', 'id_municipio']) },
-              { label: 'Calle y número', value: getNestedValue([addressData, personalData], ['calle', 'direccion', 'domicilio']) },
-              { label: 'Colonia', value: getNestedValue([addressData, personalData], ['colonia']) },
-              { label: 'Código postal', value: getNestedValue([addressData, personalData], ['codigo_postal', 'cp']) },
-            ]}
-          />
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'beneficiarios'}
+              className={`module-nav-btn ${activeTab === 'beneficiarios' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('beneficiarios');
+                setSearchParams({ tab: 'beneficiarios' });
+              }}
+            >
+              <Users size={16} />
+              <span>Beneficiarios</span>
+              {hasBeneficiaries && (
+                <span className={`module-nav-badge ${activeTab === 'beneficiarios' ? 'active' : 'inactive'}`}>
+                  {beneficiariesList.filter((b) => b.nombre).length}
+                </span>
+              )}
+            </button>
+          </div>
 
-          {/* Información laboral si está disponible */}
-          {laboralesData && (
-            <ProfileSection
-              title="Información laboral"
-              items={[
-                { label: 'Empresa', value: laboralesData.empresa_nombre || laboralesData.empresa },
-                { label: 'Puesto', value: laboralesData.puesto },
-              ]}
-            />
-          )}
+          {/* TAB 1: DATOS PERSONALES */}
+          {activeTab === 'general' && (
+            <>
+              {/* Datos personales con desglose de Apellidos y botón para solicitar corrección */}
+              <ProfileSection
+                headerAction={
+                  <Button
+                    className="button-secondary icon-button"
+                    onClick={() => handleOpenCorrection('apellido')}
+                    type="button"
+                  >
+                    <FileEdit size={16} aria-hidden="true" />
+                    Solicitar corrección
+                  </Button>
+                }
+                items={[
+                  { label: 'Nombre(s)', value: getNestedValue([personalData, user], ['nombre', 'name']) },
+                  { label: 'Apellidos', value: getNestedValue([personalData, user], ['apellido', 'apellidos', 'last_name']) },
+                  { label: 'Correo', value: getNestedValue([personalData, user], ['email', 'correo', 'correo_electronico']) },
+                  { label: 'Telefono', value: getValue(personalData, ['telefono', 'phone', 'celular']) },
+                  { label: 'RFC', value: getValue(personalData, ['rfc', 'RFC']) },
+                  ...(getValue(personalData, ['numero_empleado'], '')
+                    ? [{ label: 'No. Empleado', value: getValue(personalData, ['numero_empleado']) }]
+                    : []),
+                  ...(getValue(personalData, ['codigo_cliente'], '')
+                    ? [{ label: 'Código de Cliente', value: getValue(personalData, ['codigo_cliente']) }]
+                    : []),
+                ]}
+                subtitle="Identidad oficial y datos fiscales registrados en tu cuenta."
+                title="Datos personales"
+              />
 
-          {/* Tarjeta especializada e interactiva para Beneficiarios */}
-          <Card className="profile-card motion-immediate">
-            <div className="profile-card-header-row">
-              <div>
-                <h2>Beneficiarios de la cuenta</h2>
-                <p style={{ margin: '4px 0 0', color: 'var(--color-text-muted)', fontSize: '0.86rem' }}>
-                  Personas designadas para recibir tus fondos y rendimientos en caso de fallecimiento (distribución obligatoria al 100%).
-                </p>
-              </div>
+              {/* Domicilio */}
+              <ProfileSection
+                title="Dirección residencial"
+                items={[
+                  { label: 'Estado', value: getNestedValue([addressData, personalData], ['estado', 'estado_nombre', 'nombre_estado', 'id_estado']) },
+                  { label: 'Municipio', value: getNestedValue([addressData, personalData], ['municipio', 'municipio_nombre', 'nombre_municipio', 'ciudad', 'id_municipio']) },
+                  { label: 'Calle y número', value: getNestedValue([addressData, personalData], ['calle', 'direccion', 'domicilio']) },
+                  { label: 'Colonia', value: getNestedValue([addressData, personalData], ['colonia']) },
+                  { label: 'Código postal', value: getNestedValue([addressData, personalData], ['codigo_postal', 'cp']) },
+                ]}
+              />
 
-              <Button
-                className="button-secondary icon-button"
-                onClick={() => setIsBeneficiariesModalOpen(true)}
-                type="button"
-              >
-                <Users size={16} aria-hidden="true" />
-                {hasBeneficiaries ? 'Editar beneficiarios' : 'Asignar beneficiarios'}
-              </Button>
-            </div>
+              {/* Información laboral si está disponible */}
+              {laboralesData && (
+                <ProfileSection
+                  title="Información laboral"
+                  items={[
+                    { label: 'Empresa', value: laboralesData.empresa_nombre || laboralesData.empresa },
+                    { label: 'Puesto', value: laboralesData.puesto },
+                  ]}
+                />
+              )}
 
-            {hasBeneficiaries ? (
-              <div className="beneficiaries-grid-layout">
-                {beneficiariesList.map((beneficiary) => (
-                  <div className="beneficiary-card-item" key={beneficiary.slot}>
-                    <div className="beneficiary-card-top">
-                      <span className="beneficiary-slot-name">
-                        {beneficiary.slot === 1 ? 'Beneficiario Principal (1)' : 'Beneficiario Secundario (2)'}
-                      </span>
-                      <span className="beneficiary-badge-pct">
-                        {beneficiary.porcentaje}%
-                      </span>
-                    </div>
-                    <div className="beneficiary-card-name">
-                      {beneficiary.nombre || 'No asignado'}
-                    </div>
-                    <p className="beneficiary-card-phone">
-                      {beneficiary.telefono ? `Teléfono: ${beneficiary.telefono}` : 'Sin teléfono de contacto'}
+              {/* Datos bancarios */}
+              <ProfileSection
+                title="Datos bancarios"
+                items={[
+                  { label: 'Banco', value: getNestedValue([bankData, personalData], ['banco', 'nombre_banco']) },
+                  { label: 'Cuenta / CLABE', value: getNestedValue([bankData, personalData], ['cuenta', 'numero_cuenta', 'clabe']) },
+                ]}
+              />
+
+              {/* Seguridad de la cuenta */}
+              <Card className="profile-card motion-immediate">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
+                  <div>
+                    <h2>Seguridad de la cuenta</h2>
+                    <p style={{ margin: '4px 0 0', color: 'var(--color-text-muted)', fontSize: '0.88rem' }}>
+                      Administra tus credenciales de acceso y protege tu información registrada.
                     </p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{
-                background: '#f8fafc',
-                border: '1px dashed #cbd5e1',
-                borderRadius: '12px',
-                padding: '20px',
-                textAlign: 'center',
-                marginBottom: '16px',
-              }}>
-                <p style={{ margin: '0 0 12px', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
-                  Aún no has configurado tus beneficiarios legales. Asigna a tus beneficiarios para garantizar la protección patrimonial de tus cuentas de ahorro e inversión.
-                </p>
+                  <Button
+                    className="button-secondary icon-button"
+                    onClick={() => setIsPasswordModalOpen(true)}
+                    type="button"
+                  >
+                    <KeyRound size={18} aria-hidden="true" />
+                    Cambiar contraseña
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Acceso a Beneficiarios */}
+              <div className="records-entry motion-immediate" style={{ marginTop: '24px' }}>
+                <div>
+                  <span>Protección patrimonial</span>
+                  <h2>¿Deseas gestionar tus beneficiarios?</h2>
+                  <p>Designa formalmente a las personas que recibirán tus ahorros y rendimientos acumulados con asignación legal.</p>
+                </div>
                 <Button
-                  className="icon-button"
+                  className="button-secondary icon-button records-entry-button"
+                  onClick={() => {
+                    setActiveTab('beneficiarios');
+                    setSearchParams({ tab: 'beneficiarios' });
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                >
+                  <Users size={18} aria-hidden="true" />
+                  <span>Ver beneficiarios</span>
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* TAB 2: BENEFICIARIOS */}
+          {activeTab === 'beneficiarios' && (
+            <Card className="profile-card motion-immediate">
+              <div className="profile-card-header-row">
+                <div>
+                  <h2>Beneficiarios de la cuenta</h2>
+                  <p style={{ margin: '4px 0 0', color: 'var(--color-text-muted)', fontSize: '0.86rem' }}>
+                    Personas designadas para recibir tus fondos y rendimientos en caso de fallecimiento (distribución obligatoria al 100%).
+                  </p>
+                </div>
+
+                <Button
+                  className="button-secondary icon-button"
                   onClick={() => setIsBeneficiariesModalOpen(true)}
                   type="button"
                 >
                   <Users size={16} aria-hidden="true" />
-                  Asignar beneficiarios ahora
+                  {hasBeneficiaries ? 'Editar beneficiarios' : 'Asignar beneficiarios'}
                 </Button>
               </div>
-            )}
 
-            <div className="beneficiaries-card-footer">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontSize: '0.85rem', fontWeight: 600 }}>
-                <ShieldCheck size={17} />
-                <span>Asignación patrimonial debidamente registrada</span>
+              {hasBeneficiaries ? (
+                <div className="beneficiaries-grid-layout">
+                  {beneficiariesList.map((beneficiary) => (
+                    <div className="beneficiary-card-item" key={beneficiary.slot}>
+                      <div className="beneficiary-card-top">
+                        <span className="beneficiary-slot-name">
+                          {beneficiary.slot === 1 ? 'Beneficiario Principal (1)' : 'Beneficiario Secundario (2)'}
+                        </span>
+                        <span className="beneficiary-badge-pct">
+                          {beneficiary.porcentaje}%
+                        </span>
+                      </div>
+                      <div className="beneficiary-card-name">
+                        {beneficiary.nombre || 'No asignado'}
+                      </div>
+                      <p className="beneficiary-card-phone">
+                        {beneficiary.telefono ? `Teléfono: ${beneficiary.telefono}` : 'Sin teléfono de contacto'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1px dashed #cbd5e1',
+                  borderRadius: '12px',
+                  padding: '24px 20px',
+                  textAlign: 'center',
+                  marginBottom: '16px',
+                }}>
+                  <p style={{ margin: '0 0 14px', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
+                    Aún no has configurado tus beneficiarios legales. Asigna a tus beneficiarios para garantizar la protección patrimonial de tus cuentas de ahorro e inversión.
+                  </p>
+                  <Button
+                    className="icon-button"
+                    onClick={() => setIsBeneficiariesModalOpen(true)}
+                    type="button"
+                  >
+                    <Users size={16} aria-hidden="true" />
+                    Asignar beneficiarios ahora
+                  </Button>
+                </div>
+              )}
+
+              <div className="beneficiaries-card-footer">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontSize: '0.85rem', fontWeight: 600 }}>
+                  <ShieldCheck size={17} />
+                  <span>Asignación patrimonial debidamente registrada</span>
+                </div>
+
+                <button
+                  className="terms-link-button"
+                  onClick={() => setIsTermsModalOpen(true)}
+                  type="button"
+                >
+                  <Scale size={15} />
+                  Ver términos y condiciones legales
+                </button>
               </div>
-
-              <button
-                className="terms-link-button"
-                onClick={() => setIsTermsModalOpen(true)}
-                type="button"
-              >
-                <Scale size={15} />
-                Ver términos y condiciones legales
-              </button>
-            </div>
-          </Card>
-
-          {/* Datos bancarios */}
-          <ProfileSection
-            title="Datos bancarios"
-            items={[
-              { label: 'Banco', value: getNestedValue([bankData, personalData], ['banco', 'nombre_banco']) },
-              { label: 'Cuenta / CLABE', value: getNestedValue([bankData, personalData], ['cuenta', 'numero_cuenta', 'clabe']) },
-            ]}
-          />
-
-          {/* Seguridad de la cuenta */}
-          <Card className="profile-card motion-immediate">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
-              <div>
-                <h2>Seguridad de la cuenta</h2>
-                <p style={{ margin: '4px 0 0', color: 'var(--color-text-muted)', fontSize: '0.88rem' }}>
-                  Administra tus credenciales de acceso y protege tu información registrada.
-                </p>
-              </div>
-              <Button
-                className="button-secondary icon-button"
-                onClick={() => setIsPasswordModalOpen(true)}
-                type="button"
-              >
-                <KeyRound size={18} aria-hidden="true" />
-                Cambiar contraseña
-              </Button>
-            </div>
-          </Card>
+            </Card>
+          )}
 
           {/* Modales montados */}
           <ChangePasswordModal

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Building2, ChevronDown, KeyRound, LogOut, User } from 'lucide-react';
+import { Building2, ChevronDown, HelpCircle, KeyRound, LogOut, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import logoGrowcap from '../../assets/rombo_blanco.png';
 import useAuth from '../../features/auth/hooks/useAuth.js';
@@ -76,7 +76,30 @@ function Header() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button
+          type="button"
+          aria-label="Preguntas frecuentes y ayuda"
+          title="Preguntas frecuentes y ayuda"
+          onClick={() => navigate('/faq')}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: '#64748b',
+            cursor: 'pointer',
+            padding: '8px',
+            borderRadius: '8px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'color 0.15s, background 0.15s',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#2563eb'; e.currentTarget.style.background = '#eff6ff'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = 'transparent'; }}
+        >
+          <HelpCircle size={20} />
+        </button>
+
         <NotificationBell />
 
         <div className="header-user-menu" ref={menuRef}>
@@ -167,6 +190,24 @@ function Header() {
                 <span className="dropdown-item-content">
                   <strong>Cambiar contraseña</strong>
                   <small>Seguridad y clave de acceso</small>
+                </span>
+              </button>
+
+              <button
+                className="dropdown-item"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  navigate('/faq');
+                }}
+                role="menuitem"
+                type="button"
+              >
+                <span className="dropdown-item-icon" aria-hidden="true">
+                  <HelpCircle size={18} />
+                </span>
+                <span className="dropdown-item-content">
+                  <strong>Preguntas frecuentes</strong>
+                  <small>Dudas sobre nómina, aval, finiquitos y reglas</small>
                 </span>
               </button>
 

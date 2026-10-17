@@ -8,6 +8,7 @@ import SavingsPage from '../features/savings/pages/SavingsPage.jsx';
 import InvestmentsPage from '../features/investments/pages/InvestmentsPage.jsx';
 import LoansPage from '../features/loans/pages/LoansPage.jsx';
 import ProfilePage from '../features/profile/pages/ProfilePage.jsx';
+import FaqPage from '../features/faq/pages/FaqPage.jsx';
 import useGrowcapPageMotion from '../hooks/useGrowcapPageMotion.js';
 import ProtectedRoute from './ProtectedRoute.jsx';
 
@@ -54,6 +55,7 @@ function AppRouter() {
           <Route path="/inversion/stripe/return" element={<InvestmentsPage />} />
           <Route path="/prestamos" element={<LoansPage />} />
           <Route path="/perfil" element={<ProfilePage />} />
+          <Route path="/faq" element={<FaqPage />} />
         </Route>
       </Route>
 

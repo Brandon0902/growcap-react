@@ -40,6 +40,7 @@ function formatMovementDate(fechaStr) {
 function formatMovementType(tipo) {
   const map = {
     DEPOSITO: 'Depósito en Caja',
+    APORTACION_AHORRO: 'Ahorro Disponible',
     TRASPASO_INVERSION: 'Traspaso Inversión',
     TRASPASO_AHORRO: 'Traspaso Ahorro',
     RETIRO: 'Retiro Bancario',
@@ -123,6 +124,7 @@ export default function GeneralKardexModal({
       list = list.filter((m) => {
         const t = String(m.tipo || '').toUpperCase();
         if (filterType === 'DEPOSITO') return t === 'DEPOSITO';
+        if (filterType === 'AHORRO') return t === 'APORTACION_AHORRO' || String(m.origen || '').includes('ahorro');
         if (filterType === 'TRASPASO') return t.includes('TRASPASO');
         if (filterType === 'RETIRO') return t === 'RETIRO';
         return true;
@@ -385,6 +387,7 @@ export default function GeneralKardexModal({
                 {[
                   { id: 'ALL', label: 'Todos' },
                   { id: 'DEPOSITO', label: 'Depósitos en Caja' },
+                  { id: 'AHORRO', label: 'Ahorros' },
                   { id: 'TRASPASO', label: 'Traspasos Inversión' },
                   { id: 'RETIRO', label: 'Retiros' },
                 ].map((pill) => {

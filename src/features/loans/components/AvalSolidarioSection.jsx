@@ -1,6 +1,5 @@
 import {
   Check,
-  ChevronDown,
   ChevronRight,
   Clock,
   Copy,
@@ -52,14 +51,12 @@ const AvalSolidarioSection = forwardRef(function AvalSolidarioSection(
   ref
 ) {
   const rootRef = useRef(null);
-  const [isExpanded, setIsExpanded] = useState(requests.length > 0);
   const [activeTab, setActiveTab] = useState(requests.length > 0 ? 'solicitudes' : 'codigo');
 
-  // Exponer API imperativa para auto-expandir al hacer scroll desde el banner
+  // Exponer API imperativa para compatibilidad y scroll suave
   useImperativeHandle(ref, () => ({
-    expand: () => setIsExpanded(true),
+    expand: () => {},
     scrollIntoView: (options) => {
-      setIsExpanded(true);
       setTimeout(() => {
         rootRef.current?.scrollIntoView(options ?? { behavior: 'smooth', block: 'start' });
       }, 50);
@@ -99,10 +96,9 @@ const AvalSolidarioSection = forwardRef(function AvalSolidarioSection(
     fetchToken();
   }, []);
 
-  // Si llegan nuevas solicitudes, auto-expandir y alternar a solicitudes
+  // Si llegan nuevas solicitudes, alternar a solicitudes
   useEffect(() => {
     if (requests.length > 0) {
-      setIsExpanded(true);
       if (activeTab !== 'solicitudes') {
         setActiveTab('solicitudes');
       }
@@ -144,132 +140,97 @@ const AvalSolidarioSection = forwardRef(function AvalSolidarioSection(
       id="seccion-aval-solidario"
       className="section-block aval-solidario-section motion-immediate"
       style={{
-        marginTop: '36px',
+        marginTop: '0',
         scrollMarginTop: '24px',
       }}
     >
-      {/* Barra Cabecera Desplegable / Accordion */}
       <div
-        role="button"
-        tabIndex={0}
-        onClick={() => setIsExpanded((prev) => !prev)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setIsExpanded((prev) => !prev);
-          }
-        }}
         style={{
           background: 'var(--color-surface, #ffffff)',
           border: '1px solid #e2e8f0',
-          borderRadius: isExpanded ? '12px 12px 0 0' : '12px',
-          padding: '16px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          cursor: 'pointer',
-          userSelect: 'none',
-          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.03)',
-          transition: 'all 0.2s ease',
+          borderRadius: '12px',
+          boxShadow: '0 4px 16px rgba(15, 23, 42, 0.04)',
+          overflow: 'hidden',
         }}
-        aria-expanded={isExpanded}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: requests.length > 0 ? '#fef2f2' : '#f0fdf4',
-              color: requests.length > 0 ? '#dc2626' : '#16a34a',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              border: `1px solid ${requests.length > 0 ? '#fecaca' : '#bbf7d0'}`,
-            }}
-          >
-            <ShieldCheck size={20} />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <h2 style={{ fontSize: '1.15rem', color: '#0f172a', margin: 0, fontWeight: 700 }}>
-                Aval Solidario
-              </h2>
-              {requests.length > 0 ? (
-                <span
-                  style={{
-                    background: '#dc2626',
-                    color: '#ffffff',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    padding: '2px 8px',
-                    borderRadius: '10px',
-                  }}
-                >
-                  {requests.length} solicitud{requests.length !== 1 ? 'es' : ''} pendiente{requests.length !== 1 ? 's' : ''}
-                </span>
-              ) : (
-                <span
-                  style={{
-                    background: '#f1f5f9',
-                    color: '#64748b',
-                    fontSize: '0.70rem',
-                    fontWeight: 600,
-                    padding: '2px 8px',
-                    borderRadius: '8px',
-                  }}
-                >
-                  Opcional
-                </span>
-              )}
-            </div>
-            <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '2px 0 0' }}>
-              Autoriza solicitudes de respaldo o genera tu código digital para apoyar a compañeros.
-            </p>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <span style={{ fontSize: '0.80rem', fontWeight: 600, color: '#2563eb' }}>
-            {isExpanded ? 'Contraer' : 'Desplegar'}
-          </span>
-          <div
-            style={{
-              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.25s ease',
-              color: '#64748b',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <ChevronDown size={18} />
-          </div>
-        </div>
-      </div>
-
-      {/* Contenedor Interior Expandible */}
-      {isExpanded && (
+        {/* Cabecera Informativa */}
         <div
           style={{
+            padding: '16px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid #e2e8f0',
             background: 'var(--color-surface, #ffffff)',
-            border: '1px solid #e2e8f0',
-            borderTop: 'none',
-            borderRadius: '0 0 12px 12px',
-            boxShadow: '0 4px 16px rgba(15, 23, 42, 0.04)',
-            overflow: 'hidden',
           }}
         >
-          {/* Barra de pestañas sobria */}
-          <div
-            style={{
-              display: 'flex',
-              borderBottom: '1px solid #e2e8f0',
-              background: '#f8fafc',
-              padding: '4px 20px 0',
-              gap: '8px',
-            }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: requests.length > 0 ? '#fef2f2' : '#f0fdf4',
+                color: requests.length > 0 ? '#dc2626' : '#16a34a',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                border: `1px solid ${requests.length > 0 ? '#fecaca' : '#bbf7d0'}`,
+              }}
+            >
+              <ShieldCheck size={20} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <h2 style={{ fontSize: '1.15rem', color: '#0f172a', margin: 0, fontWeight: 700 }}>
+                  Aval Solidario
+                </h2>
+                {requests.length > 0 ? (
+                  <span
+                    style={{
+                      background: '#dc2626',
+                      color: '#ffffff',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: '10px',
+                    }}
+                  >
+                    {requests.length} solicitud{requests.length !== 1 ? 'es' : ''} pendiente{requests.length !== 1 ? 's' : ''}
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      background: '#f1f5f9',
+                      color: '#64748b',
+                      fontSize: '0.70rem',
+                      fontWeight: 600,
+                      padding: '2px 8px',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    Opcional
+                  </span>
+                )}
+              </div>
+              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '2px 0 0' }}>
+                Autoriza solicitudes de respaldo o genera tu código digital para apoyar a compañeros.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Barra de pestañas sobria */}
+        <div
+          style={{
+            display: 'flex',
+            borderBottom: '1px solid #e2e8f0',
+            background: '#f8fafc',
+            padding: '4px 20px 0',
+            gap: '8px',
+          }}
+        >
           <button
             type="button"
             onClick={() => setActiveTab('solicitudes')}
@@ -585,7 +546,6 @@ const AvalSolidarioSection = forwardRef(function AvalSolidarioSection(
           )}
         </div>
       </div>
-      )}
 
       {showTermsModal && (
         <AvalTermsModal

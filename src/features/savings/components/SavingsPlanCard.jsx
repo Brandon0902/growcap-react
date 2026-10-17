@@ -349,9 +349,9 @@ function SavingsPlanCard({ plan, index, onClick, disabled = false }) {
     >
       <div className="savings-plan-card-top">
         <span className="savings-plan-icon" aria-hidden="true" style={isPlanInactive ? { filter: 'grayscale(0.6)', opacity: 0.7 } : undefined}>
-          <Icon size={22} />
+          <Icon size={20} />
         </span>
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
           <h3 style={{ margin: 0, color: isPlanInactive ? '#64748b' : undefined }}>{toText(title)}</h3>
           {isPlanInactive ? (
             <span
@@ -359,17 +359,18 @@ function SavingsPlanCard({ plan, index, onClick, disabled = false }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '0.7rem',
+                fontSize: '0.68rem',
                 fontWeight: 700,
                 background: '#fef2f2',
                 color: '#ef4444',
                 border: '1px solid #fecaca',
-                padding: '2px 8px',
-                borderRadius: '12px',
+                padding: '2px 6px',
+                borderRadius: '10px',
                 letterSpacing: '0.02em',
+                flexShrink: 0,
               }}
             >
-              <Lock size={11} aria-hidden="true" />
+              <Lock size={10} aria-hidden="true" />
               INACTIVO
             </span>
           ) : isContractActive ? (
@@ -378,17 +379,18 @@ function SavingsPlanCard({ plan, index, onClick, disabled = false }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '0.7rem',
+                fontSize: '0.68rem',
                 fontWeight: 700,
                 background: 'rgba(147, 51, 234, 0.1)',
                 color: 'var(--color-primary)',
                 border: '1px solid rgba(147, 51, 234, 0.25)',
-                padding: '2px 8px',
-                borderRadius: '12px',
+                padding: '2px 6px',
+                borderRadius: '10px',
                 letterSpacing: '0.02em',
+                flexShrink: 0,
               }}
             >
-              <Lock size={11} aria-hidden="true" />
+              <Lock size={10} aria-hidden="true" />
               ACTIVO
             </span>
           ) : null}
@@ -431,42 +433,26 @@ function SavingsPlanCard({ plan, index, onClick, disabled = false }) {
 
       {isPlanInactive ? (
         <div
+          className="savings-plan-status-banner"
           style={{
-            marginTop: '14px',
-            padding: '9px 12px',
             background: '#fef2f2',
             border: '1px solid #fecaca',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
             color: '#ef4444',
-            fontSize: '0.78rem',
-            fontWeight: 600,
           }}
         >
-          <Lock size={13} aria-hidden="true" />
+          <Lock size={12} aria-hidden="true" />
           <span>Plan no disponible actualmente</span>
         </div>
       ) : isContractActive ? (
         <div
+          className="savings-plan-status-banner"
           style={{
-            marginTop: '14px',
-            padding: '9px 12px',
             background: 'rgba(147, 51, 234, 0.05)',
             border: '1px solid rgba(147, 51, 234, 0.2)',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
             color: 'var(--color-primary)',
-            fontSize: '0.78rem',
-            fontWeight: 600,
           }}
         >
-          <Lock size={13} aria-hidden="true" />
+          <Lock size={12} aria-hidden="true" />
           <span>Ya estás ahorrando en este plan</span>
         </div>
       ) : (

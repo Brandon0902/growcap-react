@@ -111,9 +111,9 @@ function InvestmentPlanCard({ description, name, plan, onClick }) {
     >
       <div className="savings-plan-card-top">
         <span className="savings-plan-icon investment-plan-icon" aria-hidden="true">
-          <ChartNoAxesColumnIncreasing size={22} />
+          <ChartNoAxesColumnIncreasing size={20} />
         </span>
-        <div>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <h3>{planName}</h3>
           <p>{planDescription}</p>
         </div>

@@ -71,9 +71,9 @@ function LoginWealthScene() {
           });
 
           if (reduceMotion) {
-            gsap.set('.wealth-scene, .piggy-bank, .piggy-core, .wealth-copy', {
+            gsap.set('.wealth-scene, .piggy-bank, .piggy-core, .wealth-copy, .wealth-copy > *', {
               autoAlpha: 1,
-              clearProps: 'transform,visibility',
+              clearProps: 'all',
             });
             gsap.set('.piggy-bank', { scale: pigScale.final, y: pigRestY });
             gsap.set('.piggy-belly-full, .piggy-cheek, .piggy-brow, .piggy-stuffed-eye, .piggy-mouth-pop', {
@@ -125,8 +125,17 @@ function LoginWealthScene() {
           });
 
           intro
-            .from('.wealth-ambient', { autoAlpha: 0, scale: 0.94 })
-            .from('.wealth-copy > *', { autoAlpha: 0, y: 16, stagger: 0.08 }, '<0.08')
+            .fromTo(
+              '.wealth-ambient',
+              { autoAlpha: 0, scale: 0.94 },
+              { autoAlpha: 1, scale: 1, duration: 0.6, ease: 'power3.out', clearProps: 'transform' },
+            )
+            .fromTo(
+              '.wealth-copy > *',
+              { autoAlpha: 0, y: 16 },
+              { autoAlpha: 1, y: 0, stagger: 0.08, duration: 0.45, ease: 'power3.out', clearProps: 'all' },
+              0.08,
+            )
             .to('.piggy-bank', {
               autoAlpha: 1,
               y: pigRestY,
@@ -270,7 +279,10 @@ function LoginWealthScene() {
         },
       );
 
-      return () => mm.revert();
+      return () => {
+        gsap.set('.wealth-copy > *, .wealth-ambient, .piggy-bank, .wealth-shadow', { clearProps: 'all' });
+        mm.revert();
+      };
     },
     { scope: sceneRef },
   );

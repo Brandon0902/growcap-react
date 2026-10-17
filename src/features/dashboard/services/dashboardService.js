@@ -19,8 +19,13 @@ export async function getClienteMovimientosSaldo(params = {}) {
   };
 }
 
-export async function solicitarRetiroSaldoGeneral({ monto, nip }) {
-  const { data } = await axiosClient.post(ENDPOINTS.client.solicitarRetiroGeneral, { monto, nip });
+export async function solicitarRetiroSaldoGeneral({ monto, nip, origen_tipo, origen_id }) {
+  const { data } = await axiosClient.post(ENDPOINTS.client.solicitarRetiroGeneral, {
+    monto,
+    nip,
+    ...(origen_tipo ? { origen_tipo } : {}),
+    ...(origen_id !== undefined && origen_id !== null ? { origen_id } : {}),
+  });
 
   return {
     data,

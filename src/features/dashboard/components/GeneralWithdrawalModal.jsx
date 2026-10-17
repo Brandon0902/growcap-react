@@ -31,11 +31,13 @@ export default function GeneralWithdrawalModal({
   isOpen,
   onClose,
   availableBalance = 0,
+  availableAccounts = [],
   onSuccess,
 }) {
   const modalId = useId();
-  const maxAvailable = Number(availableBalance ?? 0);
+  const accountsList = Array.isArray(availableAccounts) ? availableAccounts.filter((a) => Number(a?.saldo_disponible) > 0) : [];
 
+  const [selectedAccountKey, setSelectedAccountKey] = useState('');
   const [amount, setAmount] = useState('');
   const [nip, setNip] = useState('');
   const [showNip, setShowNip] = useState(false);
@@ -57,9 +59,17 @@ export default function GeneralWithdrawalModal({
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState('');
 
+  const selectedAccount = accountsList.find((a) => a.key === selectedAccountKey) || accountsList[0] || null;
+  const maxAvailable = selectedAccount
+    ? Number(selectedAccount.saldo_disponible ?? 0)
+    : Number(availableBalance ?? 0);
+
   useEffect(() => {
     if (isOpen) {
-      setAmount(maxAvailable > 0 ? String(maxAvailable) : '');
+      const initialAcc = accountsList[0] || null;
+      const initialMax = initialAcc ? Number(initialAcc.saldo_disponible ?? 0) : Number(availableBalance ?? 0);
+      setSelectedAccountKey(initialAcc ? initialAcc.key : '');
+      setAmount(initialMax > 0 ? String(initialMax) : '');
       setNip('');
       setShowNip(false);
       setError('');
@@ -89,9 +99,18 @@ export default function GeneralWithdrawalModal({
         })
         .finally(() => setIsLoadingProfile(false));
     }
-  }, [isOpen, maxAvailable]);
+  }, [isOpen, availableBalance]);
 
   if (!isOpen) return null;
+
+  const handleAccountChange = (newKey) => {
+    setSelectedAccountKey(newKey);
+    const found = accountsList.find((a) => a.key === newKey);
+    if (found) {
+      setAmount(String(Number(found.saldo_disponible ?? 0)));
+    }
+    setError('');
+  };
 
   const handleQuickPercent = (pct) => {
     const val = Number(((maxAvailable * pct) / 100).toFixed(2));
@@ -151,7 +170,7 @@ export default function GeneralWithdrawalModal({
       return;
     }
     if (parsedAmount > maxAvailable) {
-      setError(`El monto no puede superar tu saldo disponible (${formatMoney(maxAvailable)}).`);
+      setError(`El monto no puede superar el saldo disponible de la cuenta seleccionada (${formatMoney(maxAvailable)}).`);
       return;
     }
     if (!nip || nip.length < 4) {
@@ -164,6 +183,8 @@ export default function GeneralWithdrawalModal({
       const res = await solicitarRetiroSaldoGeneral({
         monto: parsedAmount,
         nip,
+        origen_tipo: selectedAccount?.origen_tipo,
+        origen_id: selectedAccount?.id,
       });
       const msg = res?.data?.message || 'Solicitud de retiro registrada.';
       setSuccessMsg(msg);
@@ -274,7 +295,42 @@ export default function GeneralWithdrawalModal({
 
           {!isResettingNip ? (
             <form onSubmit={handleSubmitWithdrawal} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Saldo Disponible y Cuenta Destino */}
+              {/* Selector de Cuenta de Origen */}
+              {accountsList.length > 0 && (
+                <div>
+                  <label
+                    htmlFor={`${modalId}-source-account`}
+                    style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}
+                  >
+                    Cuenta de origen
+                  </label>
+                  <select
+                    id={`${modalId}-source-account`}
+                    value={selectedAccount?.key || ''}
+                    onChange={(e) => handleAccountChange(e.target.value)}
+                    disabled={isSubmitting || accountsList.length === 1}
+                    style={{
+                      width: '100%',
+                      padding: '9px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.84rem',
+                      fontWeight: 600,
+                      color: '#0f172a',
+                      background: accountsList.length === 1 ? '#f8fafc' : '#ffffff',
+                      outline: 'none',
+                    }}
+                  >
+                    {accountsList.map((acc) => (
+                      <option key={acc.key} value={acc.key}>
+                        {acc.etiqueta} — {formatMoney(acc.saldo_disponible)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Saldo Disponible de la Cuenta y Destino */}
               <div
                 style={{
                   background: '#f8fafc',
@@ -288,7 +344,7 @@ export default function GeneralWithdrawalModal({
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.74rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
-                    Saldo Disponible
+                    {selectedAccount ? 'Disponible en cuenta' : 'Saldo Disponible'}
                   </span>
                   <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-primary)' }}>
                     {formatMoney(maxAvailable)}

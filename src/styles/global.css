@@ -1241,6 +1241,34 @@ h3 {
   transform: translateX(5px);
 }
 
+.savings-plan-status-banner {
+  align-items: center;
+  border-radius: 8px;
+  display: flex;
+  font-size: 0.78rem;
+  font-weight: 600;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 10px;
+  padding: 8px 12px;
+}
+
+.plan-locked-badge {
+  align-items: center;
+  background: #fef3c7;
+  border-radius: 12px;
+  color: #d97706;
+  display: flex;
+  font-size: 0.75rem;
+  font-weight: 600;
+  gap: 4px;
+  padding: 3px 8px;
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  z-index: 2;
+}
+
 .summary-card-interactive {
   cursor: pointer;
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
@@ -2963,10 +2991,139 @@ h3 {
 
   .savings-plans-grid {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .savings-plan-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 16px var(--color-shadow);
+    gap: 6px;
     min-height: auto;
+    padding: 10px 12px;
+  }
+
+  .savings-plan-card::after {
+    height: 3px;
+  }
+
+  .savings-plan-card-top {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    grid-template-columns: none;
+  }
+
+  .savings-plan-icon {
+    border-radius: 6px;
+    box-shadow: 0 4px 10px var(--color-primary-shadow);
+    height: 30px;
+    min-width: 30px;
+    width: 30px;
+  }
+
+  .savings-plan-icon svg {
+    height: 16px;
+    width: 16px;
+  }
+
+  .savings-plan-card h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.15;
+    margin: 0;
+  }
+
+  .savings-plan-card p {
+    color: var(--muted);
+    display: -webkit-box;
+    font-size: 0.72rem;
+    line-height: 1.25;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+
+  .savings-plan-rate {
+    align-items: baseline;
+    border-radius: 6px;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    padding: 5px 10px;
+  }
+
+  .savings-plan-rate span {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    opacity: 0.9;
+    text-transform: uppercase;
+  }
+
+  .savings-plan-rate strong {
+    font-size: 1.15rem;
+    line-height: 1;
+    margin: 0 !important;
+  }
+
+  .savings-plan-summary {
+    display: grid;
+    gap: 6px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .savings-plan-summary span {
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-height: 0;
+    padding: 4px 8px;
+  }
+
+  .savings-plan-summary small {
+    font-size: 0.64rem;
+    line-height: 1.1;
+  }
+
+  .savings-plan-summary strong {
+    font-size: 0.82rem;
+    line-height: 1.15;
+  }
+
+  .savings-plan-tags {
+    gap: 4px;
+    margin-top: 0;
+  }
+
+  .savings-plan-tags span {
+    border-radius: 4px;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+
+  .plan-card-action {
+    border-top: 1px dashed rgba(147, 51, 234, 0.18);
+    font-size: 0.75rem;
+    margin-top: 1px;
+    padding-top: 5px;
+  }
+
+  .savings-plan-status-banner {
+    border-radius: 6px;
+    font-size: 0.72rem !important;
+    margin-top: 2px !important;
+    padding: 4px 8px !important;
+  }
+
+  .plan-locked-badge {
+    border-radius: 8px;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    right: 8px;
+    top: 8px;
   }
 
   .savings-plans-state {
@@ -3054,7 +3211,7 @@ h3 {
     gap: 2px;
     grid-template-columns: repeat(5, 1fr);
     left: 0;
-    padding: 6px;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)) 6px;
     position: fixed;
     right: 0;
     z-index: 9;
@@ -3239,15 +3396,8 @@ h3 {
 }
 
 @media (max-width: 420px) {
-  .savings-plan-card-top,
-  .savings-plan-summary,
   .skeleton-card-metrics {
     grid-template-columns: 1fr;
-  }
-
-  .savings-plan-icon {
-    height: 42px;
-    width: 42px;
   }
 }
 
@@ -3715,6 +3865,141 @@ h3 {
   justify-content: flex-end;
   padding: 16px 22px;
 }
+
+/* ==========================================================================
+   Idle Timeout Modal (Security Inactivity Warning)
+   ========================================================================== */
+.idle-modal-backdrop {
+  align-items: center;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(5px);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 16px;
+  position: fixed;
+  z-index: 99999;
+}
+
+.idle-modal-dialog {
+  animation: passwordModalFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--color-surface);
+  border: 1px solid rgba(233, 213, 255, 0.95);
+  border-radius: 16px;
+  box-shadow:
+    0 24px 64px rgba(17, 24, 39, 0.24),
+    0 4px 16px rgba(17, 24, 39, 0.08);
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+  max-width: 440px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.idle-modal-header {
+  align-items: center;
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-surface));
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: 12px;
+  padding: 18px 22px;
+}
+
+.idle-modal-icon-badge {
+  align-items: center;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--purple-200);
+  border-radius: 10px;
+  color: var(--color-primary);
+  display: flex;
+  flex-shrink: 0;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.idle-modal-kicker {
+  color: var(--color-primary);
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.idle-modal-header h2 {
+  color: var(--purple-950);
+  font-size: 1.25rem;
+  line-height: 1.2;
+  margin: 3px 0 0;
+}
+
+.idle-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+}
+
+.idle-modal-text {
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.idle-modal-timer-badge {
+  align-items: center;
+  background: var(--color-primary-soft);
+  border: 1px dashed rgba(107, 33, 168, 0.25);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  padding: 14px 16px;
+  text-align: center;
+}
+
+.idle-modal-timer-time {
+  color: var(--color-primary);
+  font-family: var(--font-mono, monospace);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.idle-modal-timer-label {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.idle-modal-footer {
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 16px 22px;
+}
+
+@media (max-width: 480px) {
+  .idle-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .idle-modal-footer button {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
 
 
 /* Responsividad de avatar en pantallas pequeñas */
@@ -4980,6 +5265,48 @@ h3 {
   transform: scaleX(1);
 }
 
+/* Tarjeta ensombrecida y estado distintivo para productos liquidados / ciclo concluido */
+.financial-compact-card.is-liquidated {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  opacity: 0.88;
+}
+
+.financial-compact-card.is-liquidated:hover {
+  opacity: 1;
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.financial-compact-card.is-liquidated::after {
+  background: #94a3b8;
+}
+
+.financial-compact-card.is-liquidated .financial-compact-title {
+  color: #475569;
+}
+
+.financial-compact-card.is-liquidated .financial-compact-amount {
+  color: #64748b !important;
+}
+
+.financial-compact-card.is-liquidated.is-expanded {
+  border-color: #94a3b8;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.financial-compact-card.is-liquidated.is-expanded .financial-compact-header {
+  background: rgba(148, 163, 184, 0.08);
+  border-bottom-color: #e2e8f0;
+}
+
+.financial-compact-progress-pill.is-liquidated {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+}
+
 .financial-compact-header {
   padding: 12px 18px;
   display: flex;
@@ -5359,6 +5686,81 @@ h3 {
   align-items: center;
   gap: 6px;
   transition: all 0.15s ease;
+}
+
+/* Module Top Navigation Segmented Tabs */
+.module-nav-tabs {
+  display: inline-flex;
+  align-items: center;
+  background: #f8fafc;
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 22px;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.module-nav-btn {
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: all 0.16s ease;
+  background: transparent;
+  color: #64748b;
+}
+
+.module-nav-btn:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.module-nav-btn.active {
+  background: #ffffff;
+  color: #6b21a8;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.module-nav-badge {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.module-nav-badge.active {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.module-nav-badge.inactive {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+@media (max-width: 640px) {
+  .module-nav-tabs {
+    width: 100%;
+    display: flex;
+    justify-content: stretch;
+  }
+  .module-nav-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
 }
 
 /* ==========================================================================

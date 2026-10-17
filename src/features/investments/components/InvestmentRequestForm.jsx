@@ -484,10 +484,6 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
               <dd>{getPlanName(selectedPlan)}</dd>
             </div>
             <div>
-              <dt>Periodo del plan</dt>
-              <dd>{formatPlanValue(planPeriod)}</dd>
-            </div>
-            <div>
               <dt>Rendimiento anual</dt>
               <dd>{formatPercent(planYield)}</dd>
             </div>

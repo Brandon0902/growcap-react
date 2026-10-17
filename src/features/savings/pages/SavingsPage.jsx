@@ -1,4 +1,4 @@
-import { AlertCircle, ChevronUp, Eye, EyeOff, HandCoins, PiggyBank, RefreshCw, TrendingUp } from 'lucide-react';
+import { AlertCircle, ChevronUp, Eye, EyeOff, HandCoins, History, PiggyBank, RefreshCw, TrendingUp } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
@@ -77,7 +77,11 @@ function SavingsPage() {
   const [plansError, setPlansError] = useState('');
   const [savingsError, setSavingsError] = useState('');
   const [checkoutNotice, setCheckoutNotice] = useState({ message: '', type: 'info' });
-  const [isRecordsOpen, setIsRecordsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(() => {
+    const viewParam = searchParams.get('view');
+    const tabParam = searchParams.get('tab');
+    return viewParam === 'my-records' || tabParam === 'records' ? 'records' : 'plans';
+  });
   const [isPlanProjectionOpen, setIsPlanProjectionOpen] = useState(false);
   const [selectedPlanToProject, setSelectedPlanToProject] = useState(null);
 
@@ -135,11 +139,12 @@ function SavingsPage() {
   }, [loadSavingsPlans]);
 
   useEffect(() => {
-    if (searchParams.get('view') === 'my-records' || searchParams.get('tab') === 'records') {
-      setIsRecordsOpen(true);
-      setTimeout(() => {
-        recordsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 300);
+    const viewParam = searchParams.get('view');
+    const tabParam = searchParams.get('tab');
+    if (viewParam === 'my-records' || tabParam === 'records') {
+      setActiveTab('records');
+    } else if (tabParam === 'plans') {
+      setActiveTab('plans');
     }
   }, [searchParams]);
 
@@ -232,7 +237,7 @@ function SavingsPage() {
             message: `¡Pago confirmado por Mercado Pago! Tu aportación voluntaria${montoStr} fue acreditada automáticamente en tu meta de ahorro.`,
             type: 'success',
           });
-          setIsRecordsOpen(true);
+          setActiveTab('records');
         } else if (res?.status === 'rejected' || res?.status === 'cancelled') {
           setCheckoutNotice({
             message: 'El pago no fue aprobado o fue rechazado por Mercado Pago. Tu saldo no fue modificado.',
@@ -300,185 +305,288 @@ function SavingsPage() {
         icon={HandCoins}
         stats={[
           { label: 'Planes activos', value: isLoadingPlans ? '...' : String(activePlans.length) },
-          { label: 'Solicitudes', value: isLoadingPlans ? '...' : String(savings.length) },
+          { label: 'Mis ahorros', value: isLoadingPlans ? '...' : String(savings.length) },
         ]}
         title="Haz crecer tu dinero con GrowCap"
+        actions={
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {activeTab === 'plans' ? (
+              <Button
+                type="button"
+                className="button-secondary"
+                onClick={() => {
+                  setActiveTab('records');
+                  setSearchParams({ tab: 'records' });
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 16px',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  fontSize: '0.86rem',
+                }}
+              >
+                <Eye size={17} style={{ color: '#6b21a8' }} />
+                <span>Mis ahorros activos ({savings.length})</span>
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                className="button-secondary"
+                onClick={() => {
+                  setActiveTab('plans');
+                  setSearchParams({ tab: 'plans' });
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 16px',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  fontSize: '0.86rem',
+                }}
+              >
+                <PiggyBank size={17} style={{ color: '#6b21a8' }} />
+                <span>Ver planes disponibles</span>
+              </Button>
+            )}
+            {activePlans.length > 0 && (
+              <Button
+                type="button"
+                className="button-secondary"
+                onClick={() => {
+                  setSelectedPlanToProject(null);
+                  setIsPlanProjectionOpen(true);
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 16px',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  fontSize: '0.86rem',
+                }}
+                title="Simula y proyecta tus ganancias antes de contratar un plan"
+              >
+                <TrendingUp size={16} />
+                <span>Simular proyección</span>
+              </Button>
+            )}
+          </div>
+        }
       >
-        Explora nuestros planes de ahorro diseñados a tu medida. Administra tus aportaciones y observa cómo tu dinero se multiplica de forma segura y automática desde tu nómina.
+        Explora nuestros planes de ahorro diseñados a tu medida. 
       </PageHero>
 
       {checkoutNotice.message && <Alert type={checkoutNotice.type}>{checkoutNotice.message}</Alert>}
 
-      <section className="section-block savings-plans-section motion-section" ref={plansRef}>
-        <div className="section-heading savings-plans-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <h2>Planes de ahorro</h2>
-          </div>
-          {activePlans.length > 0 && (
-            <Button
-              className="button-secondary icon-button"
-              style={{ fontSize: '0.8rem', minHeight: '34px', padding: '6px 14px' }}
-              onClick={() => {
-                setSelectedPlanToProject(null);
-                setIsPlanProjectionOpen(true);
-              }}
-              title="Simula y proyecta tus ganancias antes de contratar un plan"
-            >
-              <TrendingUp size={16} aria-hidden="true" />
-              Simular Proyección
-            </Button>
-          )}
-        </div>
-
-        {isLoadingPlans && <SavingsPlansSkeleton />}
-
-        {!isLoadingPlans && plansError && (
-          <div className="savings-plans-state savings-plans-error" role="alert">
-            <AlertCircle size={34} aria-hidden="true" />
-            <div>
-              <h3>No se pudieron cargar los planes</h3>
-              <p>{plansError}</p>
-            </div>
-            <Button className="button-secondary icon-button" onClick={loadSavingsPlans}>
-              <RefreshCw size={18} aria-hidden="true" />
-              Reintentar
-            </Button>
-          </div>
-        )}
-
-        {!isLoadingPlans && !plansError && activePlans.length === 0 && (
-          <div className="savings-plans-state">
-            <PiggyBank size={38} aria-hidden="true" />
-            <div>
-              <h3>Aun no hay planes disponibles</h3>
-              <p>Cuando caja_growcap tenga planes de ahorro activos, apareceran aqui automaticamente.</p>
-            </div>
-          </div>
-        )}
-
-        {!isLoadingPlans && !plansError && activePlans.length > 0 && (
-          <div className="savings-plans-grid">
-            {activePlans.map((plan, index) => {
-              const hasActivePlan = savings.some(
-                (s) =>
-                  (Number(s.status) === 1 || String(s.estado ?? '').toLowerCase().includes('activ')) &&
-                  (String(s.ahorro_id) === String(plan.id) ||
-                    String(s.id_ahorro) === String(plan.id) ||
-                    String(s.plan?.id) === String(plan.id)),
-              );
-              return (
-                <SavingsPlanCard 
-                  index={index} 
-                  key={getSavingsPlanKey(plan, index)} 
-                  plan={plan} 
-                  onClick={handlePlanClick}
-                  disabled={hasActivePlan}
-                />
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      <SavingsRequestForm
-        ref={requestFormRef}
-        onCreated={loadSavingsPlans}
-        plans={activePlans}
-        suggestedFrequency={suggestedFrequency}
-        salaryCapacity={salaryCapacity}
-      />
-
-      <div className="records-entry motion-immediate">
-        <div>
-          <span>Seguimiento</span>
-          <h2>Consulta tus ahorros cuando lo necesites</h2>
-          <p>Los registros existentes se mantienen separados para que la solicitud sea la accion principal.</p>
-        </div>
-        <Button
-          className="button-secondary icon-button records-entry-button"
+      {/* Segmented Top Navigation */}
+      <div className="module-nav-tabs" role="tablist" aria-label="Secciones de Ahorro">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'plans'}
+          className={`module-nav-btn ${activeTab === 'plans' ? 'active' : ''}`}
           onClick={() => {
-            setIsRecordsOpen((prev) => {
-              const nextState = !prev;
-              if (nextState) {
-                setTimeout(() => {
-                  recordsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
-              }
-              return nextState;
-            });
+            setActiveTab('plans');
+            setSearchParams({ tab: 'plans' });
           }}
-          aria-expanded={isRecordsOpen}
         >
-          {isRecordsOpen ? <ChevronUp size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
-          {isRecordsOpen ? 'Ocultar mis ahorros' : 'Ver mis ahorros'}
-        </Button>
+          <PiggyBank size={16} />
+          <span>Planes y solicitud</span>
+          <span className={`module-nav-badge ${activeTab === 'plans' ? 'active' : 'inactive'}`}>
+            {activePlans.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'records'}
+          className={`module-nav-btn ${activeTab === 'records' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('records');
+            setSearchParams({ tab: 'records' });
+          }}
+        >
+          <Eye size={16} />
+          <span>Mis ahorros activos</span>
+          <span className={`module-nav-badge ${activeTab === 'records' ? 'active' : 'inactive'}`}>
+            {savings.length}
+          </span>
+        </button>
       </div>
 
-      <div
-        ref={recordsRef}
-        style={{
-          overflow: 'hidden',
-          transition: 'max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, margin 0.35s ease',
-          maxHeight: isRecordsOpen ? '4000px' : '0px',
-          opacity: isRecordsOpen ? 1 : 0,
-          marginTop: isRecordsOpen ? '20px' : '0px',
-          pointerEvents: isRecordsOpen ? 'auto' : 'none',
-        }}
-      >
-        <div
-          style={{
-            background: 'var(--color-surface)',
-            border: '1px solid #E9D5FF',
-            borderRadius: 'var(--radius)',
-            boxShadow: '0 16px 38px rgba(17, 24, 39, 0.06)',
-            padding: 'clamp(16px, 2.5vw, 24px)',
-          }}
-        >
+      {activeTab === 'records' && (
+        <section className="section-block records-main-section motion-immediate" ref={recordsRef}>
           <div
             style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '16px',
-              flexWrap: 'wrap',
-              gap: '8px',
+              background: 'var(--color-surface)',
+              border: '1px solid #E9D5FF',
+              borderRadius: 'var(--radius)',
+              boxShadow: '0 16px 38px rgba(17, 24, 39, 0.06)',
+              padding: 'clamp(16px, 2.5vw, 24px)',
             }}
           >
-            <div>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Registros del cliente
-              </span>
-              <h2 style={{ fontSize: '1.4rem', color: 'var(--purple-950)', margin: '2px 0 0' }}>Mis ahorros</h2>
-              <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '3px 0 0' }}>
-                Revisa cuotas, saldos, fechas, método de pago y estado de cada solicitud.
-              </p>
-            </div>
-            <Button
-              className="button-secondary icon-button"
-              style={{ fontSize: '0.78rem', padding: '6px 12px', minHeight: '34px' }}
-              onClick={() => setIsRecordsOpen(false)}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '16px',
+                flexWrap: 'wrap',
+                gap: '8px',
+              }}
             >
-              <ChevronUp size={16} aria-hidden="true" />
-              Ocultar
-            </Button>
-          </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Registros del cliente
+                </span>
+                <h2 style={{ fontSize: '1.4rem', color: 'var(--purple-950)', margin: '2px 0 0' }}>Mis ahorros</h2>
+                <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '3px 0 0' }}>
+                  Revisa cuotas, saldos, fechas, método de pago y estado de cada solicitud.
+                </p>
+              </div>
+              <Button
+                className="button-secondary icon-button"
+                style={{ fontSize: '0.78rem', padding: '6px 14px', minHeight: '34px' }}
+                onClick={() => {
+                  setActiveTab('plans');
+                  setSearchParams({ tab: 'plans' });
+                }}
+              >
+                <PiggyBank size={16} aria-hidden="true" />
+                Explorar nuevos planes
+              </Button>
+            </div>
 
-          <FinancialRequestList
-            emptyDescription="Cuando completes una solicitud, aparecera aqui."
-            emptyTitle="Aun no tienes ahorros registrados."
-            error={savingsError}
-            isLoading={isLoadingPlans}
-            items={savings}
-            plans={plans}
+            <FinancialRequestList
+              emptyDescription="Cuando completes una solicitud de ahorro, aparecera aqui."
+              emptyTitle="Aun no tienes ahorros registrados."
+              error={savingsError}
+              isLoading={isLoadingPlans}
+              items={savings}
+              plans={plans}
+              suggestedFrequency={suggestedFrequency}
+              salaryCapacity={salaryCapacity}
+              onRefresh={loadSavingsPlans}
+              searchable
+              title="Historial de ahorros"
+              type="savings"
+            />
+          </div>
+        </section>
+      )}
+
+      {activeTab === 'plans' && (
+        <>
+          <section className="section-block savings-plans-section motion-section" ref={plansRef}>
+            <div className="section-heading savings-plans-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h2>Planes de ahorro</h2>
+              </div>
+              {activePlans.length > 0 && (
+                <Button
+                  className="button-secondary icon-button"
+                  style={{ fontSize: '0.8rem', minHeight: '34px', padding: '6px 14px' }}
+                  onClick={() => {
+                    setSelectedPlanToProject(null);
+                    setIsPlanProjectionOpen(true);
+                  }}
+                  title="Simula y proyecta tus ganancias antes de contratar un plan"
+                >
+                  <TrendingUp size={16} aria-hidden="true" />
+                  Simular Proyección
+                </Button>
+              )}
+            </div>
+
+            {isLoadingPlans && <SavingsPlansSkeleton />}
+
+            {!isLoadingPlans && plansError && (
+              <div className="savings-plans-state savings-plans-error" role="alert">
+                <AlertCircle size={34} aria-hidden="true" />
+                <div>
+                  <h3>No se pudieron cargar los planes</h3>
+                  <p>{plansError}</p>
+                </div>
+                <Button className="button-secondary icon-button" onClick={loadSavingsPlans}>
+                  <RefreshCw size={18} aria-hidden="true" />
+                  Reintentar
+                </Button>
+              </div>
+            )}
+
+            {!isLoadingPlans && !plansError && activePlans.length === 0 && (
+              <div className="savings-plans-state">
+                <PiggyBank size={38} aria-hidden="true" />
+                <div>
+                  <h3>Aun no hay planes disponibles</h3>
+                  <p>Cuando caja_growcap tenga planes de ahorro activos, apareceran aqui automaticamente.</p>
+                </div>
+              </div>
+            )}
+
+            {!isLoadingPlans && !plansError && activePlans.length > 0 && (
+              <div className="savings-plans-grid">
+                {activePlans.map((plan, index) => {
+                  const hasActivePlan = savings.some(
+                    (s) =>
+                      (Number(s.status) === 1 || String(s.estado ?? '').toLowerCase().includes('activ')) &&
+                      (String(s.ahorro_id) === String(plan.id) ||
+                        String(s.id_ahorro) === String(plan.id) ||
+                        String(s.plan?.id) === String(plan.id)),
+                  );
+                  return (
+                    <SavingsPlanCard 
+                      index={index} 
+                      key={getSavingsPlanKey(plan, index)} 
+                      plan={plan} 
+                      onClick={handlePlanClick}
+                      disabled={hasActivePlan}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          <SavingsRequestForm
+            ref={requestFormRef}
+            onCreated={() => {
+              loadSavingsPlans();
+              setActiveTab('records');
+              setSearchParams({ tab: 'records' });
+            }}
+            plans={activePlans}
             suggestedFrequency={suggestedFrequency}
             salaryCapacity={salaryCapacity}
-            onRefresh={loadSavingsPlans}
-            searchable
-            title="Historial de ahorros"
-            type="savings"
           />
-        </div>
-      </div>
+
+          <div className="records-entry motion-immediate">
+            <div>
+              <span>Seguimiento</span>
+              <h2>¿Ya tienes ahorros activos?</h2>
+              <p>Consulta cuotas, estados de cuenta, aportaciones voluntarias y retiros.</p>
+            </div>
+            <Button
+              className="button-secondary icon-button records-entry-button"
+              onClick={() => {
+                setActiveTab('records');
+                setSearchParams({ tab: 'records' });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            >
+              <Eye size={18} aria-hidden="true" />
+              Ver mis ahorros ({savings.length})
+            </Button>
+          </div>
+        </>
+      )}
 
       {isPlanProjectionOpen && createPortal(
         <SavingsProjectionModal

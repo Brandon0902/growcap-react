@@ -1,0 +1,2677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual de Usuario | GrowCap Caja de Ahorro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --primary-border: #bfdbfe;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-500: #64748b;
+      --slate-400: #94a3b8;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50: #f8fafc;
+      --white: #ffffff;
+      --success: #16a34a;
+      --success-light: #ecfdf5;
+      --success-border: #bbf7d0;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --warning-border: #fde68a;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --radius: 12px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--slate-800);
+      background-color: var(--slate-50);
+      line-height: 1.65;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Sticky Header */
+    .top-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--slate-200);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+      min-width: fit-content;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #38bdf8;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--slate-900);
+    }
+
+    .brand-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 3px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--primary-border);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Search Bar */
+    .search-container {
+      position: relative;
+      flex: 1;
+      max-width: 540px;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      width: 18px;
+      height: 18px;
+      color: var(--slate-400);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 40px;
+      padding: 0 42px 0 40px;
+      border-radius: 20px;
+      border: 1px solid var(--slate-200);
+      background: var(--slate-100);
+      font-size: 0.88rem;
+      color: var(--slate-900);
+      outline: none;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .search-input:focus {
+      background: var(--white);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--slate-400);
+      display: none;
+      padding: 4px;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .search-clear-btn:hover {
+      color: var(--slate-600);
+    }
+
+    .search-stats-badge {
+      position: absolute;
+      right: 36px;
+      font-size: 0.74rem;
+      color: var(--primary);
+      font-weight: 700;
+      background: var(--primary-light);
+      padding: 2px 8px;
+      border-radius: 12px;
+      display: none;
+      white-space: nowrap;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-action {
+      height: 38px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid var(--slate-200);
+      background: var(--white);
+      color: var(--slate-700);
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .btn-action:hover {
+      background: var(--slate-100);
+      color: var(--slate-900);
+      border-color: var(--slate-300);
+    }
+
+    .btn-return {
+      height: 38px;
+      padding: 0 16px;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      text-decoration: none;
+      background: #6B21A8;
+      color: #ffffff;
+      border: 1px solid #581c87;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      box-shadow: 0 2px 6px rgba(107, 33, 168, 0.25);
+    }
+
+    .btn-return:hover {
+      background: #581c87;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .floating-return-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 100;
+      background: #6B21A8;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 30px;
+      padding: 10px 18px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(107, 33, 168, 0.4);
+      transition: all 0.2s ease;
+      text-decoration: none;
+      font-family: inherit;
+    }
+
+    .floating-return-btn:hover {
+      background: #581c87;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(107, 33, 168, 0.5);
+    }
+
+    @media (max-width: 640px) {
+      .floating-return-btn {
+        bottom: 18px;
+        right: 18px;
+        padding: 9px 14px;
+        font-size: 0.8rem;
+      }
+      .btn-return span {
+        display: none;
+      }
+      .btn-return {
+        padding: 0 10px;
+      }
+    }
+
+    /* Reading Progress Bar */
+    .progress-bar-container {
+      position: fixed;
+      top: 64px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: transparent;
+      z-index: 49;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #2563eb, #38bdf8);
+      transition: width 0.1s ease;
+    }
+
+    /* Layout: Sidebar + Main Content */
+    .layout-wrapper {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      min-height: calc(100vh - 64px);
+    }
+
+    /* Sidebar Navigation (TOC) */
+    .sidebar {
+      width: 300px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 64px;
+      height: calc(100vh - 64px);
+      overflow-y: auto;
+      padding: 24px 16px;
+      border-right: 1px solid var(--slate-200);
+      background: var(--white);
+    }
+
+    .sidebar-section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--slate-400);
+      padding: 0 12px;
+      margin-bottom: 8px;
+    }
+
+    .toc-menu {
+      list-style: none;
+    }
+
+    .toc-item {
+      margin-bottom: 2px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--slate-600);
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+
+    .toc-link:hover {
+      background: var(--slate-100);
+      color: var(--slate-900);
+    }
+
+    .toc-link.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .toc-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      opacity: 0.8;
+    }
+
+    .toc-badge {
+      margin-left: auto;
+      font-size: 0.68rem;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--slate-100);
+      color: var(--slate-600);
+    }
+
+    .toc-link.active .toc-badge {
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--primary);
+    }
+
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      padding: 36px 48px 80px;
+      max-width: 980px;
+    }
+
+    /* Hero Banner */
+    .manual-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border-radius: 16px;
+      padding: 40px;
+      color: var(--white);
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .manual-hero::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      right: -50px;
+      width: 260px;
+      height: 260px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.18) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .manual-hero .kicker {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #38bdf8;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .manual-hero h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin-bottom: 14px;
+    }
+
+    .manual-hero p {
+      font-size: 1.05rem;
+      color: #cbd5e1;
+      max-width: 680px;
+      line-height: 1.6;
+    }
+
+    .hero-quick-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .hero-pill {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      color: #f1f5f9;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: background 0.2s ease;
+    }
+
+    .hero-pill:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Content Modules & Sections */
+    .content-module {
+      margin-bottom: 56px;
+      scroll-margin-top: 84px;
+    }
+
+    .module-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--slate-200);
+    }
+
+    .module-number {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    .module-title {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--slate-900);
+      letter-spacing: -0.02em;
+    }
+
+    .section-lead {
+      font-size: 1.05rem;
+      color: var(--slate-600);
+      margin-bottom: 24px;
+    }
+
+    /* Cards & Grids */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .info-card {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .info-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-icon-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .card-icon-badge.blue {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .card-icon-badge.green {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .card-icon-badge.amber {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+
+    .info-card h4 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 6px;
+    }
+
+    .info-card p {
+      font-size: 0.88rem;
+      color: var(--slate-600);
+      line-height: 1.55;
+    }
+
+    /* Alert Boxes */
+    .callout-box {
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      border: 1px solid transparent;
+    }
+
+    .callout-box.info {
+      background: #f0f7ff;
+      border-color: #bfdbfe;
+      color: #1e40af;
+    }
+
+    .callout-box.warning {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #92400e;
+    }
+
+    .callout-box.success {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+      color: #166534;
+    }
+
+    .callout-icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .callout-content strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 0.92rem;
+    }
+
+    .callout-content p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    /* Real Screenshot Showcase Frame */
+    .screenshot-frame {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: 14px;
+      overflow: hidden;
+      margin: 28px 0;
+      box-shadow: var(--shadow-md);
+    }
+
+    .screenshot-browser-bar {
+      background: #f8fafc;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--slate-200);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .browser-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .browser-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #cbd5e1;
+    }
+
+    .browser-dot.red { background: #fca5a5; }
+    .browser-dot.yellow { background: #fde047; }
+    .browser-dot.green { background: #86efac; }
+
+    .browser-address {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: 6px;
+      padding: 3px 12px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--slate-500);
+      flex: 1;
+      max-width: 420px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .screenshot-img-wrapper {
+      position: relative;
+      background: #0f172a;
+      cursor: zoom-in;
+    }
+
+    .screenshot-img-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: opacity 0.2s ease;
+    }
+
+    .screenshot-img-wrapper:hover img {
+      opacity: 0.95;
+    }
+
+    .zoom-hint {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(15, 23, 42, 0.85);
+      color: var(--white);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+
+    .screenshot-caption {
+      padding: 12px 18px;
+      background: var(--white);
+      font-size: 0.84rem;
+      color: var(--slate-600);
+      border-top: 1px solid var(--slate-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .screenshot-caption strong {
+      color: var(--slate-800);
+    }
+
+    /* Comparison / Data Tables */
+    .table-container {
+      overflow-x: auto;
+      margin: 20px 0;
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      background: var(--white);
+      box-shadow: var(--shadow-sm);
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    table.data-table th {
+      background: #f8fafc;
+      padding: 12px 16px;
+      font-weight: 700;
+      color: var(--slate-700);
+      border-bottom: 1px solid var(--slate-200);
+    }
+
+    table.data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--slate-200);
+      color: var(--slate-600);
+    }
+
+    table.data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.data-table tr:hover td {
+      background: #f8fafc;
+    }
+
+    .badge-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+
+    .badge-pill.green {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+
+    .badge-pill.blue {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+    }
+
+    .badge-pill.amber {
+      background: var(--warning-light);
+      color: var(--warning);
+      border: 1px solid var(--warning-border);
+    }
+
+    /* Steps List */
+    .steps-list {
+      list-style: none;
+      counter-reset: step-counter;
+      margin: 20px 0;
+    }
+
+    .step-item {
+      position: relative;
+      padding-left: 48px;
+      margin-bottom: 20px;
+    }
+
+    .step-item::before {
+      counter-increment: step-counter;
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--slate-900);
+      color: var(--white);
+      font-weight: 800;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-item h5 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 4px;
+    }
+
+    .step-item p {
+      font-size: 0.88rem;
+      color: var(--slate-600);
+    }
+
+    /* Interactive FAQ Accordion */
+    .faq-category-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .faq-filter-chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      color: var(--slate-600);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .faq-filter-chip:hover, .faq-filter-chip.active {
+      background: var(--primary);
+      color: var(--white);
+      border-color: var(--primary);
+    }
+
+    .faq-accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .faq-item.open {
+      border-color: var(--primary-border);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+    }
+
+    .faq-trigger {
+      width: 100%;
+      padding: 16px 20px;
+      background: none;
+      border: none;
+      text-align: left;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .faq-trigger:hover {
+      color: var(--primary);
+    }
+
+    .faq-icon-chevron {
+      width: 18px;
+      height: 18px;
+      color: var(--slate-400);
+      transition: transform 0.25s ease;
+      flex-shrink: 0;
+    }
+
+    .faq-item.open .faq-icon-chevron {
+      transform: rotate(180deg);
+      color: var(--primary);
+    }
+
+    .faq-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: #f8fafc;
+      border-top: 1px solid transparent;
+    }
+
+    .faq-item.open .faq-panel {
+      border-top-color: var(--slate-200);
+    }
+
+    .faq-panel-content {
+      padding: 18px 22px;
+      font-size: 0.89rem;
+      color: var(--slate-700);
+      line-height: 1.65;
+    }
+
+    .faq-category-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    /* Lightbox Modal */
+    .lightbox-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .lightbox-modal.open {
+      display: flex;
+    }
+
+    .lightbox-content-box {
+      max-width: 95vw;
+      max-height: 90vh;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .lightbox-image {
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 8px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      object-fit: contain;
+    }
+
+    .lightbox-close-btn {
+      position: absolute;
+      top: -42px;
+      right: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: var(--white);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: background 0.2s;
+    }
+
+    .lightbox-close-btn:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .lightbox-caption-text {
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    /* Search Highlight Marker: Sin márgenes ni espacios artificiales */
+    mark.search-highlight {
+      background-color: #fef08a !important;
+      color: #854d0e !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: none !important;
+      display: inline !important;
+      font-weight: 700;
+      border-radius: 2px;
+    }
+
+    /* Footer */
+    .manual-footer {
+      border-top: 1px solid var(--slate-200);
+      padding: 32px 0;
+      margin-top: 60px;
+      color: var(--slate-500);
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* Print Styles */
+    @media print {
+      .top-navbar, .sidebar, .progress-bar-container, .header-actions, .zoom-hint, .faq-category-filters {
+        display: none !important;
+      }
+      .layout-wrapper {
+        display: block !important;
+      }
+      .main-content {
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .manual-hero {
+        background: #0f172a !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact;
+      }
+      .screenshot-frame {
+        page-break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+      }
+      .faq-panel {
+        max-height: none !important;
+        display: block !important;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .sidebar {
+        display: none;
+      }
+      .main-content {
+        padding: 24px 18px 60px;
+      }
+      .manual-hero {
+        padding: 24px 20px;
+      }
+      .manual-hero h1 {
+        font-size: 1.65rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Sticky Navigation Bar -->
+  <header class="top-navbar">
+    <a href="/" onclick="handleReturnToApp(event)" class="brand-group" title="Volver a la App GrowCap">
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+          <polyline points="16 7 22 7 22 13"></polyline>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">GrowCap</div>
+      </div>
+      <span class="brand-badge">Manual de Cliente</span>
+    </a>
+
+    <!-- Universal Search Bar -->
+    <div class="search-container">
+      <div class="search-input-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input 
+          type="text" 
+          id="globalSearchInput" 
+          class="search-input" 
+          placeholder="Buscar tema, palabra clave o regla... (Ej. aval, retiro, 30%, nip)"
+          autocomplete="off"
+        >
+        <button id="searchClearBtn" class="search-clear-btn" title="Limpiar búsqueda">✕</button>
+        <span id="searchStatsBadge" class="search-stats-badge"></span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-return" onclick="handleReturnToApp(event)" title="Regresar a la aplicación GrowCap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Volver a la App</span>
+      </button>
+
+      <button class="btn-action" onclick="window.print()" title="Imprimir o guardar como PDF">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 6 2 18 2 18 9"></polyline>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+          <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+        <span>Imprimir PDF</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Reading Progress Bar -->
+  <div class="progress-bar-container">
+    <div id="readingProgressFill" class="progress-bar-fill"></div>
+  </div>
+
+  <div class="layout-wrapper">
+    <!-- Sidebar Navigation (TOC) -->
+    <aside class="sidebar">
+      <div class="sidebar-section-title">Índice del Manual</div>
+      <ul class="toc-menu">
+        <li class="toc-item">
+          <a href="#modulo-saldos" class="toc-link active" data-target="modulo-saldos">
+            <svg class="toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+            <span>1. Conoce tus Saldos</span>
+            <span class="toc-badge">Básico</span>
+          </a>
+        </li>
+        <li class="toc-item">
+          <a href="#modulo-inicio" class="toc-link" data-target="modulo-inicio">
+            <svg class="toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span>2. Inicio y Portafolio</span>
+          </a>
+        </li>
+        <li class="toc-item">
+          <a href="#modulo-depositos" class="toc-link" data-target="modulo-depositos">
+            <svg class="toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span>3. Depósitos (SPEI)</span>
+          </a>
+        </li>
+        <li class="toc-item">
+          <a href="#modulo-ahorros" class="toc-link" data-target="modulo-ahorros">
+            <svg class="toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h1l1-2-1-2h-1c0-1-.3-2-1-3z"></path></svg>
+            <span>4. Caja de Ahorro</span>
+            <span class="toc-badge">Planes</span>
+          </a>
+        </li>
+        <li class="toc-item">
+          <a href="#modulo-inversiones" class="toc-link" data-target="modulo-inversiones">
+            <svg class="toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <span>5. Inversión a Plazo</span>
+            <span class="toc-badge">18%-22%</span>
+          </a>
+        </li>
+        <li class="toc-item">
+          <a href="#modulo-prestamos" class="toc-link" data-target="modulo-prestamos">
+            <svg class="toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+            <span>6. Préstamos y Cuotas</span>
+            <span class="toc-badge">Tope 30%</span>
+          </a>
+        </li>
+        <li class="toc-item">
+          <a href="#modulo-aval" class="toc-link" data-target="modulo-aval">
+            <svg class="toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span>7. Aval Solidario</span>
+            <span class="toc-badge">Clave</span>
+          </a>
+        </li>
+        <li class="toc-item">
+          <a href="#modulo-perfil" class="toc-link" data-target="modulo-perfil">
+            <svg class="toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>8. Perfil, CLABE y NIP</span>
+          </a>
+        </li>
+        <li class="toc-item">
+          <a href="#modulo-faq" class="toc-link" data-target="modulo-faq">
+            <svg class="toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>9. Preguntas Frecuentes</span>
+            <span class="toc-badge">50+ Respuestas</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      
+      <!-- Hero Welcome -->
+      <section class="manual-hero">
+        <div class="kicker">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"></circle></svg>
+          Portal de Clientes Oficial
+        </div>
+        <h1>Manual Práctico para Clientes</h1>
+        <p>Aprende a gestionar tu dinero, hacer crecer tu patrimonio mediante ahorro e inversiones garantizadas y tramitar préstamos con descuentos cómodos vía nómina de manera segura y transparente.</p>
+
+        <div class="hero-quick-pills">
+          <a href="#modulo-saldos" class="hero-pill">💰 ¿Qué es mi saldo disponible?</a>
+          <a href="#modulo-depositos" class="hero-pill">📲 ¿Cómo depositar?</a>
+          <a href="#modulo-inversiones" class="hero-pill">📈 Inversiones al 18% y 22%</a>
+          <a href="#modulo-aval" class="hero-pill">🤝 ¿Qué significa ser aval?</a>
+          <a href="#modulo-faq" class="hero-pill">❓ Preguntas frecuentes</a>
+        </div>
+      </section>
+
+      <!-- MODULO 1: SALDOS -->
+      <article id="modulo-saldos" class="content-module searchable-section">
+        <div class="module-header">
+          <div class="module-number">1</div>
+          <h2 class="module-title">Conoce tus Saldos: ¿Dónde está mi dinero?</h2>
+        </div>
+        <p class="section-lead search-target">En GrowCap no hay conceptos confusos ni letras chiquitas. Tu dinero se divide claramente entre lo que tienes listo para retirar y lo que está colocado generando ganancias diarias.</p>
+
+        <div class="cards-grid">
+          <div class="info-card">
+            <div class="card-icon-badge blue">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </div>
+            <h4>Saldo Disponible (General)</h4>
+            <p class="search-target">Es tu dinero <strong>100% líquido e inmediato</strong>. Puedes retirarlo en cualquier momento a tu cuenta bancaria personal vía SPEI o usarlo para abrir una nueva inversión sin tener que depositar de nuevo.</p>
+          </div>
+
+          <div class="info-card">
+            <div class="card-icon-badge green">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+            </div>
+            <h4>Saldo Colocado (En Rendimiento)</h4>
+            <p class="search-target">Capital activo dentro de un plan de ahorro o inversión a plazo fijo. Está protegido y generando intereses a tu favor día con día durante el tiempo acordado.</p>
+          </div>
+
+          <div class="info-card">
+            <div class="card-icon-badge amber">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+            </div>
+            <h4>Saldo Deudor (Préstamos)</h4>
+            <p class="search-target">Muestra el monto total pendiente por liquidar de tu préstamo activo. Conforme se apliquen tus descuentos de nómina, esta cifra disminuirá hasta llegar a $0.00.</p>
+          </div>
+        </div>
+
+        <div class="callout-box info">
+          <div class="callout-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          </div>
+          <div class="callout-content">
+            <strong>¿De dónde sale tu Saldo Disponible?</strong>
+            <p class="search-target">Se compone de tres fuentes: (1) Depósitos libres que aún no colocas en un plan, (2) Saldos liberados de planes de ahorro que alcanzaron su meta, y (3) Inversiones a plazo vencidas con su capital e intereses que decidiste no reinvertir.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- MODULO 2: INICIO DASHBOARD -->
+      <article id="modulo-inicio" class="content-module searchable-section">
+        <div class="module-header">
+          <div class="module-number">2</div>
+          <h2 class="module-title">Inicio (Dashboard y Productos Activos)</h2>
+        </div>
+        <p class="section-lead search-target">La pantalla de inicio te ofrece una visión clara de tus finanzas: tu saldo disponible al momento, accesos rápidos de operación y el estado de cada uno de tus productos.</p>
+
+        <!-- Screenshot Real: Tarjetas de Inicio -->
+        <div class="screenshot-frame">
+          <div class="screenshot-browser-bar">
+            <div class="browser-dots"><div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div></div>
+            <div class="browser-address">https://app.growcap.mx/dashboard</div>
+          </div>
+          <div class="screenshot-img-wrapper" onclick="openLightbox('manual_assets/dashboard_tarjetas.png', 'Tarjetas de inicio del cliente: Mis Ahorros, Mis Inversiones y Mis Préstamos con desglose de capital colocado y disponible cobrable')">
+            <img src="manual_assets/dashboard_tarjetas.png" alt="Tarjetas de inicio del cliente">
+            <div class="zoom-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Clic para ampliar</div>
+          </div>
+          <div class="screenshot-caption">
+            <span><strong>Ilustración 1:</strong> Tarjetas principales de la cuenta del cliente: desglose de capital colocado generando rendimientos vs disponible cobrable para retiro.</span>
+          </div>
+        </div>
+
+        <!-- Screenshot Real: Vista Móvil -->
+        <div class="screenshot-frame">
+          <div class="screenshot-browser-bar">
+            <div class="browser-dots"><div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div></div>
+            <div class="browser-address">https://app.growcap.mx (Vista Móvil / PWA)</div>
+          </div>
+          <div class="screenshot-img-wrapper" onclick="openLightbox('manual_assets/dashboard_movil.png', 'Vista móvil de GrowCap para clientes con barra de navegación inferior')">
+            <img src="manual_assets/dashboard_movil.png" alt="Vista móvil de GrowCap">
+            <div class="zoom-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Clic para ampliar</div>
+          </div>
+          <div class="screenshot-caption">
+            <span><strong>Ilustración 2:</strong> En tu celular dispones de una barra de navegación inferior permanente para moverte entre Inicio, Ahorro, Inversión, Préstamos y Perfil.</span>
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          <div class="info-card">
+            <h4>Botón "Movimientos"</h4>
+            <p class="search-target">Consulta tu Kardex completo con fecha, concepto y monto de cada abono, retiro, descuento o ganancia acreditada.</p>
+          </div>
+          <div class="info-card">
+            <h4>Botón "Retirar"</h4>
+            <p class="search-target">Solicita el envío de tu saldo disponible directamente a tu cuenta bancaria registrada ingresando tu NIP de 4 dígitos.</p>
+          </div>
+          <div class="info-card">
+            <h4>Botón "Depositar"</h4>
+            <p class="search-target">Accede a los datos bancarios oficiales para realizar transferencias SPEI y adjuntar tu comprobante de pago.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- MODULO 3: DEPOSITOS -->
+      <article id="modulo-depositos" class="content-module searchable-section">
+        <div class="module-header">
+          <div class="module-number">3</div>
+          <h2 class="module-title">¿Cómo ingresar dinero? (Depósitos SPEI)</h2>
+        </div>
+        <p class="section-lead search-target">Agregar fondos a tu cuenta de GrowCap es muy sencillo. Todo depósito se acredita mediante transferencia bancaria verificada por tesorería.</p>
+
+        <ol class="steps-list">
+          <li class="step-item">
+            <h5>Realiza la transferencia desde la app de tu banco</h5>
+            <p class="search-target">Ingresa a tu banca móvil habitual (BBVA, Banorte, Santander, etc.) y transfiere a la cuenta CLABE oficial que aparece en la ventanilla de depósito de GrowCap.</p>
+          </li>
+          <li class="step-item">
+            <h5>Usa la referencia sugerida</h5>
+            <p class="search-target">En el concepto de tu transferencia coloca la referencia que te indica el sistema (ejemplo: <code>DEP-123-4567</code>). Esto permite identificar tu pago de inmediato.</p>
+          </li>
+          <li class="step-item">
+            <h5>Registra el comprobante en la plataforma</h5>
+            <p class="search-target">En el botón <strong>"Depositar"</strong>, indica el monto exacto, la fecha y sube la foto o archivo PDF emitido por tu banco (máximo 15 MB).</p>
+          </li>
+          <li class="step-item">
+            <h5>Acreditación en tu Saldo Disponible</h5>
+            <p class="search-target">Tu solicitud quedará en estado <strong>"En Revisión"</strong> y al validarse pasará a <strong>"Acreditado"</strong>, sumándose al instante a tu Saldo Disponible.</p>
+          </li>
+        </ol>
+
+        <div class="callout-box success">
+          <div class="callout-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+          <div class="callout-content">
+            <strong>Historial siempre a la mano</strong>
+            <p class="search-target">En la pestaña <em>Historial de Depósitos</em> podrás consultar en todo momento el listado de tus comprobantes enviados con su fecha, monto y estatus de aprobación.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- MODULO 4: AHORROS -->
+      <article id="modulo-ahorros" class="content-module searchable-section">
+        <div class="module-header">
+          <div class="module-number">4</div>
+          <h2 class="module-title">Caja de Ahorro: Modalidades y Reglas</h2>
+        </div>
+        <p class="section-lead search-target">Elige cómo ahorrar según tus necesidades: liquidez inmediata para imprevistos diarios o planes programados con descuento vía nómina para metas mayores.</p>
+
+        <!-- Screenshot Real: Solicitud de Ahorro -->
+        <div class="screenshot-frame">
+          <div class="screenshot-browser-bar">
+            <div class="browser-dots"><div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div></div>
+            <div class="browser-address">https://app.growcap.mx/ahorros/solicitar</div>
+          </div>
+          <div class="screenshot-img-wrapper" onclick="openLightbox('manual_assets/ahorro_solicitud.png', 'Modal de solicitud de ahorro para clientes: Confirmación de plan, periodo, rendimiento y autorización de descuento vía nómina')">
+            <img src="manual_assets/ahorro_solicitud.png" alt="Confirmación de plan de ahorro del cliente">
+            <div class="zoom-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Clic para ampliar</div>
+          </div>
+          <div class="screenshot-caption">
+            <span><strong>Ilustración 3:</strong> Paso final de solicitud de ahorro donde revisas el plan, el plazo, la tasa pactada y autorizas el descuento de nómina.</span>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Modalidad</th>
+                <th>Tasa Anual</th>
+                <th>Monto Mínimo</th>
+                <th>Plazo Mínimo</th>
+                <th>Disponibilidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Siempre Disponible</strong></td>
+                <td><span class="badge-pill green">10.00%</span></td>
+                <td>$100.00 MXN</td>
+                <td>Sin plazo forzoso</td>
+                <td>Inmediata (retira cuando lo necesites)</td>
+              </tr>
+              <tr>
+                <td><strong>Ahorro Programado</strong></td>
+                <td><span class="badge-pill blue">12.00%</span></td>
+                <td>$100.00 MXN</td>
+                <td>2 meses</td>
+                <td>Al cumplir el plazo (10 días de gracia)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="cards-grid">
+          <div class="info-card">
+            <h4>Aportaciones Voluntarias</h4>
+            <p class="search-target">En cualquier día del mes puedes abonar dinero extra a tu cuenta de ahorro para incrementar tu capital y ganar más intereses.</p>
+          </div>
+          <div class="info-card">
+            <h4>Pausar y Reanudar</h4>
+            <p class="search-target">Si pasas por una quincena difícil, puedes pausar temporalmente las cuotas de tu ahorro programado sin perder tus rendimientos y reanudarlas después.</p>
+          </div>
+          <div class="info-card">
+            <h4>Periodo de Gracia (10 Días)</h4>
+            <p class="search-target">Al cumplirse el plazo meta de tu ahorro, tienes 10 días para retirar o transferir tu dinero antes de que se renueve automáticamente.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- MODULO 5: INVERSIONES -->
+      <article id="modulo-inversiones" class="content-module searchable-section">
+        <div class="module-header">
+          <div class="module-number">5</div>
+          <h2 class="module-title">Inversiones a Plazo Fijo: Haz Crecer tu Dinero</h2>
+        </div>
+        <p class="section-lead search-target">En una inversión a plazo fijo tu dinero queda colocado durante un periodo determinado a cambio de una tasa de rendimiento alta y garantizada.</p>
+
+        <!-- Screenshot Real: Tarjeta de Plan de Inversion -->
+        <div class="screenshot-frame">
+          <div class="screenshot-browser-bar">
+            <div class="browser-dots"><div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div></div>
+            <div class="browser-address">https://app.growcap.mx/inversion/planes</div>
+          </div>
+          <div class="screenshot-img-wrapper" onclick="openLightbox('manual_assets/inversion_plan_tarjeta.png', 'Tarjeta del plan de inversión a 1 año con 22% de rendimiento anual')">
+            <img src="manual_assets/inversion_plan_tarjeta.png" alt="Tarjeta del plan de inversión a 1 año">
+            <div class="zoom-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Clic para ampliar</div>
+          </div>
+          <div class="screenshot-caption">
+            <span><strong>Ilustración 4:</strong> Catálogo de planes de inversión con rendimientos de hasta el 22% anual e inversión mínima accesible.</span>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Plan de Inversión</th>
+                <th>Plazo</th>
+                <th>Rendimiento Anual</th>
+                <th>Monto Mínimo</th>
+                <th>Monto Máximo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Plan 6 Meses</strong></td>
+                <td>6 meses</td>
+                <td><span class="badge-pill green">18.00% Anual</span></td>
+                <td>$10,000.00 MXN</td>
+                <td>$300,000.00 MXN</td>
+              </tr>
+              <tr>
+                <td><strong>Plan 1 Año</strong></td>
+                <td>12 meses</td>
+                <td><span class="badge-pill green">22.00% Anual</span></td>
+                <td>$10,000.00 MXN</td>
+                <td>$250,000.00 MXN</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Screenshot Real: Banner de Vencimiento de Inversion -->
+        <div class="screenshot-frame">
+          <div class="screenshot-browser-bar">
+            <div class="browser-dots"><div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div></div>
+            <div class="browser-address">https://app.growcap.mx/inversion/vencimiento</div>
+          </div>
+          <div class="screenshot-img-wrapper" onclick="openLightbox('manual_assets/inversion_vencimiento_acciones.png', 'Banner de inversión vencida: Saldo liberado y botones para Mover a Saldo, Retirar o Reinvertir')">
+            <img src="manual_assets/inversion_vencimiento_acciones.png" alt="Banner de inversión vencida">
+            <div class="zoom-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Clic para ampliar</div>
+          </div>
+          <div class="screenshot-caption">
+            <span><strong>Ilustración 5:</strong> Al vencer tu inversión, cuentas con un periodo de gracia donde puedes mover el saldo a disponible, retirarlo a tu banco o reinvertirlo para un nuevo ciclo.</span>
+          </div>
+        </div>
+
+        <!-- Screenshot Real: Póliza Activa -->
+        <div class="screenshot-frame">
+          <div class="screenshot-browser-bar">
+            <div class="browser-dots"><div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div></div>
+            <div class="browser-address">https://app.growcap.mx/inversion/polizas</div>
+          </div>
+          <div class="screenshot-img-wrapper" onclick="openLightbox('manual_assets/inversion_poliza_activa.png', 'Póliza de inversión activa en cartera con capital invertido y botón de Estado de Cuenta')">
+            <img src="manual_assets/inversion_poliza_activa.png" alt="Póliza de inversión en cartera">
+            <div class="zoom-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Clic para ampliar</div>
+          </div>
+          <div class="screenshot-caption">
+            <span><strong>Ilustración 6:</strong> Detalle de póliza activa: visualiza tu capital invertido, plazo, fecha de corte y descarga tu estado de cuenta con un clic.</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- MODULO 6: PRESTAMOS -->
+      <article id="modulo-prestamos" class="content-module searchable-section">
+        <div class="module-header">
+          <div class="module-number">6</div>
+          <h2 class="module-title">Préstamos y Reglas de Financiamiento</h2>
+        </div>
+        <p class="section-lead search-target">Créditos solidarios diseñados para apoyarte ante imprevistos, con descuento automático en tu nómina para que nunca caigas en mora involuntaria.</p>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Plan de Crédito</th>
+                <th>Plazo</th>
+                <th>Semanas</th>
+                <th>Tasa Total</th>
+                <th>Monto Mínimo</th>
+                <th>Monto Máximo</th>
+                <th>Antigüedad Laboral</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Respiro</strong></td>
+                <td>1 mes</td>
+                <td>4 semanas</td>
+                <td>11.20%</td>
+                <td>$500.00</td>
+                <td>$1,500.00</td>
+                <td>6 meses (0.5 años)</td>
+              </tr>
+              <tr>
+                <td><strong>Impulso</strong></td>
+                <td>2 meses</td>
+                <td>12 semanas</td>
+                <td>24.80%</td>
+                <td>$500.00</td>
+                <td>$5,000.00</td>
+                <td>1 año</td>
+              </tr>
+              <tr>
+                <td><strong>Emprende</strong></td>
+                <td>6 meses</td>
+                <td>24 semanas</td>
+                <td>35.18%</td>
+                <td>$500.00</td>
+                <td>$16,000.00</td>
+                <td>1.5 años</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Screenshot Real: Tabla de Amortizacion -->
+        <div class="screenshot-frame">
+          <div class="screenshot-browser-bar">
+            <div class="browser-dots"><div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div></div>
+            <div class="browser-address">https://app.growcap.mx/prestamos/solicitar/cuotas</div>
+          </div>
+          <div class="screenshot-img-wrapper" onclick="openLightbox('manual_assets/prestamo_tabla_cuotas.png', 'Paso final de solicitud de préstamo: Tabla de amortización semanal, desglose de capital, intereses y protocolo de aprobación de aval')">
+            <img src="manual_assets/prestamo_tabla_cuotas.png" alt="Tabla de cuotas del préstamo">
+            <div class="zoom-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Clic para ampliar</div>
+          </div>
+          <div class="screenshot-caption">
+            <span><strong>Ilustración 7:</strong> Tabla de pagos semanal con desglose de cuota fija, capital, interés y saldo restante antes de enviar a autorización.</span>
+          </div>
+        </div>
+
+        <!-- Screenshot Real: Tarjeta de Prestamo Activo -->
+        <div class="screenshot-frame">
+          <div class="screenshot-browser-bar">
+            <div class="browser-dots"><div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div></div>
+            <div class="browser-address">https://app.growcap.mx/prestamos/mis-creditos</div>
+          </div>
+          <div class="screenshot-img-wrapper" onclick="openLightbox('manual_assets/prestamo_tarjeta_activa.png', 'Monitoreo de préstamo activo: Saldo restante, cuota de nómina, barra de progreso y botón para abonar o liquidar')">
+            <img src="manual_assets/prestamo_tarjeta_activa.png" alt="Préstamo activo del colaborador">
+            <div class="zoom-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Clic para ampliar</div>
+          </div>
+          <div class="screenshot-caption">
+            <span><strong>Ilustración 8:</strong> Seguimiento en tiempo real de tu préstamo: saldo pendiente, cuota de nómina, barra de progreso y botón para adelantar pagos vía SPEI.</span>
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          <div class="info-card">
+            <h4>1. Regla del Tope del 30%</h4>
+            <p class="search-target">Tu cuota de pago no puede superar el 30% de tu sueldo por nómina. Es una protección legal para garantizar que siempre cuentes con ingresos suficientes para tu familia.</p>
+          </div>
+          <div class="info-card">
+            <h4>2. Regla de Préstamo Único</h4>
+            <p class="search-target">Solo puedes tener un préstamo activo a la vez. Al liquidar tu crédito actual en su totalidad, puedes solicitar uno nuevo inmediatamente.</p>
+          </div>
+          <div class="info-card">
+            <h4>3. Descuento Directo</h4>
+            <p class="search-target">Tus pagos se descuentan de forma automática en tu recibo de nómina según tu calendario (semanal, quincenal o mensual).</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- MODULO 7: AVAL SOLIDARIO -->
+      <article id="modulo-aval" class="content-module searchable-section">
+        <div class="module-header">
+          <div class="module-number">7</div>
+          <h2 class="module-title">Todo sobre el Aval Solidario</h2>
+        </div>
+        <p class="section-lead search-target">El aval es el copiloto financiero en un préstamo. Conoce cómo funciona este respaldo y cómo se autoriza de forma 100% digital y segura.</p>
+
+        <div class="callout-box warning">
+          <div class="callout-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </div>
+          <div class="callout-content">
+            <strong>¿Qué significa ser Aval Solidario?</strong>
+            <p class="search-target">Ser aval significa dar tu respaldo y confianza a un compañero de trabajo. Adquieres la responsabilidad legal y moral de responder solidariamente por el saldo deudor si el titular no cumple sus pagos. Solo debes respaldar a personas de tu entera confianza.</p>
+          </div>
+        </div>
+
+        <!-- Screenshot Real: Paso de Seleccion de Garantia -->
+        <div class="screenshot-frame">
+          <div class="screenshot-browser-bar">
+            <div class="browser-dots"><div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div></div>
+            <div class="browser-address">https://app.growcap.mx/prestamos/solicitar/garantia</div>
+          </div>
+          <div class="screenshot-img-wrapper" onclick="openLightbox('manual_assets/prestamo_solicitud_garantia.png', 'Paso de garantía del préstamo: Comparativa entre Auto-Garantía con Ahorro propio y Aval Solidario en 2 pasos')">
+            <img src="manual_assets/prestamo_solicitud_garantia.png" alt="Elección de garantía del préstamo">
+            <div class="zoom-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Clic para ampliar</div>
+          </div>
+          <div class="screenshot-caption">
+            <span><strong>Ilustración 9:</strong> Pantalla del cliente para seleccionar garantía: para montos menores a $2,000 puedes elegir Auto-Garantía con tu propio ahorro o el código de tu aval.</span>
+          </div>
+        </div>
+
+        <!-- Screenshot Real: Pantalla de Autorizacion del Aval -->
+        <div class="screenshot-frame">
+          <div class="screenshot-browser-bar">
+            <div class="browser-dots"><div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div></div>
+            <div class="browser-address">https://app.growcap.mx/cliente/avales/autorizar</div>
+          </div>
+          <div class="screenshot-img-wrapper" onclick="openLightbox('manual_assets/aval_autorizar_nip.png', 'Pantalla del compañero aval: Revisa la solicitud de su compañero y autoriza digitalmente con su NIP de 4 dígitos')">
+            <img src="manual_assets/aval_autorizar_nip.png" alt="Pantalla de autorización de aval con NIP">
+            <div class="zoom-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Clic para ampliar</div>
+          </div>
+          <div class="screenshot-caption">
+            <span><strong>Ilustración 10:</strong> Ventana del compañero aval: revisa los datos del solicitante, monto, cuota semanal, y confirma ingresando su NIP secreto de seguridad.</span>
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          <div class="info-card">
+            <h4>Código Dinámico de 48 Horas</h4>
+            <p class="search-target">El compañero que será aval genera en su cuenta un código temporal (ej: <code>AVL-7K9B2M</code>). Este código vence a las 48 horas y solo puede utilizarse una vez.</p>
+          </div>
+          <div class="info-card">
+            <h4>Autorización Obligatoria con NIP</h4>
+            <p class="search-target">Tras enviar la solicitud, el aval recibe una notificación en su cuenta. Revisa monto y cuota, y <strong>autoriza ingresando su NIP secreto</strong>.</p>
+          </div>
+          <div class="info-card">
+            <h4>Límite de 1 Aval Activo</h4>
+            <p class="search-target">Para proteger a los colaboradores, un usuario solo puede ser aval de <strong>un solo crédito activo a la vez</strong> hasta que sea liquidado.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- MODULO 8: PERFIL Y SEGURIDAD -->
+      <article id="modulo-perfil" class="content-module searchable-section">
+        <div class="module-header">
+          <div class="module-number">8</div>
+          <h2 class="module-title">Perfil, Seguridad y Tus Datos</h2>
+        </div>
+        <p class="section-lead search-target">Tu cuenta está resguardada con altos estándares de seguridad financiera. Mantén al día tu cuenta bancaria y beneficiarios.</p>
+
+        <div class="cards-grid">
+          <div class="info-card">
+            <h4>Tu Cuenta Bancaria (CLABE de 18 dígitos)</h4>
+            <p class="search-target">Registra tu cuenta CLABE personal. Todos los retiros solicitados se transferirán únicamente a esta cuenta a tu nombre para evitar fraudes.</p>
+          </div>
+          <div class="info-card">
+            <h4>NIP de Seguridad (4 Dígitos)</h4>
+            <p class="search-target">Tu firma digital secreta para retiros y autorizaciones de aval. Puedes configurarlo o cambiarlo en cualquier momento desde tu Perfil.</p>
+          </div>
+          <div class="info-card">
+            <h4>Beneficiarios Designados</h4>
+            <p class="search-target">Indica a tus familiares que recibirán tus fondos acumulados en caso fortuito, asignando porcentajes que sumen exactamente el 100%.</p>
+          </div>
+          <div class="info-card">
+            <h4>Cierre por Inactividad (10 Minutos)</h4>
+            <p class="search-target">Si dejas la plataforma abierta sin actividad durante 10 minutos, el sistema mostrará una cuenta regresiva de 60 segundos y cerrará la sesión automáticamente.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- MODULO 9: PREGUNTAS FRECUENTES (AMPLIADA) -->
+      <article id="modulo-faq" class="content-module searchable-section">
+        <div class="module-header">
+          <div class="module-number">9</div>
+          <h2 class="module-title">Preguntas Frecuentes (FAQ)</h2>
+        </div>
+        <p class="section-lead search-target">Encuentra respuestas claras y detalladas a más de 50 dudas comunes sobre el funcionamiento de la caja de ahorro.</p>
+
+                        <!-- Category Filters -->
+        <div class="faq-category-filters">
+          <button class="faq-filter-chip active" data-filter="all">Todas las dudas</button>
+          <button class="faq-filter-chip" data-filter="prestamos">Préstamos Personales</button>
+          <button class="faq-filter-chip" data-filter="nomina">Convenio y Nómina</button>
+          <button class="faq-filter-chip" data-filter="bajas">Bajas y Finiquitos</button>
+          <button class="faq-filter-chip" data-filter="aval">Aval Solidario</button>
+          <button class="faq-filter-chip" data-filter="insuficiencia">Nómina Insuficiente</button>
+          <button class="faq-filter-chip" data-filter="ahorro">Ahorro</button>
+          <button class="faq-filter-chip" data-filter="inversion">Inversiones</button>
+          <button class="faq-filter-chip" data-filter="saldos">Saldos y Retiros</button>
+          <button class="faq-filter-chip" data-filter="seguridad">Seguridad y NIP</button>
+        </div>
+
+        <div class="faq-accordion">
+
+          <!-- CATEGORIA: PRESTAMOS -->
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cuáles son los requisitos básicos para solicitar un préstamo personal?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>Estar activo en una empresa con convenio vigente, percibir ingresos por nómina comprobables, tener capacidad de descuento disponible (máximo 30% de tu sueldo neto periódico) y presentar identificación oficial vigente, comprobante de domicilio y el último recibo de nómina.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cuánto dinero puedo solicitar y de qué depende mi límite de crédito?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>El monto mínimo y máximo está determinado por los planes habilitados para tu empresa. Además, por normativa de protección laboral, la cuota estimada de pago no puede superar el 30% de tu percepción salarial neta periódica.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cómo se calculan y descuentan las cuotas de mi préstamo?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>Las cuotas son fijas y uniformes a lo largo de todo el plazo seleccionado en el simulador. Se descuentan automáticamente en cada dispersión oficial de nómina (semanal, quincenal o mensual) directamente por tu empresa.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Puedo realizar abonos extraordinarios o liquidar mi préstamo antes de tiempo?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>Sí. En cualquier momento puedes entrar a tu módulo de Préstamos, dar clic en "Abonar / Liquidar" y realizar abonos directos o saldar tu cuenta mediante transferencia bancaria SPEI o pasarela de pago para reducir tu saldo restante.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Existe alguna penalización o comisión por liquidar antes de tiempo?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>No hay ninguna penalización ni cobro extra por liquidar antes de tiempo. Sin embargo, ten en cuenta que el sistema liquida el total de la deuda acordada (capital más intereses contratados desde el inicio del préstamo), por lo que no aplica descuento ni condonación de intereses por pronto pago.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cuánto tiempo tarda la revisión, aprobación y depósito de mi préstamo?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>Una vez firmado el pagaré y completada la validación de tu aval (o seleccionada tu auto-garantía), el comité revisa la solicitud en un lapso de 24 a 48 horas hábiles. Al ser aprobada, la dispersión se envía vía SPEI a tu cuenta bancaria registrada.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cómo recibo el dinero aprobado de mi préstamo?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>El recurso se transfiere íntegramente por SPEI a la cuenta CLABE personal que diste de alta en la plataforma, garantizando que el dinero llegue de forma segura y directa a tu banco.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Puedo tener dos préstamos activos al mismo tiempo?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>Como regla general debes liquidar tu préstamo en curso antes de solicitar otro. El comité de crédito solo evaluará una segunda solicitud si tu capacidad de retención del 30% lo permite con total solvencia.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué documentos debo adjuntar al solicitar mi préstamo?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>Depende del monto solicitado: para préstamos a partir de $2,000.00 MXN debes adjuntar el formato de solicitud firmado, INE vigente y comprobante de domicilio reciente, tanto tuyos como de tu aval solidario. Para préstamos menores a $2,000.00 MXN el trámite es simplificado: puedes utilizar un código de aval solidario o respaldar el crédito con tu propio ahorro a plazo fijo (Auto-Garantía).</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Dónde puedo consultar mi saldo pendiente, cuotas pagadas y próximas fechas de cobro?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>Ingresa a Préstamos y da clic en "Ver Detalle" sobre tu crédito activo. Podrás revisar tu saldo insoluto, el número de cuotas cubiertas y la tabla de amortización detallada.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué sucede si mi solicitud de préstamo es devuelta o rechazada?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>La plataforma te notificará el motivo puntual (por ejemplo: imagen ilegible de la identificación, cuota superior al 30% permitido o falta de confirmación del aval). Podrás corregir los datos u observaciones y reenviarla de inmediato.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Tener un préstamo en GrowCap afecta o consulta mi Buró de Crédito?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>No. GrowCap opera como una prestación interna de caja de ahorro bajo convenio laboral con tu empresa. La evaluación se realiza con base en tu estabilidad e ingresos en el centro de trabajo, sin reportar consultas de buró tradicional.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="prestamos">
+            <button class="faq-trigger">
+              <span class="search-target">Si termino de pagar mi préstamo, ¿puedo solicitar otro de inmediato?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Préstamos Personales</span>
+                <p>Sí. En cuanto se registra la conciliación del último abono o cuota de nómina y el crédito pasa al estatus "Liquidado", tu capacidad crediticia se restablece al 100% y puedes iniciar una nueva solicitud.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CATEGORIA: NOMINA -->
+          <div class="faq-item" data-category="nomina">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cómo funcionan los descuentos vía nómina si soy socio por convenio de mi empresa?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Convenio y Nómina</span>
+                <p>Tu empresa cuenta con un convenio formal con GrowCap para facilitar la retención automática de tus compromisos de ahorro o préstamos. El departamento de Nóminas aplica el descuento directamente en tu fecha de corte y transfiere el monto a la Caja para acreditarlo a tu cuenta sin que tengas que acudir a ventanillas bancarias.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="nomina">
+            <button class="faq-trigger">
+              <span class="search-target">¿En qué fechas se aplican los descuentos de nómina?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Convenio y Nómina</span>
+                <p>Los descuentos se sincronizan de forma estricta con el calendario oficial de pagos de tu centro de trabajo: cada semana, quincena o mes, conforme a la periodicidad registrada en tus Datos Laborales.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="nomina">
+            <button class="faq-trigger">
+              <span class="search-target">¿Aparecen estos descuentos reflejados en mi recibo de nómina oficial (CFDI / recibo de pago)?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Convenio y Nómina</span>
+                <p>Sí. En el apartado de deducciones de tu recibo de pago oficial verás el concepto claramente desglosado como retención de caja de ahorro o préstamo GrowCap, lo que te garantiza absoluta transparencia contable y laboral.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="nomina">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué pasa si el día de pago de nómina cae en fin de semana o día festivo oficial?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Convenio y Nómina</span>
+                <p>El descuento se ejecuta en el día hábil en que tu empresa efectivamente disperse el pago de nómina. La plataforma de la caja reconoce este movimiento y mantiene tus compromisos al corriente sin recargos.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="nomina">
+            <button class="faq-trigger">
+              <span class="search-target">¿Puedo cambiar la periodicidad de mis descuentos (ejemplo: de semanal a quincenal)?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Convenio y Nómina</span>
+                <p>La periodicidad de retención está sujeta directamente a cómo tu empresa te paga tu salario. Si tu centro de trabajo modifica tu esquema de nómina, comunícalo a Recursos Humanos y a la administración de GrowCap para actualizar tus datos.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="nomina">
+            <button class="faq-trigger">
+              <span class="search-target">¿Puedo modificar o pausar el monto que ahorro por nómina?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Convenio y Nómina</span>
+                <p>Sí. Puedes pausar o ajustar la cuota de tu plan de ahorro programado directamente en la sección de Ahorros. Las solicitudes confirmadas antes del cierre de corte de nómina de tu empresa se aplican para el siguiente periodo de pago.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CATEGORIA: BAJAS -->
+          <div class="faq-item" data-category="bajas">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué pasa con mi deuda si renuncio o me dan de baja de la empresa y tengo un préstamo activo?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Bajas y Finiquitos</span>
+                <p>Al concluir tu relación laboral con la empresa con convenio, el saldo pendiente de tu préstamo debe liquidarse. Conforme a las cláusulas legales del pagaré y el contrato firmado, la empresa aplicará la retención del saldo insoluto de tu préstamo directamente de tu liquidación o finiquito laboral.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="bajas">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué sucede si mi finiquito no alcanza para cubrir la totalidad de mi préstamo?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Bajas y Finiquitos</span>
+                <p>Si el importe de tu finiquito resulta insuficiente para saldar el total, el remanente continúa siendo tu obligación personal. La administración de GrowCap te contactará para establecer un calendario de pagos voluntarios mediante transferencia bancaria SPEI, permitiéndote finiquitar tu crédito sin perjudicar tu historial ni comprometer a tu aval.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="bajas">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué ocurre con mis ahorros e inversiones acumuladas si dejo de laborar en la empresa?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Bajas y Finiquitos</span>
+                <p>Tu dinero acumulado es 100% tu patrimonio. Si tienes un préstamo pendiente, tus ahorros disponibles pueden aplicarse para amortizar la deuda. Si no tienes deuda o tras liquidarla queda saldo a favor, tus fondos liberados se transfieren íntegramente a tu cuenta bancaria registrada vía SPEI.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="bajas">
+            <button class="faq-trigger">
+              <span class="search-target">¿Puedo seguir ahorrando o invirtiendo en GrowCap si cambio de trabajo?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Bajas y Finiquitos</span>
+                <p>Podrás dar seguimiento y culminar tus inversiones y ahorros activos hasta su fecha de vencimiento. La posibilidad de abrir nuevos productos dependerá de si tu nuevo centro de trabajo cuenta con convenio o si la caja habilita esquemas de aportación independiente.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CATEGORIA: AVAL -->
+          <div class="faq-item" data-category="aval">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué pasa si soy aval de un compañero y él renuncia o es despedido teniendo deuda activa?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Aval Solidario</span>
+                <p>El primer mecanismo legal de cobro es siempre el finiquito o liquidación laboral del propio titular del crédito, retenido por la empresa. Solo en el caso excepcional de que el finiquito no cubra la deuda y el titular se desentienda del pago voluntario, la administración contactará al aval para revisar el remanente y acordar esquemas accesibles de regularización.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="aval">
+            <button class="faq-trigger">
+              <span class="search-target">¿A mí como aval me descuentan de inmediato de mi nómina si el titular renuncia?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Aval Solidario</span>
+                <p>No de manera inmediata ni sorpresiva. Primero se agota el cobro sobre el finiquito del solicitante y se le brinda la oportunidad de transferir vía SPEI. Solo tras este proceso, y con previo aviso formal, se requeriría el cumplimiento solidario.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="aval">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué pasa si el que renuncia a la empresa soy yo, y soy aval activo de otro compañero?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Aval Solidario</span>
+                <p>Al tramitar tu baja laboral, el área administrativa verificará que el crédito que respaldaste se encuentre al corriente en sus pagos. De ser necesario, se solicitará al deudor titular que designe un aval sustituto o respalde su préstamo con su propio ahorro a plazo para liberar tu garantía.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="aval">
+            <button class="faq-trigger">
+              <span class="search-target">¿Puedo renunciar a ser aval de un compañero antes de que termine de pagar su crédito?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Aval Solidario</span>
+                <p>Una vez formalizado y desembolsado el crédito, la obligación de aval solidario permanece vigente durante todo el plazo del préstamo. Solo se puede liberar al aval anticipadamente si el titular liquida su adeudo o si presenta un nuevo aval que sea aprobado por el comité.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="aval">
+            <button class="faq-trigger">
+              <span class="search-target">¿Por qué para préstamos a partir de $2,000.00 MXN es obligatorio tener un aval solidario?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Aval Solidario</span>
+                <p>Es una regla estatutaria para proteger el fondo comunitario de la caja de ahorro. En créditos a partir de $2,000 MXN se formaliza el pagaré con la firma digital y documentación oficial tanto del titular como del aval solidario.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="aval">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué es la Auto-Garantía para préstamos menores a $2,000.00 MXN?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Aval Solidario</span>
+                <p>Si solicitas menos de $2,000 MXN y cuentas con saldo en cuentas de ahorro a plazo fijo, puedes usar ese saldo como garantía propia. El crédito se aprueba al instante sin necesidad de pedir favores ni avales.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CATEGORIA: INSUFICIENCIA -->
+          <div class="faq-item" data-category="insuficiencia">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué pasa si en una semana o quincena mi nómina no alcanza para cubrir mis compromisos?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Nómina Insuficiente</span>
+                <p>Si tus percepciones netas bajan por faltas, permisos o comisiones menores, la empresa retendrá únicamente hasta donde legalmente sea posible. El saldo que no pudo ser descontado quedará pendiente de pago para su posterior regularización.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="insuficiencia">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué ocurre si tengo una incapacidad médica del IMSS y mi empresa no me genera nómina?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Nómina Insuficiente</span>
+                <p>Durante una incapacidad del IMSS, la empresa no dispersa nómina ordinaria. En este periodo debes notificar a la administración de GrowCap con tu boleta de incapacidad; tus cuotas se pausarán temporalmente o podrás realizar pagos voluntarios por SPEI para mantener tu crédito al día.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="insuficiencia">
+            <button class="faq-trigger">
+              <span class="search-target">Si la nómina no alcanzó para descontar mi cuota, ¿se me cobran penalizaciones o intereses moratorios?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Nómina Insuficiente</span>
+                <p>No hay recargos abusivos inmediatos si existe una causa justificada. Tienes la opción de realizar el abono por transferencia bancaria SPEI directamente desde la plataforma antes del siguiente corte para no acumular cuotas vencidas.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="insuficiencia">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cómo realizo el pago manual si mi empresa no pudo descontar mi cuota en nómina?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Nómina Insuficiente</span>
+                <p>Ingresa a tu módulo de Préstamos, ubica tu crédito activo y da clic en "Abonar / Liquidar". La plataforma te mostrará la cuenta CLABE y la referencia para transferir vía SPEI, y podrás adjuntar tu comprobante bancario para acreditación inmediata.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="insuficiencia">
+            <button class="faq-trigger">
+              <span class="search-target">Si mi nómina neta queda muy justa, ¿se prioriza el préstamo o el ahorro?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Nómina Insuficiente</span>
+                <p>Por política de protección crediticia, se prioriza el descuento del préstamo para evitar atrasos y proteger tanto tu historial como el respaldo de tu aval. La aportación de ahorro programado puede ajustarse o posponerse.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CATEGORIA: AHORRO -->
+          <div class="faq-item" data-category="ahorro">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cómo sé qué rendimiento generará mi cuenta de ahorro?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Ahorro</span>
+                <p>Al seleccionar tu plan de ahorro (Siempre disponible o Programado con meta), la plataforma te informa la tasa de rendimiento preferencial vigente pactada para dicho producto. Los intereses se calculan diariamente y se acreditan conforme a las condiciones del plan.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="ahorro">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cuál es el monto mínimo para abrir una cuenta de ahorro?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Ahorro</span>
+                <p>El monto mínimo de apertura es muy accesible (desde $100.00 MXN), permitiendo a cualquier colaborador comenzar a construir su fondo de reserva con pequeñas aportaciones.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="ahorro">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué es la ventana de gracia de 10 días al cumplir el plazo de mi ahorro programado?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Ahorro</span>
+                <p>Al llegar a la fecha de vencimiento de tu ahorro con meta, se abre un periodo de 10 días de gracia durante el cual tu capital y ganancias están 100% disponibles para transferir a tu banco. Si no solicitas el retiro, el plan se renueva para seguir generando rendimientos.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="ahorro">
+            <button class="faq-trigger">
+              <span class="search-target">¿Hay algún costo por retiro o comisión por manejo de cuenta en mis ahorros?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Ahorro</span>
+                <p>No. No existen comisiones de apertura, saldo mínimo ni penalizaciones por retiro en las ventanas autorizadas. Todos los rendimientos pactados se acreditan íntegros a tu favor.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="ahorro">
+            <button class="faq-trigger">
+              <span class="search-target">¿Puedo tener más de una cuenta de ahorro activa al mismo tiempo?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Ahorro</span>
+                <p>Sí. Puedes mantener una cuenta de Ahorro Siempre Disponible para emergencias cotidianas y a la vez tener uno o más planes de Ahorro Programado para metas específicas como vacaciones o fin de año.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="ahorro">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cómo y cuándo se acreditan los rendimientos generados por mi ahorro?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Ahorro</span>
+                <p>Los intereses se generan diariamente sobre tu saldo acumulado conforme a la tasa pactada y se acreditan a tu cuenta al corte mensual o al finalizar la meta establecida.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CATEGORIA: INVERSION -->
+          <div class="faq-item" data-category="inversion">
+            <button class="faq-trigger">
+              <span class="search-target">¿Puedo retirar mi inversión antes de que venza el plazo contratado?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Inversiones</span>
+                <p>No. Las inversiones a plazo fijo son acuerdos donde el capital permanece invertido durante todo el plazo elegido a cambio de una tasa de rendimiento preferencial garantizada. El dinero y los intereses se liberan puntualmente al cumplirse la fecha de vencimiento.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="inversion">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cómo funciona la auto-reinversión de mis inversiones?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Inversiones</span>
+                <p>Al crear tu inversión o durante su vigencia puedes activar o desactivar la casilla de auto-reinversión. Si está activa, al vencer el plazo tu capital (o capital más ganancias) se renovará automáticamente por un ciclo idéntico para generar interés compuesto.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="inversion">
+            <button class="faq-trigger">
+              <span class="search-target">¿El rendimiento de mi inversión es fijo o puede variar con la inflación?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Inversiones</span>
+                <p>La tasa pactada al momento de confirmar tu inversión queda formalmente garantizada durante toda la vigencia de tu póliza, sin importar variaciones externas del mercado.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="inversion">
+            <button class="faq-trigger">
+              <span class="search-target">¿Puedo pagar una nueva inversión usando mi Saldo Disponible acumulado?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Inversiones</span>
+                <p>Sí. Al configurar tu inversión puedes seleccionar pagar con tu Saldo Disponible, evitando transferencias bancarias intermedias y optimizando tu capital.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="inversion">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué opciones tengo al cumplirse la fecha de vencimiento de mi inversión?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Inversiones</span>
+                <p>Al vencer el plazo puedes transferir tus recursos hacia tu cuenta bancaria personal vía SPEI, pasarlos a tu Saldo Disponible para utilizarlos libremente, o reinvertirlos para continuar generando ganancias.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CATEGORIA: SALDOS -->
+          <div class="faq-item" data-category="saldos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cuál es la diferencia entre Saldo Disponible y Saldo Colocado?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Saldos y Retiros</span>
+                <p>El Saldo Disponible es dinero 100% líquido que puedes transferir a tu cuenta bancaria de inmediato o usar para abrir nuevas inversiones. El Saldo Colocado es el capital que está trabajando dentro de planes activos generando rendimientos día con día.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="saldos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cómo retiro dinero de mi Saldo Disponible a mi cuenta bancaria?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Saldos y Retiros</span>
+                <p>En tu pantalla de Inicio o Perfil, da clic en "Solicitar Retiro", escribe el monto deseado y confirma con tu NIP de 4 dígitos. El sistema generará la orden de transferencia interbancaria hacia tu cuenta CLABE registrada.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="saldos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Cuánto tiempo tarda en reflejarse un retiro en mi cuenta bancaria?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Saldos y Retiros</span>
+                <p>Las solicitudes de retiro se procesan y validan por el área administrativa en un lapso habitual de 24 a 48 horas hábiles bancarias antes de emitir la dispersión vía SPEI.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="saldos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué es el Kardex y cómo descargo mi estado de cuenta?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Saldos y Retiros</span>
+                <p>El Kardex es el registro contable detallado de cada abono, cargo, rendimiento o retiro en tu cuenta. Puedes consultarlo en el botón "Movimientos" del Inicio o descargar estados de cuenta específicos por plan en formato PDF.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="saldos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Por qué mi depósito por transferencia bancaria no se reflejó de inmediato?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Saldos y Retiros</span>
+                <p>Al transferir vía SPEI y subir tu comprobante, la solicitud entra en estatus "En Revisión" mientras tesorería concilia los fondos en la cuenta de la caja. Una vez verificado, pasa a "Acreditado" y se refleja en tu saldo disponible.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="saldos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué formato de archivo puedo subir como comprobante de depósito y qué peso máximo permite?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Saldos y Retiros</span>
+                <p>Puedes adjuntar archivos de imagen (PNG, JPG, JPEG) o documentos PDF emitidos por la aplicación de tu banco, con un tamaño máximo permitido de 15 MB.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="saldos">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué sucede si olvidé colocar la referencia sugerida al transferir mi depósito?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Saldos y Retiros</span>
+                <p>No hay inconveniente. Al adjuntar tu comprobante bancario en la plataforma, el área de caja coteja la clave de rastreo, la hora y el monto exacto para acreditarlo manualmente a tu cuenta.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CATEGORIA: SEGURIDAD -->
+          <div class="faq-item" data-category="seguridad">
+            <button class="faq-trigger">
+              <span class="search-target">¿Para qué sirve mi NIP de 4 dígitos y en qué momentos me lo solicitarán?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Seguridad y NIP</span>
+                <p>El NIP es tu firma electrónica secreta para autorizaciones críticas: (1) Solicitar retiros de dinero hacia tu cuenta bancaria personal, y (2) Autorizar formalmente el respaldo como aval de un compañero de trabajo.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="seguridad">
+            <button class="faq-trigger">
+              <span class="search-target">¿Qué hago si olvido mi NIP de 4 dígitos?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Seguridad y NIP</span>
+                <p>Ingresa a tu módulo de Perfil y elige la opción "Configurar / Restablecer NIP". El sistema solicitará tu contraseña de inicio de sesión para verificar tu identidad y te permitirá definir un nuevo código de 4 números al instante.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="seguridad">
+            <button class="faq-trigger">
+              <span class="search-target">¿Por qué se cierra la sesión tras 10 minutos de inactividad?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Seguridad y NIP</span>
+                <p>Es una medida de seguridad obligatoria para proteger tu privacidad y tu patrimonio. Si dejas tu equipo o teléfono desatendido en el trabajo, evitamos que terceras personas puedan visualizar tus saldos o efectuar operaciones en tu cuenta.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="seguridad">
+            <button class="faq-trigger">
+              <span class="search-target">¿Por qué mi cuenta CLABE para retiros debe coincidir obligatoriamente con mi nombre?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Seguridad y NIP</span>
+                <p>Por estrictas normas de seguridad y prevención de fraudes, la caja de ahorro únicamente transfiere recursos a cuentas bancarias verificadas a nombre y RFC del colaborador titular registrado.</p>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item" data-category="seguridad">
+            <button class="faq-trigger">
+              <span class="search-target">¿Dónde registro a mis beneficiarios y qué pasa con mis recursos en caso fortuito?</span>
+              <svg class="faq-icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-panel">
+              <div class="faq-panel-content search-target">
+                <span class="faq-category-tag">Seguridad y NIP</span>
+                <p>En la sección de Perfil puedes registrar y actualizar a tus beneficiarios designando los porcentajes correspondientes (que sumen 100%). En caso fortuito, la caja entrega los fondos acumulados a las personas designadas conforme a la ley.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Footer -->
+      <footer class="manual-footer">
+        <div>
+          <strong>GrowCap Caja de Ahorro</strong> &bull; Manual de Usuario v2.0
+        </div>
+        <div>
+          ¿Dudas adicionales? Acércate al área de Recursos Humanos o Administración de tu sucursal.
+        </div>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Lightbox Modal for Screenshots -->
+  <div id="lightboxModal" class="lightbox-modal" onclick="closeLightbox(event)">
+    <div class="lightbox-content-box" onclick="event.stopPropagation()">
+      <button class="lightbox-close-btn" onclick="closeLightbox()" title="Cerrar vista">&times;</button>
+      <img id="lightboxImg" class="lightbox-image" src="" alt="Captura ampliada">
+      <div id="lightboxCaption" class="lightbox-caption-text"></div>
+    </div>
+  </div>
+
+  <!-- Interactive Scripts (Robusto, sin división destructiva de nodos) -->
+  <script>
+    // 1. Guardar contenido prístino para búsqueda sin romper palabras
+    const searchTargets = document.querySelectorAll('.search-target');
+    searchTargets.forEach(el => {
+      el.dataset.pristineHtml = el.innerHTML;
+    });
+
+    // 2. Reading Progress Bar & TOC Active Highlighting
+    window.addEventListener('scroll', () => {
+      const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
+      document.getElementById('readingProgressFill').style.width = scrolled + '%';
+
+      // Highlight TOC
+      const sections = document.querySelectorAll('.content-module');
+      let currentSectionId = '';
+      sections.forEach(section => {
+        const top = section.offsetTop - 120;
+        if (winScroll >= top) {
+          currentSectionId = section.getAttribute('id');
+        }
+      });
+
+      if (currentSectionId) {
+        document.querySelectorAll('.toc-link').forEach(link => {
+          link.classList.toggle('active', link.getAttribute('data-target') === currentSectionId);
+        });
+      }
+    });
+
+    // 3. Motor de Búsqueda Seguro en Tiempo Real
+    const searchInput = document.getElementById('globalSearchInput');
+    const searchClearBtn = document.getElementById('searchClearBtn');
+    const searchStatsBadge = document.getElementById('searchStatsBadge');
+    const searchableSections = document.querySelectorAll('.searchable-section');
+
+    function resetSearchUI() {
+      searchTargets.forEach(el => {
+        el.innerHTML = el.dataset.pristineHtml;
+      });
+      searchableSections.forEach(sec => sec.style.display = '');
+      document.querySelectorAll('.faq-item').forEach(item => item.style.display = '');
+      searchClearBtn.style.display = 'none';
+      searchStatsBadge.style.display = 'none';
+    }
+
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+
+      if (!query || query.length < 2) {
+        resetSearchUI();
+        if (query.length === 1) {
+          searchClearBtn.style.display = 'block';
+        }
+        return;
+      }
+
+      searchClearBtn.style.display = 'block';
+
+      // Escapar caracteres regex de forma segura
+      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regexMatch = new RegExp(`(${escaped})`, 'gi');
+
+      let totalMatches = 0;
+
+      // Aplicar resaltado restaurando siempre desde pristineHtml (cero fractura de palabras)
+      searchTargets.forEach(el => {
+        const original = el.dataset.pristineHtml;
+        const matches = (original.match(regexMatch) || []).length;
+        if (matches > 0) {
+          totalMatches += matches;
+          // Reemplazo limpio respetando etiquetas HTML
+          el.innerHTML = original.replace(regexMatch, '<mark class="search-highlight">$1</mark>');
+        } else {
+          el.innerHTML = original;
+        }
+      });
+
+      // Filtrar visibilidad de secciones principales
+      const queryLower = query.toLowerCase();
+      searchableSections.forEach(section => {
+        const text = section.textContent.toLowerCase();
+        if (text.includes(queryLower)) {
+          section.style.display = '';
+        } else {
+          section.style.display = 'none';
+        }
+      });
+
+      // Filtrar preguntas frecuentes de forma específica
+      document.querySelectorAll('.faq-item').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(queryLower)) {
+          item.style.display = '';
+          // Abrir automáticamente la pregunta coincidente
+          item.classList.add('open');
+          const panel = item.querySelector('.faq-panel');
+          if (panel) panel.style.maxHeight = panel.scrollHeight + 'px';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+
+      searchStatsBadge.style.display = 'block';
+      if (totalMatches > 0) {
+        searchStatsBadge.textContent = `${totalMatches} coincidencia${totalMatches > 1 ? 's' : ''}`;
+        searchStatsBadge.style.background = '#eff6ff';
+        searchStatsBadge.style.color = '#2563eb';
+      } else {
+        searchStatsBadge.textContent = 'Sin resultados';
+        searchStatsBadge.style.background = '#fef2f2';
+        searchStatsBadge.style.color = '#dc2626';
+      }
+    });
+
+    searchClearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      resetSearchUI();
+      searchInput.focus();
+    });
+
+    // 4. Acordeón Interactivo de FAQ
+    document.querySelectorAll('.faq-trigger').forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const item = trigger.closest('.faq-item');
+        const panel = item.querySelector('.faq-panel');
+        const isOpen = item.classList.contains('open');
+
+        // Cerrar otros acordeones
+        document.querySelectorAll('.faq-item').forEach(other => {
+          if (other !== item) {
+            other.classList.remove('open');
+            const otherPanel = other.querySelector('.faq-panel');
+            if (otherPanel) otherPanel.style.maxHeight = null;
+          }
+        });
+
+        if (isOpen) {
+          item.classList.remove('open');
+          panel.style.maxHeight = null;
+        } else {
+          item.classList.add('open');
+          panel.style.maxHeight = panel.scrollHeight + 'px';
+        }
+      });
+    });
+
+    // Chips de Filtrado por Categoría
+    document.querySelectorAll('.faq-filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.faq-filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const filter = chip.getAttribute('data-filter');
+
+        document.querySelectorAll('.faq-item').forEach(item => {
+          const category = item.getAttribute('data-category');
+          if (filter === 'all' || category === filter) {
+            item.style.display = '';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // 5. Visor Lightbox para Capturas de Pantalla
+    const lightboxModal = document.getElementById('lightboxModal');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxCaption = document.getElementById('lightboxCaption');
+
+    window.openLightbox = function(src, caption) {
+      lightboxImg.src = src;
+      lightboxCaption.textContent = caption;
+      lightboxModal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    };
+
+    window.closeLightbox = function(e) {
+      lightboxModal.classList.remove('open');
+      document.body.style.overflow = '';
+      lightboxImg.src = '';
+    };
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lightboxModal.classList.contains('open')) {
+        closeLightbox();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+      }
+    });
+
+    // 6. Retorno inteligente a la App GrowCap
+    window.handleReturnToApp = function(e) {
+      if (e) e.preventDefault();
+      try {
+        if (window.opener && !window.opener.closed) {
+          window.close();
+          return;
+        }
+      } catch (_) {}
+      if (window.history.length > 1 && document.referrer && document.referrer.indexOf(window.location.host) !== -1) {
+        window.history.back();
+      } else {
+        window.location.href = '/';
+      }
+    };
+  </script>
+
+  <!-- Floating Return Button -->
+  <button class="floating-return-btn" onclick="handleReturnToApp(event)" title="Regresar a GrowCap">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+    <span>Volver a la App</span>
+  </button>
+</body>
+</html>

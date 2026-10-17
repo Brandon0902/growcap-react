@@ -32,6 +32,7 @@ function LoginPage() {
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const isInactiveSession = location.state?.reason === 'inactivity';
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -74,6 +75,9 @@ function LoginPage() {
         <p>Ingresa tus datos para continuar de forma segura.</p>
       </div>
       {formError && <Alert type="error">{formError}</Alert>}
+      {!formError && isInactiveSession && (
+        <Alert type="info">Tu sesión finalizó por inactividad.</Alert>
+      )}
       <div className="motion-form">
         <Input
           autoComplete="username"

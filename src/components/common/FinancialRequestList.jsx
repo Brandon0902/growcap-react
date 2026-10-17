@@ -22,6 +22,7 @@ import {
   X,
   Banknote,
   WalletCards,
+  CheckCircle2,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -1393,28 +1394,29 @@ function FinancialRequestList({
                           </span>
                         )}
                       </div>
-                      <div className="financial-compact-amount-group">
-                        <span className="financial-compact-amount" style={{ color: saldoDisp > 0 ? '#16a34a' : 'var(--color-primary)' }}>
-                          {formatMoney(item.saldo_disponible)}
-                        </span>
-                        <span className="financial-compact-chevron" aria-hidden="true">
-                          <ChevronDown size={17} />
-                        </span>
+                      <div className="financial-compact-line-1-right">
+                        {endDate && (
+                          <span className="financial-compact-expire-tag">
+                            Vence: {formatDate(endDate)}
+                          </span>
+                        )}
+                        <div className="financial-compact-amount-group">
+                          <span className="financial-compact-amount" style={{ color: saldoDisp > 0 ? '#16a34a' : 'var(--color-primary)' }}>
+                            {formatMoney(item.saldo_disponible)}
+                          </span>
+                          <span className="financial-compact-chevron" aria-hidden="true">
+                            <ChevronDown size={17} />
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Línea 2: Cuota / Frecuencia + Tasa + Vencimiento + Progreso */}
+                    {/* Línea 2: Cuota / Frecuencia + Tasa + Progreso */}
                     <div className="financial-compact-line-2">
                       <div className="financial-compact-subtext">
                         <span>{item.esta_pausado ? 'Aportaciones pausadas' : `${formatMoney(item.cuota)} / ${frequency}`}</span>
                         <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
                         <span>{yieldText}</span>
-                        {endDate && (
-                          <>
-                            <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
-                            <span style={{ color: '#475569', fontWeight: 600 }}>Vence: {formatDate(endDate)}</span>
-                          </>
-                        )}
                         {item.en_ventana_retiro && (
                           <>
                             <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
@@ -2026,9 +2028,11 @@ function FinancialRequestList({
                 diasRestantes = Math.ceil((endMs - nowMs) / 86400000);
               }
 
+              const isLiquidated = Number(item.status) === 3 || Number(item.status) === 4 || statusBadge.label === 'Liquidada';
+
               return (
                 <article
-                  className={`financial-compact-card ${isExpanded ? 'is-expanded' : ''}`}
+                  className={`financial-compact-card ${isExpanded ? 'is-expanded' : ''} ${isLiquidated ? 'is-liquidated' : ''}`}
                   key={itemId}
                 >
                   {/* Encabezado interactivo de 2 Líneas */}
@@ -2051,9 +2055,31 @@ function FinancialRequestList({
                         <h3 className="financial-compact-title">
                           {getTitle(item, `Póliza #${item.id || index + 1}`)}
                         </h3>
-                        <span className={`request-card-label status-${statusBadge.tone}`} style={{ margin: 0, fontSize: '0.66rem', padding: '1px 7px', borderRadius: '10px' }}>
-                          {statusBadge.label}
-                        </span>
+                        {isLiquidated ? (
+                          <span
+                            className="financial-compact-status-badge is-liquidated"
+                            style={{
+                              margin: 0,
+                              fontSize: '0.68rem',
+                              padding: '2px 8px',
+                              borderRadius: '10px',
+                              background: '#e2e8f0',
+                              color: '#334155',
+                              border: '1px solid #cbd5e1',
+                              fontWeight: 700,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                          >
+                            <CheckCircle2 size={12} className="text-slate-600" aria-hidden="true" />
+                            Liquidada • Ciclo Concluido
+                          </span>
+                        ) : (
+                          <span className={`request-card-label status-${statusBadge.tone}`} style={{ margin: 0, fontSize: '0.66rem', padding: '1px 7px', borderRadius: '10px' }}>
+                            {statusBadge.label}
+                          </span>
+                        )}
                         {Number(item.saldo_disponible ?? 0) > 0 && (
                           <span
                             style={{
@@ -2073,13 +2099,19 @@ function FinancialRequestList({
                       </div>
                       <div className="financial-compact-line-1-right">
                         {endDate && (
-                          <span className="financial-compact-expire-tag">
-                            Vence: {formatDate(endDate)}
+                          <span
+                            className={`financial-compact-expire-tag ${isLiquidated ? 'is-liquidated' : ''}`}
+                            style={isLiquidated ? { background: '#e2e8f0', color: '#475569', borderColor: '#cbd5e1' } : undefined}
+                          >
+                            {isLiquidated ? `Concluida: ${formatDate(endDate)}` : `Vence: ${formatDate(endDate)}`}
                           </span>
                         )}
                         <div className="financial-compact-amount-group">
-                          <span className="financial-compact-amount" style={{ color: 'var(--color-primary)' }}>
-                            {formatMoney(capitalActual)}
+                          <span
+                            className="financial-compact-amount"
+                            style={{ color: isLiquidated ? '#64748b' : 'var(--color-primary)' }}
+                          >
+                            {formatMoney(capitalActual > 0 ? capitalActual : capitalInicial + rendGenerado)}
                           </span>
                           <span className="financial-compact-chevron" aria-hidden="true">
                             <ChevronDown size={17} />
@@ -2095,28 +2127,48 @@ function FinancialRequestList({
                         <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
                         <span>{plazoText}</span>
                         <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
-                        <span style={{ color: '#16a34a', fontWeight: 600 }}>+{formatMoney(rendGenerado)} ganancia</span>
+                        <span style={{ color: isLiquidated ? '#059669' : '#16a34a', fontWeight: 600 }}>
+                          +{formatMoney(rendGenerado)} ganancia {isLiquidated ? 'generada' : ''}
+                        </span>
                       </div>
-                      {endDate && (
-                        <div className="financial-compact-progress-pill" title={`Maduración: ${progresoMaduracion}% (${diasRestantes !== null && diasRestantes <= 0 ? 'Plazo cumplido' : `${diasRestantes}d restantes`})`}>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: diasRestantes !== null && diasRestantes <= 0 ? '#10b981' : 'var(--color-primary)' }}>
-                            {diasRestantes !== null && diasRestantes <= 0 ? 'Cumplido' : `${progresoMaduracion}%`}
+                      {isLiquidated ? (
+                        <div className="financial-compact-progress-pill is-liquidated" title="Póliza 100% liquidada y ciclo concluido">
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#475569' }}>
+                            100% Liquidada
                           </span>
                           <div className="financial-compact-micro-bar">
                             <div
                               className="financial-compact-micro-fill"
                               style={{
-                                width: `${progresoMaduracion}%`,
-                                background: (diasRestantes !== null && diasRestantes <= 0) || progresoMaduracion >= 100
-                                  ? '#10b981'
-                                  : (diasRestantes <= 30 ? 'linear-gradient(90deg, #f59e0b 0%, #ef4444 100%)' : 'linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%)'),
-                                boxShadow: (diasRestantes !== null && diasRestantes <= 0) || progresoMaduracion >= 100
-                                  ? '0 0 6px rgba(16, 185, 129, 0.35)'
-                                  : '0 0 6px rgba(79, 70, 229, 0.3)',
+                                width: '100%',
+                                background: '#94a3b8',
+                                boxShadow: 'none',
                               }}
                             />
                           </div>
                         </div>
+                      ) : (
+                        endDate && (
+                          <div className="financial-compact-progress-pill" title={`Maduración: ${progresoMaduracion}% (${diasRestantes !== null && diasRestantes <= 0 ? 'Plazo cumplido' : `${diasRestantes}d restantes`})`}>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: diasRestantes !== null && diasRestantes <= 0 ? '#10b981' : 'var(--color-primary)' }}>
+                              {diasRestantes !== null && diasRestantes <= 0 ? 'Cumplido' : `${progresoMaduracion}%`}
+                            </span>
+                            <div className="financial-compact-micro-bar">
+                              <div
+                                className="financial-compact-micro-fill"
+                                style={{
+                                  width: `${progresoMaduracion}%`,
+                                  background: (diasRestantes !== null && diasRestantes <= 0) || progresoMaduracion >= 100
+                                    ? '#10b981'
+                                    : (diasRestantes <= 30 ? 'linear-gradient(90deg, #f59e0b 0%, #ef4444 100%)' : 'linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%)'),
+                                  boxShadow: (diasRestantes !== null && diasRestantes <= 0) || progresoMaduracion >= 100
+                                    ? '0 0 6px rgba(16, 185, 129, 0.35)'
+                                    : '0 0 6px rgba(79, 70, 229, 0.3)',
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )
                       )}
                     </div>
 
@@ -2195,6 +2247,26 @@ function FinancialRequestList({
                   {/* Drawer expandible al clic */}
                   {isExpanded && (
                     <div className="financial-expanded-drawer">
+                      {isLiquidated && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '10px 14px',
+                            borderRadius: '8px',
+                            background: '#f8fafc',
+                            border: '1px solid #cbd5e1',
+                            color: '#334155',
+                            fontSize: '0.78rem',
+                            fontWeight: 600,
+                            marginBottom: '14px',
+                          }}
+                        >
+                          <CheckCircle2 size={18} className="text-emerald-600 shrink-0" aria-hidden="true" />
+                          <span>Póliza 100% liquidada. El capital ({formatMoney(capitalInicial)}) y sus ganancias generadas ({formatMoney(rendGenerado)}) concluyeron su ciclo contratado y fueron liberados a tu Saldo Disponible.</span>
+                        </div>
+                      )}
                       <div className="financial-drawer-grid">
                         <div className="financial-drawer-field">
                           <span className="financial-drawer-label">Inversión Inicial</span>
