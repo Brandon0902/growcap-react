@@ -16,6 +16,19 @@ test('document guarantor loan remains multipart', () => {
   assert.equal(request.config.headers['Content-Type'], 'multipart/form-data');
 });
 
+test('document guarantor loan includes aval INE multipart', () => {
+  const fileFrente = new Blob(['img-frente'], { type: 'image/jpeg' });
+  const fileReverso = new Blob(['img-reverso'], { type: 'image/jpeg' });
+  const request = buildLoanRequest({
+    id_activo: '1',
+    cantidad: '2500',
+    doc_ine_aval_frente: fileFrente,
+    doc_ine_aval_reverso: fileReverso,
+  });
+  assert.equal(request.data instanceof FormData, true);
+  assert.equal(request.config.headers['Content-Type'], 'multipart/form-data');
+});
+
 test('422 details are exposed as field errors and a specific message', () => {
   const normalized = normalizeApiError({ response: { status: 422, data: { message: 'The given data was invalid.', details: { id_activo: ['Expected number, received nan'] } } } });
   assert.deepEqual(normalized.fieldErrors, { id_activo: ['El plan seleccionado no es válido.'] });

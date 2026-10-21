@@ -463,52 +463,34 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                 </div>
               </div>
 
-              {/* Input Monto */}
+              {/* Input Monto Hero */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                  Monto depositado (MXN) *
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                  Monto transferido *
                 </label>
-                <div style={{ position: 'relative' }}>
-                  <span
-                    style={{
-                      position: 'absolute',
-                      left: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      fontSize: '1.1rem',
-                      fontWeight: 700,
-                      color: '#94a3b8',
-                    }}
-                  >
-                    $
-                  </span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="1"
-                    placeholder="0.00"
-                    required
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px 8px 28px',
-                      fontSize: '1.15rem',
-                      fontWeight: 700,
-                      color: '#0f172a',
-                      border: '1.5px solid #cbd5e1',
-                      borderRadius: '8px',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                  />
+                <div className="hero-amount-field" style={{ margin: 0 }}>
+                  <div className="hero-amount-box">
+                    <span className="hero-amount-currency">$</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      min="1"
+                      placeholder="0.00"
+                      required
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="hero-amount-input"
+                    />
+                    <span className="hero-amount-suffix">MXN</span>
+                  </div>
                 </div>
               </div>
 
               {/* Fila Fecha y Referencia */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
                     Fecha de la transferencia *
                   </label>
                   <input
@@ -518,17 +500,19 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                     onChange={(e) => setFechaDeposito(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '7px 10px',
-                      fontSize: '0.82rem',
+                      padding: '9px 12px',
+                      fontSize: '0.92rem',
+                      fontWeight: 600,
+                      color: '#0f172a',
                       border: '1px solid #cbd5e1',
-                      borderRadius: '6px',
+                      borderRadius: '8px',
                       boxSizing: 'border-box',
                     }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
                     Folio / Clave de rastreo SPEI *
                   </label>
                   <input
@@ -539,10 +523,12 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                     onChange={(e) => setReferencia(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '7px 10px',
-                      fontSize: '0.82rem',
+                      padding: '9px 12px',
+                      fontSize: '0.92rem',
+                      fontWeight: 600,
+                      color: '#0f172a',
                       border: '1px solid #cbd5e1',
-                      borderRadius: '6px',
+                      borderRadius: '8px',
                       boxSizing: 'border-box',
                     }}
                   />

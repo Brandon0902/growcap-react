@@ -345,11 +345,16 @@ function SavingsProjectionModal({
                   style={{ width: '100%', fontSize: '0.875rem', padding: '8px 12px', borderRadius: '8px' }}
                 >
                   <option value="ALL">Consolidado ({activeSavings.length} cuentas)</option>
-                  {activeSavings.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {getTitle(s)} - Actual: {formatMoney(s.total_acumulado || s.monto_acumulado || 0)}
-                    </option>
-                  ))}
+                  {activeSavings.map((s) => {
+                    const saldoReal = Number(s.saldo_fecha ?? 0) > 0
+                      ? Number(s.saldo_fecha)
+                      : Number(s.monto_ahorro ?? 0) + Number(s.saldo_disponible ?? 0);
+                    return (
+                      <option key={s.id} value={s.id}>
+                        {getTitle(s)} - Actual: {formatMoney(saldoReal)}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             )
@@ -422,7 +427,7 @@ function SavingsProjectionModal({
           {currentData.isPermanente && (
             <div>
               <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
-                Plazo estimado:
+                Horizonte de simulación:
               </label>
               <div style={{ display: 'flex', gap: '6px' }}>
                 {[
@@ -465,7 +470,9 @@ function SavingsProjectionModal({
             }}
           >
             <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              {currentData.fechaFin ? `Total a recibir (${formatDate(currentData.fechaFin)})` : 'Total proyectado a recibir'}
+              {currentData.isPermanente
+                ? `Saldo estimado en ${horizonteMeses === 12 ? '1 año' : horizonteMeses === 24 ? '2 años' : `${horizonteMeses} meses`}`
+                : (currentData.fechaFin ? `Total al vencimiento (${formatDate(currentData.fechaFin)})` : 'Total proyectado a recibir')}
             </span>
             <strong
               style={{

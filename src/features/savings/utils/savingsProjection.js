@@ -3,7 +3,11 @@
  */
 
 export function calculateSavingsProjection(ahorro, customCuota = null, customHorizonteMeses = null, defaultFreq = 'Quincenal') {
-  const montoActual = Math.max(0, Number(ahorro?.monto_ahorro ?? 0));
+  const montoColocado = Math.max(0, Number(ahorro?.monto_ahorro ?? 0));
+  const montoDisp = Math.max(0, Number(ahorro?.saldo_disponible ?? 0));
+  const montoActual = Number(ahorro?.saldo_fecha ?? 0) > 0
+    ? Number(ahorro.saldo_fecha)
+    : Number((montoColocado + montoDisp).toFixed(2));
   const cuota = customCuota !== null
     ? Math.max(0, Number(customCuota))
     : Math.max(0, Number(ahorro?.cuota ?? ahorro?.monto_min ?? ahorro?.monto_minimo ?? 100));
@@ -81,7 +85,7 @@ export function calculateSavingsProjection(ahorro, customCuota = null, customHor
   const diasRestantes = Math.max(0, Math.round((fechaFin.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
 
   const progressPct = isPermanente
-    ? Math.min(100, Math.max(5, Math.round((diasTranscurridos / (diasTranscurridos + diasRestantes)) * 100)))
+    ? null
     : Math.min(100, Math.max(0, Math.round((diasTranscurridos / totalDias) * 100)));
 
   const periodosRestantes = Math.max(0, Math.round(diasRestantes / diasPorPeriodo));

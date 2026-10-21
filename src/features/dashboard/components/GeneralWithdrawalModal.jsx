@@ -186,12 +186,11 @@ export default function GeneralWithdrawalModal({
         origen_tipo: selectedAccount?.origen_tipo,
         origen_id: selectedAccount?.id,
       });
-      const msg = res?.data?.message || 'Solicitud de retiro registrada.';
-      setSuccessMsg(msg);
-      setTimeout(() => {
-        onSuccess?.(msg);
-        onClose();
-      }, 1200);
+      const msg =
+        res?.data?.message ||
+        'Su transacción será verificada; la verá reflejada en su cuenta en un máximo de 48 hrs.';
+      onSuccess?.(msg);
+      onClose();
     } catch (err) {
       const normalized = normalizeApiError(err, 'Ocurrió un error al procesar el retiro.');
       setError(normalized.message);
@@ -251,18 +250,18 @@ export default function GeneralWithdrawalModal({
                 width: '36px',
                 height: '36px',
                 borderRadius: '10px',
-                background: '#fee2e2',
-                color: '#b91c1c',
+                background: successMsg ? '#dcfce7' : '#fee2e2',
+                color: successMsg ? '#15803d' : '#b91c1c',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <WalletCards size={18} />
+              {successMsg ? <CheckCircle2 size={18} /> : <WalletCards size={18} />}
             </div>
             <div>
               <h3 id={`${modalId}-title`} style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                Retiro de Saldo Disponible
+                {successMsg ? 'Solicitud Registrada' : 'Retiro de Saldo Disponible'}
               </h3>
               <p style={{ margin: '2px 0 0', fontSize: '0.74rem', color: '#64748b' }}>
                 Transferencia bancaria a tu cuenta registrada
@@ -290,10 +289,63 @@ export default function GeneralWithdrawalModal({
 
         {/* Contenido */}
         <div style={{ padding: '20px' }}>
-          {error && <Alert type="danger" message={error} style={{ marginBottom: '16px' }} />}
-          {successMsg && <Alert type="success" message={successMsg} style={{ marginBottom: '16px' }} />}
+          {error && (
+            <Alert type="error" style={{ marginBottom: '16px' }}>
+              {error}
+            </Alert>
+          )}
 
-          {!isResettingNip ? (
+          {successMsg ? (
+            <div style={{ textAlign: 'center', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: '#dcfce7',
+                  color: '#16a34a',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <CheckCircle2 size={26} />
+              </div>
+              <div>
+                <h4 style={{ margin: '0 0 4px', fontSize: '1.02rem', fontWeight: 700, color: '#0f172a' }}>
+                  Solicitud realizada con éxito
+                </h4>
+                <p style={{ margin: 0, fontSize: '0.84rem', color: '#475569', lineHeight: 1.45 }}>
+                  Lo verás reflejado en tu cuenta en un máximo de <strong>48 hrs</strong>.
+                </p>
+              </div>
+              <div
+                style={{
+                  width: '100%',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  fontSize: '0.8rem',
+                  color: '#334155',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <span>Monto solicitado:</span>
+                <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>{formatMoney(amount)}</strong>
+              </div>
+              <Button
+                type="button"
+                className="button-primary"
+                onClick={onClose}
+                style={{ width: '100%', minHeight: '38px', fontSize: '0.84rem', marginTop: '4px' }}
+              >
+                Entendido
+              </Button>
+            </div>
+          ) : !isResettingNip ? (
             <form onSubmit={handleSubmitWithdrawal} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Selector de Cuenta de Origen */}
               {accountsList.length > 0 && (
@@ -304,29 +356,77 @@ export default function GeneralWithdrawalModal({
                   >
                     Cuenta de origen
                   </label>
-                  <select
-                    id={`${modalId}-source-account`}
-                    value={selectedAccount?.key || ''}
-                    onChange={(e) => handleAccountChange(e.target.value)}
-                    disabled={isSubmitting || accountsList.length === 1}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      borderRadius: '8px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '0.84rem',
-                      fontWeight: 600,
-                      color: '#0f172a',
-                      background: accountsList.length === 1 ? '#f8fafc' : '#ffffff',
-                      outline: 'none',
-                    }}
-                  >
-                    {accountsList.map((acc) => (
-                      <option key={acc.key} value={acc.key}>
-                        {acc.etiqueta} — {formatMoney(acc.saldo_disponible)}
-                      </option>
-                    ))}
-                  </select>
+                  {accountsList.length <= 4 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {accountsList.map((acc) => {
+                        const isSelected = (selectedAccount?.key || '') === acc.key;
+                        return (
+                          <button
+                            key={acc.key}
+                            type="button"
+                            disabled={isSubmitting}
+                            onClick={() => handleAccountChange(acc.key)}
+                            style={{
+                              width: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '10px 12px',
+                              borderRadius: '10px',
+                              border: isSelected ? '1.5px solid var(--color-primary, #4f46e5)' : '1px solid #cbd5e1',
+                              background: isSelected ? 'rgba(79, 70, 229, 0.05)' : '#ffffff',
+                              cursor: isSubmitting ? 'default' : 'pointer',
+                              textAlign: 'left',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span
+                                style={{
+                                  width: '14px',
+                                  height: '14px',
+                                  borderRadius: '50%',
+                                  border: isSelected ? '4px solid var(--color-primary, #4f46e5)' : '1.5px solid #94a3b8',
+                                  background: '#ffffff',
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <span style={{ fontSize: '0.83rem', fontWeight: isSelected ? 700 : 600, color: '#0f172a' }}>
+                                {acc.etiqueta}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: isSelected ? 'var(--color-primary, #4f46e5)' : '#334155' }}>
+                              {formatMoney(acc.saldo_disponible)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <select
+                      id={`${modalId}-source-account`}
+                      value={selectedAccount?.key || ''}
+                      onChange={(e) => handleAccountChange(e.target.value)}
+                      disabled={isSubmitting}
+                      style={{
+                        width: '100%',
+                        padding: '9px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '0.84rem',
+                        fontWeight: 600,
+                        color: '#0f172a',
+                        background: '#ffffff',
+                        outline: 'none',
+                      }}
+                    >
+                      {accountsList.map((acc) => (
+                        <option key={acc.key} value={acc.key}>
+                          {acc.etiqueta} — {formatMoney(acc.saldo_disponible)}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               )}
 
@@ -369,51 +469,36 @@ export default function GeneralWithdrawalModal({
               </div>
 
               {/* Monto a Retirar */}
-              <div>
-                <label
-                  htmlFor={`${modalId}-amount`}
-                  style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}
-                >
-                  Monto a retirar
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <span
-                    style={{
-                      position: 'absolute',
-                      left: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      fontWeight: 700,
-                      color: '#64748b',
-                    }}
+              <div className="hero-amount-field" style={{ margin: '0 0 2px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                  <label
+                    htmlFor={`${modalId}-amount`}
+                    style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}
                   >
-                    $
-                  </span>
+                    Monto a retirar
+                  </label>
+                </div>
+                <div className="hero-amount-box">
+                  <span className="hero-amount-currency" aria-hidden="true">$</span>
                   <input
+                    autoFocus
+                    className="hero-amount-input"
                     id={`${modalId}-amount`}
-                    type="number"
-                    step="0.01"
-                    min="1"
+                    inputMode="decimal"
+                    disabled={isSubmitting}
                     max={maxAvailable}
-                    value={amount}
+                    min="1"
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
-                    disabled={isSubmitting}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px 9px 28px',
-                      borderRadius: '8px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '0.95rem',
-                      fontWeight: 700,
-                      color: '#0f172a',
-                      outline: 'none',
-                    }}
+                    step="0.01"
+                    type="number"
+                    value={amount}
                   />
+                  <span className="hero-amount-suffix" aria-hidden="true">MXN</span>
                 </div>
 
                 {/* Atajos de porcentaje */}
-                <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
                   {[25, 50, 100].map((pct) => (
                     <button
                       key={pct}
@@ -421,14 +506,15 @@ export default function GeneralWithdrawalModal({
                       onClick={() => handleQuickPercent(pct)}
                       style={{
                         flex: 1,
-                        padding: '4px 8px',
-                        fontSize: '0.72rem',
+                        padding: '6px 8px',
+                        fontSize: '0.78rem',
                         fontWeight: 600,
-                        borderRadius: '6px',
+                        borderRadius: '8px',
                         border: '1px solid #e2e8f0',
                         background: '#ffffff',
                         color: '#475569',
                         cursor: 'pointer',
+                        transition: 'all 0.15s ease',
                       }}
                     >
                       {pct === 100 ? 'Todo' : `${pct}%`}
@@ -479,14 +565,16 @@ export default function GeneralWithdrawalModal({
                     disabled={isSubmitting}
                     style={{
                       width: '100%',
-                      padding: '9px 40px 9px 12px',
-                      borderRadius: '8px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '0.95rem',
-                      letterSpacing: showNip ? '0.1em' : '0.25em',
+                      padding: '10px 42px 10px 14px',
+                      borderRadius: '10px',
+                      border: '2px solid #e9d5ff',
+                      fontSize: '1.25rem',
+                      letterSpacing: showNip ? '0.15em' : '0.35em',
                       fontFamily: 'monospace',
                       fontWeight: 700,
+                      color: 'var(--purple-950, #1e1b4b)',
                       outline: 'none',
+                      background: '#ffffff',
                     }}
                   />
                   <button

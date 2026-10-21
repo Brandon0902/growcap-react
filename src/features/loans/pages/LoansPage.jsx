@@ -1,5 +1,5 @@
 import { AlertCircle, ArrowRight, Banknote, ChevronUp, Eye, HandCoins, RefreshCw, Lock, ShieldCheck, XCircle } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { normalizeApiError } from '../../../api/apiUtils.js';
 import Alert from '../../../components/common/Alert.jsx';
@@ -14,6 +14,7 @@ import LoanCancelModal from '../components/LoanCancelModal.jsx';
 import AvalCenterModal from '../components/AvalCenterModal.jsx';
 import AvalAuthorizeModal from '../components/AvalAuthorizeModal.jsx';
 import AvalSolidarioSection from '../components/AvalSolidarioSection.jsx';
+import { formatCurrency } from '../../../utils/formatCurrency.js';
 import { confirmLoanMercadoPago, getLoanPlans, getLoans, getPendingAvalRequests } from '../services/loanService.js';
 
 
@@ -358,107 +359,52 @@ function LoansPage() {
   const currentLoansCount = loans.filter((l) => [2, 5].includes(Number(l.status ?? 0))).length;
   const historyLoansCount = loans.filter((l) => ![2, 5].includes(Number(l.status ?? 0))).length;
 
+  const loanMetrics = useMemo(() => {
+    let totalAdeudoRestante = 0;
+    let totalCuotaFija = 0;
+    let activeCount = 0;
+
+    for (const l of loans) {
+      const statusNum = Number(l?.status ?? l?.id_status ?? 0);
+      const isLiquidated = statusNum === 1 || statusNum === 6 || Number(l?.saldo_restante) <= 0.01;
+      const isActive = [2, 5].includes(statusNum) && !isLiquidated;
+
+      if (isActive) {
+        activeCount += 1;
+        const originalAmount = Number(l?.monto_solicitado ?? l?.cantidad ?? l?.monto ?? 0);
+        const totalAdeudo = Number(l?.total_adeudo ?? (originalAmount > 0 ? originalAmount * 1.1 : 0));
+        const saldoRestante = Number(l?.saldo_restante ?? totalAdeudo);
+        const cuota = Number(l?.cuota_fija ?? (totalAdeudo > 0 ? totalAdeudo / 12 : 0));
+
+        totalAdeudoRestante += saldoRestante;
+        totalCuotaFija += cuota;
+      }
+    }
+
+    return {
+      totalAdeudoRestante,
+      totalCuotaFija,
+      activeCount,
+    };
+  }, [loans]);
+
   return (
     <div className="page loans-page motion-page" ref={pageRef}>
       <PageHero
         eyebrow="● Préstamos Personales"
         icon={Banknote}
-        stats={[
-          { label: 'Planes activos', value: isLoading ? '...' : String(plans.length) },
-          { label: 'En curso / trámite', value: isLoading ? '...' : String(currentLoansCount) },
-        ]}
-        title="Línea de Financiamiento y Préstamos"
-        actions={
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-            {activeTab !== 'records' ? (
-              <Button
-                type="button"
-                className="button-secondary"
-                onClick={() => {
-                  setActiveTab('records');
-                  setActiveLoanTab(currentLoansCount > 0 ? 'current' : 'history');
-                  setSearchParams({ tab: 'records' });
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  fontWeight: 600,
-                  fontSize: '0.86rem',
-                }}
-              >
-                <Eye size={17} style={{ color: '#059669' }} />
-                <span>
-                  Mis préstamos ({loans.length})
-                  {currentLoansCount > 0 ? ` · ${currentLoansCount} activo` : ''}
-                </span>
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                className="button-secondary"
-                onClick={() => {
-                  setActiveTab('plans');
-                  setSearchParams({ tab: 'plans' });
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  fontWeight: 600,
-                  fontSize: '0.86rem',
-                }}
-              >
-                <Banknote size={17} style={{ color: '#059669' }} />
-                <span>Ver planes disponibles</span>
-              </Button>
-            )}
-
-            {activeTab !== 'aval' && (
-              <Button
-                type="button"
-                className="button-secondary"
-                onClick={() => {
-                  setActiveTab('aval');
-                  setSearchParams({ tab: 'aval' });
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  fontWeight: 600,
-                  fontSize: '0.86rem',
-                }}
-              >
-                <ShieldCheck size={17} style={{ color: '#2563eb' }} />
-                <span>Aval solidario</span>
-                {pendingAvalRequests.length > 0 && (
-                  <span
-                    style={{
-                      background: '#dc2626',
-                      color: '#ffffff',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      padding: '1px 7px',
-                      borderRadius: '10px',
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {pendingAvalRequests.length}
-                  </span>
-                )}
-              </Button>
-            )}
-          </div>
+        stats={
+          loanMetrics.activeCount > 0 ? [
+            { label: 'Adeudo Restante', value: isLoading ? '...' : formatCurrency(loanMetrics.totalAdeudoRestante) },
+            { label: 'Próxima Cuota Estimada', value: isLoading ? '...' : formatCurrency(loanMetrics.totalCuotaFija) },
+          ] : [
+            { label: 'Adeudo Activo', value: '$0.00' },
+            { label: 'Planes Disponibles', value: isLoading ? '...' : String(plans.length) },
+          ]
         }
+        title="Línea de Financiamiento y Préstamos"
       >
-        Simula montos y plazos con tasa preferencial, selecciona tu respaldo de garantía y da seguimiento puntual a tus compromisos activos.
+        Simula montos y plazos con tasa preferencial, selecciona tu garantía y da seguimiento a tus créditos.
       </PageHero>
 
       {checkoutNotice.message && (
@@ -467,25 +413,38 @@ function LoansPage() {
         </div>
       )}
 
-      {/* Segmented Top Navigation */}
-      <div className="module-nav-tabs" role="tablist" aria-label="Secciones de Préstamos">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'plans'}
-          className={`module-nav-btn ${activeTab === 'plans' ? 'active' : ''}`}
+      {/* Aviso rápido si hay solicitudes de Aval pendientes */}
+      {pendingAvalRequests.length > 0 && activeTab !== 'aval' && (
+        <div
+          className="aval-banner-quick-notice"
+          role="alert"
           onClick={() => {
-            setActiveTab('plans');
-            setSearchParams({ tab: 'plans' });
+            setActiveTab('aval');
+            setSearchParams({ tab: 'aval' });
           }}
         >
-          <Banknote size={16} />
-          <span>Planes y solicitud</span>
-          <span className={`module-nav-badge ${activeTab === 'plans' ? 'active' : 'inactive'}`}>
-            {plans.length}
-          </span>
-        </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ShieldCheck size={16} aria-hidden="true" style={{ color: '#dc2626', flexShrink: 0 }} />
+            <span>
+              Tienes <strong>{pendingAvalRequests.length}</strong> solicitud{pendingAvalRequests.length > 1 ? 'es' : ''} de aval pendiente{pendingAvalRequests.length > 1 ? 's' : ''}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="aval-banner-quick-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveTab('aval');
+              setSearchParams({ tab: 'aval' });
+            }}
+          >
+            Revisar
+          </button>
+        </div>
+      )}
 
+      {/* Segmented Top Navigation */}
+      <div className="module-nav-tabs loans-nav-tabs" role="tablist" aria-label="Secciones de Préstamos">
         <button
           type="button"
           role="tab"
@@ -496,10 +455,29 @@ function LoansPage() {
             setSearchParams({ tab: 'records' });
           }}
         >
-          <Eye size={16} />
-          <span>Mis préstamos</span>
+          <Eye size={15} />
+          <span className="module-nav-label-desktop">Mis préstamos</span>
+          <span className="module-nav-label-mobile">Préstamos</span>
           <span className={`module-nav-badge ${activeTab === 'records' ? 'active' : 'inactive'}`}>
             {loans.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'plans'}
+          className={`module-nav-btn ${activeTab === 'plans' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('plans');
+            setSearchParams({ tab: 'plans' });
+          }}
+        >
+          <Banknote size={15} />
+          <span className="module-nav-label-desktop">Planes y solicitud</span>
+          <span className="module-nav-label-mobile">Solicitar</span>
+          <span className={`module-nav-badge ${activeTab === 'plans' ? 'active' : 'inactive'}`}>
+            {plans.length}
           </span>
         </button>
 
@@ -513,17 +491,19 @@ function LoansPage() {
             setSearchParams({ tab: 'aval' });
           }}
         >
-          <ShieldCheck size={16} />
-          <span>Aval solidario</span>
+          <ShieldCheck size={15} />
+          <span className="module-nav-label-desktop">Aval solidario</span>
+          <span className="module-nav-label-mobile">Aval</span>
           {pendingAvalRequests.length > 0 && (
             <span
               style={{
                 background: '#dc2626',
                 color: '#ffffff',
-                fontSize: '0.7rem',
+                fontSize: '0.68rem',
                 fontWeight: 700,
-                padding: '1px 6px',
+                padding: '1px 5px',
                 borderRadius: '8px',
+                lineHeight: 1.2,
               }}
             >
               {pendingAvalRequests.length}
@@ -546,62 +526,20 @@ function LoansPage() {
           )}
 
           <section className="section-block records-main-section motion-immediate" ref={recordsRef}>
-            <div
-              style={{
-                background: 'var(--color-surface)',
-                border: '1px solid #E9D5FF',
-                borderRadius: 'var(--radius)',
-                boxShadow: '0 16px 38px rgba(17, 24, 39, 0.06)',
-                padding: 'clamp(16px, 2.5vw, 24px)',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '16px',
-                  flexWrap: 'wrap',
-                  gap: '8px',
-                }}
-              >
-                <div>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Registros del colaborador
-                  </span>
-                  <h2 style={{ fontSize: '1.4rem', color: 'var(--purple-950)', margin: '2px 0 0' }}>Mis préstamos</h2>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '3px 0 0' }}>
-                    Revisa saldos restantes, cuotas de nómina, progreso de liquidación y opciones para abonar.
-                  </p>
-                </div>
-                <Button
-                  className="button-secondary icon-button"
-                  style={{ fontSize: '0.78rem', padding: '6px 14px', minHeight: '34px' }}
-                  onClick={() => {
-                    setActiveTab('plans');
-                    setSearchParams({ tab: 'plans' });
-                  }}
-                >
-                  <Banknote size={16} aria-hidden="true" />
-                  Solicitar nuevo préstamo
-                </Button>
-              </div>
-
-              <FinancialRequestList
-                emptyDescription="Cuando completes una solicitud, aparecerá aquí."
-                emptyTitle="Aún no tienes préstamos registrados."
-                error={error}
-                isLoading={isLoading}
-                items={loans}
-                onRefresh={loadLoansData}
-                onCancelLoan={(loan) => setSelectedLoanForCancel(loan)}
-                activeLoanTab={activeLoanTab}
-                onLoanTabChange={setActiveLoanTab}
-                searchable
-                title="Historial de préstamos"
-                type="loans"
-              />
-            </div>
+            <FinancialRequestList
+              emptyDescription="Cuando completes una solicitud, aparecerá aquí."
+              emptyTitle="Aún no tienes préstamos registrados."
+              error={error}
+              isLoading={isLoading}
+              items={loans}
+              onRefresh={loadLoansData}
+              onCancelLoan={(loan) => setSelectedLoanForCancel(loan)}
+              activeLoanTab={activeLoanTab}
+              onLoanTabChange={setActiveLoanTab}
+              searchable
+              title=""
+              type="loans"
+            />
           </section>
         </>
       )}

@@ -89,6 +89,15 @@ export async function transferSavings(id, payload = {}) {
   };
 }
 
+export async function payLoanSavings(id, payload = {}) {
+  const { data } = await axiosClient.post(ENDPOINTS.savings.payLoan(id), payload);
+
+  return {
+    data,
+    endpoint: ENDPOINTS.savings.payLoan(id),
+  };
+}
+
 export async function withdrawSavings(id, payload = {}) {
   const { data } = await axiosClient.post(ENDPOINTS.savings.withdraw(id), payload);
 

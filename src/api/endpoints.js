@@ -10,6 +10,7 @@ export const ENDPOINTS = {
   client: {
     availableBalance: '/cliente/saldo-disponible',
     movements: '/cliente/movimientos-saldo',
+    withdrawals: '/cliente/retiros/mis',
     solicitarRetiroGeneral: '/cliente/retiros/general',
     myData: '/cliente/mis-datos',
     password: '/cliente/password',
@@ -78,5 +79,9 @@ export const ENDPOINTS = {
   deposits: {
     base: '/depositos',
     byId: (id) => `/depositos/${id}`,
+  },
+  assistant: {
+    chat: '/assistant/chat',
+    health: '/assistant/health',
   },
 };

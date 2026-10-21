@@ -6,6 +6,7 @@ import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 import { AuthProvider } from './features/auth/context/AuthContext.jsx';
 import './styles/global.css';
 import './styles/accessibility.css';
+import './components/common/GrowCapAssistantWidget.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

@@ -12,6 +12,7 @@ import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
 import SavingsPlanCard from '../components/SavingsPlanCard.jsx';
 import SavingsRequestForm from '../components/SavingsRequestForm.jsx';
 import SavingsProjectionModal from '../components/SavingsProjectionModal.jsx';
+import { formatCurrency } from '../../../utils/formatCurrency.js';
 import { parseStripeReturn } from '../../payments/services/stripeReturn.js';
 import {
   confirmMercadoPago,
@@ -88,6 +89,20 @@ function SavingsPage() {
   const activePlans = useMemo(() => {
     return (plans || []).filter((p) => Number(p?.status ?? 1) === 1);
   }, [plans]);
+
+  const savingsMetrics = useMemo(() => {
+    let totalAhorrado = 0;
+    let totalDisponible = 0;
+
+    for (const item of savings) {
+      const sTotal = Number(item.monto_ahorro ?? item.saldo ?? item.cantidad ?? 0);
+      const sDisp = Number(item.saldo_disponible ?? (item.en_ventana_retiro ? sTotal : 0));
+      totalAhorrado += sTotal;
+      totalDisponible += sDisp;
+    }
+
+    return { totalAhorrado, totalDisponible };
+  }, [savings]);
 
   useGrowcapPageMotion(pageRef);
 
@@ -304,105 +319,18 @@ function SavingsPage() {
         eyebrow="Ahorro"
         icon={HandCoins}
         stats={[
-          { label: 'Planes activos', value: isLoadingPlans ? '...' : String(activePlans.length) },
-          { label: 'Mis ahorros', value: isLoadingPlans ? '...' : String(savings.length) },
+          { label: 'Total en Ahorro', value: isLoadingPlans ? '...' : formatCurrency(savingsMetrics.totalAhorrado) },
+          { label: 'Saldo Disponible', value: isLoadingPlans ? '...' : formatCurrency(savingsMetrics.totalDisponible) },
         ]}
         title="Haz crecer tu dinero con GrowCap"
-        actions={
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-            {activeTab === 'plans' ? (
-              <Button
-                type="button"
-                className="button-secondary"
-                onClick={() => {
-                  setActiveTab('records');
-                  setSearchParams({ tab: 'records' });
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  fontWeight: 600,
-                  fontSize: '0.86rem',
-                }}
-              >
-                <Eye size={17} style={{ color: '#6b21a8' }} />
-                <span>Mis ahorros activos ({savings.length})</span>
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                className="button-secondary"
-                onClick={() => {
-                  setActiveTab('plans');
-                  setSearchParams({ tab: 'plans' });
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  fontWeight: 600,
-                  fontSize: '0.86rem',
-                }}
-              >
-                <PiggyBank size={17} style={{ color: '#6b21a8' }} />
-                <span>Ver planes disponibles</span>
-              </Button>
-            )}
-            {activePlans.length > 0 && (
-              <Button
-                type="button"
-                className="button-secondary"
-                onClick={() => {
-                  setSelectedPlanToProject(null);
-                  setIsPlanProjectionOpen(true);
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  fontWeight: 600,
-                  fontSize: '0.86rem',
-                }}
-                title="Simula y proyecta tus ganancias antes de contratar un plan"
-              >
-                <TrendingUp size={16} />
-                <span>Simular proyección</span>
-              </Button>
-            )}
-          </div>
-        }
       >
-        Explora nuestros planes de ahorro diseñados a tu medida. 
+        Monitorea el crecimiento de tus cuentas de ahorro.
       </PageHero>
 
       {checkoutNotice.message && <Alert type={checkoutNotice.type}>{checkoutNotice.message}</Alert>}
 
       {/* Segmented Top Navigation */}
       <div className="module-nav-tabs" role="tablist" aria-label="Secciones de Ahorro">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'plans'}
-          className={`module-nav-btn ${activeTab === 'plans' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('plans');
-            setSearchParams({ tab: 'plans' });
-          }}
-        >
-          <PiggyBank size={16} />
-          <span>Planes y solicitud</span>
-          <span className={`module-nav-badge ${activeTab === 'plans' ? 'active' : 'inactive'}`}>
-            {activePlans.length}
-          </span>
-        </button>
-
         <button
           type="button"
           role="tab"
@@ -419,66 +347,41 @@ function SavingsPage() {
             {savings.length}
           </span>
         </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'plans'}
+          className={`module-nav-btn ${activeTab === 'plans' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('plans');
+            setSearchParams({ tab: 'plans' });
+          }}
+        >
+          <PiggyBank size={16} />
+          <span>Planes y solicitud</span>
+          <span className={`module-nav-badge ${activeTab === 'plans' ? 'active' : 'inactive'}`}>
+            {activePlans.length}
+          </span>
+        </button>
       </div>
 
       {activeTab === 'records' && (
         <section className="section-block records-main-section motion-immediate" ref={recordsRef}>
-          <div
-            style={{
-              background: 'var(--color-surface)',
-              border: '1px solid #E9D5FF',
-              borderRadius: 'var(--radius)',
-              boxShadow: '0 16px 38px rgba(17, 24, 39, 0.06)',
-              padding: 'clamp(16px, 2.5vw, 24px)',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '16px',
-                flexWrap: 'wrap',
-                gap: '8px',
-              }}
-            >
-              <div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Registros del cliente
-                </span>
-                <h2 style={{ fontSize: '1.4rem', color: 'var(--purple-950)', margin: '2px 0 0' }}>Mis ahorros</h2>
-                <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '3px 0 0' }}>
-                  Revisa cuotas, saldos, fechas, método de pago y estado de cada solicitud.
-                </p>
-              </div>
-              <Button
-                className="button-secondary icon-button"
-                style={{ fontSize: '0.78rem', padding: '6px 14px', minHeight: '34px' }}
-                onClick={() => {
-                  setActiveTab('plans');
-                  setSearchParams({ tab: 'plans' });
-                }}
-              >
-                <PiggyBank size={16} aria-hidden="true" />
-                Explorar nuevos planes
-              </Button>
-            </div>
-
-            <FinancialRequestList
-              emptyDescription="Cuando completes una solicitud de ahorro, aparecera aqui."
-              emptyTitle="Aun no tienes ahorros registrados."
-              error={savingsError}
-              isLoading={isLoadingPlans}
-              items={savings}
-              plans={plans}
-              suggestedFrequency={suggestedFrequency}
-              salaryCapacity={salaryCapacity}
-              onRefresh={loadSavingsPlans}
-              searchable
-              title="Historial de ahorros"
-              type="savings"
-            />
-          </div>
+          <FinancialRequestList
+            emptyDescription="Cuando completes una solicitud de ahorro, aparecerá aquí."
+            emptyTitle="Aún no tienes ahorros registrados."
+            error={savingsError}
+            isLoading={isLoadingPlans}
+            items={savings}
+            plans={plans}
+            suggestedFrequency={suggestedFrequency}
+            salaryCapacity={salaryCapacity}
+            onRefresh={loadSavingsPlans}
+            searchable
+            title=""
+            type="savings"
+          />
         </section>
       )}
 

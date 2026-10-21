@@ -4,8 +4,8 @@ import { normalizeApiError } from '../../../api/apiUtils.js';
 import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import PageHero from '../../../components/common/PageHero.jsx';
+import SuccessAlertModal from '../../../components/common/SuccessAlertModal.jsx';
 import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
-import ModuleCard from '../components/ModuleCard.jsx';
 import SummaryCard from '../components/SummaryCard.jsx';
 import GeneralWithdrawalModal from '../components/GeneralWithdrawalModal.jsx';
 import GeneralKardexModal from '../components/GeneralKardexModal.jsx';
@@ -93,6 +93,20 @@ function DashboardPage() {
   const [isWithdrawalModalOpen, setIsWithdrawalModalOpen] = useState(false);
   const [isKardexModalOpen, setIsKardexModalOpen] = useState(false);
   const [notice, setNotice] = useState({ message: '', type: 'info' });
+  const noticeTimerRef = useRef(null);
+  const [withdrawalAlert, setWithdrawalAlert] = useState({
+    isOpen: false,
+    title: 'Retiro solicitado',
+    message: '',
+  });
+
+  const showTimedNotice = useCallback((message, type = 'success') => {
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    setNotice({ message, type });
+    noticeTimerRef.current = setTimeout(() => {
+      setNotice({ message: '', type: 'info' });
+    }, 5000);
+  }, []);
 
   useGrowcapPageMotion(pageRef);
 
@@ -133,8 +147,48 @@ function DashboardPage() {
   const investmentColocado = getNumericValue(getDashboardAmount(balance, ['sd_inversiones_colocado', 'sd_inversiones'])) ?? 0;
   const investmentDisponible = getNumericValue(getDashboardAmount(balance, ['sd_inversiones_disponible', 'sd_inversiones_disponibles'])) ?? 0;
   const investmentBalance = investmentColocado + investmentDisponible;
+  const depositsDisponible = getNumericValue(getDashboardAmount(balance, ['sd_depositos'])) ?? 0;
   const loansBalance = getDashboardAmount(balance, ['sd_prestamos', 'saldo_prestamos', 'saldo_prestamo', 'deuda_prestamos', 'prestamos', 'solicitudes_prestamos']);
   const balanceDate = getDashboardDate(balance);
+
+  const rawAccounts =
+    balance?.cuentas_disponibles
+    || balance?.data?.cuentas_disponibles
+    || balance?.detalle?.cuentas_disponibles
+    || balance?.data?.detalle?.cuentas_disponibles
+    || [];
+
+  const availableAccounts = Array.isArray(rawAccounts) && rawAccounts.length > 0
+    ? rawAccounts
+    : [
+        ...(depositsDisponible > 0
+          ? [{
+              key: 'depositos:general',
+              origen_tipo: 'depositos',
+              id: null,
+              etiqueta: 'Depósitos en Caja',
+              saldo_disponible: depositsDisponible,
+            }]
+          : []),
+        ...(savingsDisponible > 0
+          ? [{
+              key: 'ahorro:general',
+              origen_tipo: 'ahorro',
+              id: null,
+              etiqueta: 'Ahorro Disponible',
+              saldo_disponible: savingsDisponible,
+            }]
+          : []),
+        ...(investmentDisponible > 0
+          ? [{
+              key: 'inversion:general',
+              origen_tipo: 'inversion',
+              id: null,
+              etiqueta: 'Inversiones Liberadas',
+              saldo_disponible: investmentDisponible,
+            }]
+          : []),
+      ];
 
   const buildBreakdown = (colocado, disponible) => (isLoadingBalance ? null : [
     { label: 'Colocado', value: formatCurrency(colocado), tone: 'growing', tooltip: 'Capital activo colocado' },
@@ -156,17 +210,88 @@ function DashboardPage() {
       <PageHero
         eyebrow={`● Portafolio Personal · ${formalDate}`}
         stats={[
-          { label: 'Saldo general', value: isLoadingBalance ? 'Cargando' : formatCurrency(generalBalance) },
+          { label: 'Saldo Disponible', value: isLoadingBalance ? 'Cargando...' : formatCurrency(generalBalance) },
           { label: 'Actualizado', value: balanceDate || 'Hoy' },
         ]}
         title={greetingText}
+        actions={
+          <div style={{ display: 'inline-flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <Button
+              type="button"
+              className="button-primary"
+              onClick={() => setIsDepositModalOpen(true)}
+              style={{
+                fontSize: '0.82rem',
+                padding: '7px 14px',
+                minHeight: '34px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                borderRadius: '10px',
+              }}
+            >
+              <PlusCircle size={15} />
+              <span>Cargar Saldo</span>
+            </Button>
+            <Button
+              type="button"
+              className="button-secondary"
+              onClick={() => setIsWithdrawalModalOpen(true)}
+              disabled={Number(generalBalance ?? 0) <= 0}
+              style={{
+                fontSize: '0.82rem',
+                padding: '7px 14px',
+                minHeight: '34px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                borderRadius: '10px',
+              }}
+            >
+              <ArrowDownLeft size={15} />
+              <span>Retirar</span>
+            </Button>
+            <Button
+              type="button"
+              className="button-secondary"
+              onClick={() => setIsKardexModalOpen(true)}
+              style={{
+                fontSize: '0.82rem',
+                padding: '7px 14px',
+                minHeight: '34px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                borderRadius: '10px',
+              }}
+            >
+              <FileText size={15} />
+              <span>Movimientos</span>
+            </Button>
+          </div>
+        }
       >
         Monitorea el crecimiento de tu capital.
       </PageHero>
 
       {notice.message && (
         <div style={{ marginBottom: '16px' }}>
-          <Alert type={notice.type}>{notice.message}</Alert>
+          <Alert type={notice.type}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '12px' }}>
+              <span>{notice.message}</span>
+              <Button
+                type="button"
+                className="button-secondary"
+                style={{ fontSize: '0.75rem', padding: '3px 12px', minHeight: '26px' }}
+                onClick={() => {
+                  if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+                  setNotice({ message: '', type: 'info' });
+                }}
+              >
+                Aceptar
+              </Button>
+            </div>
+          </Alert>
         </div>
       )}
 
@@ -184,7 +309,7 @@ function DashboardPage() {
           className="motion-immediate"
           style={{
             marginBottom: '16px',
-            padding: '12px 18px',
+            padding: '10px 16px',
             background: '#ffffff',
             borderRadius: '12px',
             border: '1px solid #bfdbfe',
@@ -197,44 +322,26 @@ function DashboardPage() {
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                background: '#eff6ff',
-                color: '#2563eb',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <ShieldCheck size={18} />
-            </div>
-            <div>
-              <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>
-                Solicitud de respaldo como aval pendiente
-              </strong>
-              <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block' }}>
-                {pendingAvalRequests.length === 1
-                  ? `${pendingAvalRequests[0].solicitante_nombre} te ha solicitado como aval solidario.`
-                  : `Tienes ${pendingAvalRequests.length} solicitudes de aval pendientes de confirmación.`}
-              </span>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <ShieldCheck size={18} color="#2563eb" />
+            <span style={{ fontSize: '0.84rem', color: '#0f172a' }}>
+              <strong>Solicitud de aval pendiente:</strong>{' '}
+              {pendingAvalRequests.length === 1
+                ? `${pendingAvalRequests[0].solicitante_nombre} requiere tu autorización.`
+                : `Tienes ${pendingAvalRequests.length} solicitudes de aval pendientes de revisión.`}
+            </span>
           </div>
 
           <Button
             type="button"
             className="button-primary"
             style={{
-              fontSize: '0.8rem',
-              padding: '6px 14px',
-              minHeight: '32px',
+              fontSize: '0.78rem',
+              padding: '5px 12px',
+              minHeight: '30px',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '4px',
               background: '#1e293b',
               borderColor: '#0f172a',
             }}
@@ -251,69 +358,6 @@ function DashboardPage() {
           </Button>
         </div>
       )}
-
-      <section className="balance-hero-card motion-immediate" aria-label="Saldo disponible del cliente">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-          <span className="page-kicker">Saldo disponible</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <Button
-              type="button"
-              className="button-secondary"
-              onClick={() => setIsKardexModalOpen(true)}
-              style={{
-                fontSize: '0.8rem',
-                padding: '6px 12px',
-                minHeight: '32px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <FileText size={14} />
-              <span>Movimientos</span>
-            </Button>
-            <Button
-              type="button"
-              className="button-secondary"
-              onClick={() => setIsWithdrawalModalOpen(true)}
-              disabled={Number(generalBalance ?? 0) <= 0}
-              style={{
-                fontSize: '0.8rem',
-                padding: '6px 12px',
-                minHeight: '32px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <ArrowDownLeft size={14} />
-              <span>Retirar</span>
-            </Button>
-            <Button
-              type="button"
-              className="button-primary"
-              onClick={() => setIsDepositModalOpen(true)}
-              style={{
-                fontSize: '0.8rem',
-                padding: '6px 14px',
-                minHeight: '32px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <PlusCircle size={15} />
-              <span>Cargar Saldo</span>
-            </Button>
-          </div>
-        </div>
-        <strong>{isLoadingBalance ? 'Cargando...' : formatCurrency(generalBalance)}</strong>
-        <p>
-          {balanceDate
-            ? `Informacion consultada al ${balanceDate}.`
-            : 'Informacion actualizada de tu cuenta GrowCap.'}
-        </p>
-      </section>
 
       <section className="portfolio-ledger-grid motion-immediate" aria-label="Resumen de productos financieros">
         <SummaryCard
@@ -343,36 +387,6 @@ function DashboardPage() {
           to="/prestamos?view=my-records"
           actionLabel="Ver activos"
         />
-      </section>
-
-      <section className="operations-board motion-scroll">
-        <div className="section-heading">
-          <span>Accesos rapidos</span>
-          <h2>Operaciones principales</h2>
-        </div>
-        <div className="module-list">
-          <ModuleCard
-            description="Revisa tu ahorro y prepara una solicitud sencilla."
-            icon={HandCoins}
-            nextStep="Consulta y solicitud"
-            title="Ahorro"
-            to="/ahorro"
-          />
-          <ModuleCard
-            description="Compara planes antes de preparar tu solicitud."
-            icon={ChartNoAxesColumnIncreasing}
-            nextStep="Planes disponibles"
-            title="Inversion"
-            to="/inversion"
-          />
-          <ModuleCard
-            description="Avanza paso a paso con datos claros."
-            icon={Banknote}
-            nextStep="Solicitud guiada"
-            title="Prestamos"
-            to="/prestamos"
-          />
-        </div>
       </section>
 
       {selectedAvalRequestToReview && (
@@ -407,14 +421,13 @@ function DashboardPage() {
         isOpen={isWithdrawalModalOpen}
         onClose={() => setIsWithdrawalModalOpen(false)}
         availableBalance={Number(generalBalance ?? 0)}
-        availableAccounts={
-          balance?.cuentas_disponibles
-          || balance?.data?.cuentas_disponibles
-          || balance?.detalle?.cuentas_disponibles
-          || []
-        }
+        availableAccounts={availableAccounts}
         onSuccess={(msg) => {
-          setNotice({ message: msg, type: 'success' });
+          setWithdrawalAlert({
+            isOpen: true,
+            title: 'Retiro solicitado',
+            message: msg || 'Su transacción será verificada; la verá reflejada en su cuenta en un máximo de 48 hrs.',
+          });
           loadBalance();
         }}
       />
@@ -423,6 +436,13 @@ function DashboardPage() {
         isOpen={isKardexModalOpen}
         onClose={() => setIsKardexModalOpen(false)}
         availableBalance={Number(generalBalance ?? 0)}
+      />
+
+      <SuccessAlertModal
+        isOpen={withdrawalAlert.isOpen}
+        onClose={() => setWithdrawalAlert((prev) => ({ ...prev, isOpen: false }))}
+        title={withdrawalAlert.title}
+        message={withdrawalAlert.message}
       />
     </div>
   );

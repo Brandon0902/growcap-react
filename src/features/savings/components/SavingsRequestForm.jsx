@@ -8,7 +8,6 @@ import {
 import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import GuidedRequestModal from '../../../components/common/GuidedRequestModal.jsx';
-import Input from '../../../components/common/Input.jsx';
 import WizardStep from '../../../components/common/WizardStep.jsx';
 import { createSavingsCheckout, createSavingsRequest } from '../services/savingsService.js';
 import { buildSavingsCheckoutPayload, buildSavingsRequestPayload, formatSavingsRequestError } from '../services/savingsRequest.js';
@@ -474,16 +473,28 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
         </div>
       </dl>
       
-      <div className="form-field checkbox-field" style={{ marginTop: '20px', padding: '15px', background: '#1e293b', borderRadius: '8px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+      <div
+        className="form-field checkbox-field"
+        style={{
+          marginTop: '16px',
+          padding: '12px 14px',
+          background: 'rgba(107, 33, 168, 0.04)',
+          border: '1px solid #e9d5ff',
+          borderRadius: '10px',
+          display: 'flex',
+          gap: '10px',
+          alignItems: 'flex-start',
+        }}
+      >
         <input 
           type="checkbox" 
           id="accept-terms" 
           name="aceptado"
           checked={!!values.aceptado}
           onChange={(e) => setValues(curr => ({ ...curr, aceptado: e.target.checked }))}
-          style={{ marginTop: '4px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+          style={{ marginTop: '3px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
         />
-        <label htmlFor="accept-terms" style={{ cursor: 'pointer', fontSize: '0.85rem', color: '#cbd5e1', margin: 0, lineHeight: '1.4' }}>
+        <label htmlFor="accept-terms" style={{ cursor: 'pointer', fontSize: '0.84rem', color: 'var(--purple-950)', margin: 0, lineHeight: '1.4' }}>
           <strong>Autorizo el descuento</strong> periódico vía nómina conforme a las condiciones de este plan.
         </label>
       </div>
@@ -497,19 +508,17 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
     if (currentStep === 0) {
       return (
         <WizardStep
-          description="Elige el plan de ahorro."
+          description="Selecciona el tipo de ahorro que deseas iniciar."
           question="Selecciona tu plan"
         >
-          <div className="form-field">
-            <label className="form-label" htmlFor="savings-plan">
-              Plan de ahorro
-            </label>
+          <div className="form-field" style={{ marginBottom: '10px' }}>
             <select
               className="input"
               id="savings-plan"
               name="ahorro_id"
               onChange={handleChange}
               value={values.ahorro_id}
+              style={{ fontSize: '0.96rem', fontWeight: 600, padding: '10px 14px' }}
             >
               <option value="">Selecciona un plan</option>
               {plans.map((plan, index) => {
@@ -536,31 +545,44 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
       return (
         <WizardStep
           description="Descuento automático vía nómina."
-          question="Monto de aportación"
+          question="¿Cuánto deseas aportar?"
         >
-          <Input
-            error={firstFieldError(fieldErrors, 'cuota')}
-            id="savings-fee"
-            label="Monto de aportación"
-            min={minFee ?? 1}
-            max={salaryCapacity?.capacidad_disponible > 0 ? salaryCapacity.capacidad_disponible : undefined}
-            name="cuota"
-            onChange={handleChange}
-            step="0.01"
-            type="number"
-            value={values.cuota}
-          />
-          {minFee !== null && (
-            <p className="guided-help">Mínimo del plan: {formatMoney(minFee)}</p>
-          )}
-          {salaryCapacity && salaryCapacity.salario_periodico > 0 && (
-            <div style={{ marginTop: '10px', padding: '8px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#64748b' }}>Disponible (máx 50% nómina):</span>
-              <strong style={{ color: salaryCapacity.capacidad_disponible > 0 ? '#16a34a' : '#dc2626' }}>
-                {formatMoney(salaryCapacity.capacidad_disponible)}
-              </strong>
+          <div className="hero-amount-field">
+            <div className={`hero-amount-box ${firstFieldError(fieldErrors, 'cuota') ? 'has-error' : ''}`}>
+              <span className="hero-amount-currency" aria-hidden="true">$</span>
+              <input
+                autoFocus
+                className="hero-amount-input"
+                id="savings-fee"
+                inputMode="decimal"
+                max={salaryCapacity?.capacidad_disponible > 0 ? salaryCapacity.capacidad_disponible : undefined}
+                min={minFee ?? 1}
+                name="cuota"
+                onChange={handleChange}
+                placeholder="0.00"
+                step="0.01"
+                type="number"
+                value={values.cuota}
+              />
+              <span className="hero-amount-suffix" aria-hidden="true">MXN</span>
             </div>
-          )}
+            {firstFieldError(fieldErrors, 'cuota') && (
+              <p className="form-error" style={{ margin: '2px 0 0' }}>{firstFieldError(fieldErrors, 'cuota')}</p>
+            )}
+            <div className="hero-amount-badge-row">
+              <span style={{ color: '#64748b' }}>
+                Mínimo del plan: <strong style={{ color: '#334155' }}>{minFee !== null ? formatMoney(minFee) : '$100.00'}</strong>
+              </span>
+              {salaryCapacity && salaryCapacity.salario_periodico > 0 && (
+                <span style={{ color: '#64748b' }}>
+                  Disponible (máx 50% nómina):{' '}
+                  <strong style={{ color: salaryCapacity.capacidad_disponible > 0 ? '#16a34a' : '#dc2626' }}>
+                    {formatMoney(salaryCapacity.capacidad_disponible)}
+                  </strong>
+                </span>
+              )}
+            </div>
+          </div>
         </WizardStep>
       );
     }
@@ -573,24 +595,35 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
 
       return (
         <WizardStep
-          description="Día en que se liquidará tu ahorro."
-          question="Fecha de liquidación"
+          description="Día en que se liquidará tu ahorro y rendimientos."
+          question="¿Cuándo deseas recibir tu ahorro?"
         >
-          <Input
-            error={firstFieldError(fieldErrors, 'fecha_fin')}
-            id="savings-end-date"
-            label="Fecha fin"
-            name="fecha_fin"
-            onChange={handleChange}
-            type="date"
-            min={minDateString}
-            value={values.fecha_fin}
-          />
-          {customPlanCalculation && customPlanCalculation.totalMonths > 0 && (
-            <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: '#16a34a', fontWeight: 600 }}>
-              Tasa asignada: {customPlanCalculation.assignedRate}% anual ({customPlanCalculation.totalMonths} meses)
-            </p>
-          )}
+          <div className="hero-amount-field">
+            <div className={`hero-date-box ${firstFieldError(fieldErrors, 'fecha_fin') ? 'has-error' : ''}`}>
+              <input
+                className="hero-date-input"
+                id="savings-end-date"
+                min={minDateString}
+                name="fecha_fin"
+                onChange={handleChange}
+                type="date"
+                value={values.fecha_fin}
+              />
+            </div>
+            {firstFieldError(fieldErrors, 'fecha_fin') && (
+              <p className="form-error" style={{ margin: '2px 0 0' }}>{firstFieldError(fieldErrors, 'fecha_fin')}</p>
+            )}
+            {customPlanCalculation && customPlanCalculation.totalMonths > 0 && (
+              <div className="hero-amount-badge-row" style={{ background: '#f0fdf4', borderColor: '#bbf7d0' }}>
+                <span style={{ color: '#166534', fontWeight: 600 }}>
+                  Tasa asignada: {customPlanCalculation.assignedRate}% anual
+                </span>
+                <span style={{ color: '#166534', fontWeight: 600 }}>
+                  Plazo: {customPlanCalculation.totalMonths} meses
+                </span>
+              </div>
+            )}
+          </div>
         </WizardStep>
       );
     }

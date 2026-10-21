@@ -220,11 +220,13 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
           nextErrors.codigo_aval = 'Valida tu código de aval para verificar que esté vigente y no haya sido utilizado.';
         }
         if (!isUnderTwoThousand) {
-          // Documentos obligatorios para >= $2,000 (Pagaré dual, comprobante, INE frente y reverso)
+          // Documentos obligatorios para >= $2,000 (Pagaré dual, comprobante, INE frente/reverso solicitante y aval)
           if (!files.doc_solicitud_aval) nextErrors.doc_solicitud_aval = 'El Pagaré firmado por ambas partes es obligatorio.';
           if (!files.doc_comprobante_domicilio) nextErrors.doc_comprobante_domicilio = 'El comprobante de domicilio es obligatorio.';
-          if (!files.doc_ine_frente) nextErrors.doc_ine_frente = 'La identificación frontal es obligatoria.';
-          if (!files.doc_ine_reverso) nextErrors.doc_ine_reverso = 'La identificación trasera es obligatoria.';
+          if (!files.doc_ine_frente) nextErrors.doc_ine_frente = 'La identificación frontal del solicitante es obligatoria.';
+          if (!files.doc_ine_reverso) nextErrors.doc_ine_reverso = 'La identificación trasera del solicitante es obligatoria.';
+          if (!files.doc_ine_aval_frente) nextErrors.doc_ine_aval_frente = 'La identificación frontal del aval es obligatoria.';
+          if (!files.doc_ine_aval_reverso) nextErrors.doc_ine_aval_reverso = 'La identificación trasera del aval es obligatoria.';
         }
       }
     }
@@ -322,6 +324,8 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
       if (files.doc_comprobante_domicilio) payload.doc_comprobante_domicilio = files.doc_comprobante_domicilio;
       if (files.doc_ine_frente) payload.doc_ine_frente = files.doc_ine_frente;
       if (files.doc_ine_reverso) payload.doc_ine_reverso = files.doc_ine_reverso;
+      if (files.doc_ine_aval_frente) payload.doc_ine_aval_frente = files.doc_ine_aval_frente;
+      if (files.doc_ine_aval_reverso) payload.doc_ine_aval_reverso = files.doc_ine_aval_reverso;
     }
 
     return payload;
@@ -502,16 +506,14 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
             </div>
           )}
 
-          <div className="form-field">
-            <label className="form-label" htmlFor="loan-plan">
-              Plan de préstamo
-            </label>
+          <div className="form-field" style={{ marginBottom: '10px' }}>
             <select
               className="input"
               id="loan-plan"
               name="id_activo"
               onChange={handleChange}
               value={values.id_activo}
+              style={{ fontSize: '0.96rem', fontWeight: 600, padding: '10px 14px' }}
             >
               <option value="">Selecciona un plan</option>
               {plans.map((plan, index) => {
@@ -536,78 +538,92 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
     if (currentStep === 1) {
       return (
         <WizardStep
-          description="Escribe la cantidad que necesitas. Calculamos tu cuota fija y verificamos tu tope del 30% de nómina."
+          description="Escribe la cantidad que necesitas. Calculamos tu cuota fija y validamos tu capacidad de nómina."
           question="¿Cuánto necesitas solicitar?"
         >
-          <Input
-            error={firstFieldError(fieldErrors, 'cantidad') || firstFieldError(fieldErrors, 'monto')}
-            id="loan-amount"
-            label="Monto solicitado (MXN)"
-            min={planMin || 500}
-            max={planMax > 0 ? planMax : undefined}
-            name="cantidad"
-            onChange={handleChange}
-            step="100"
-            type="number"
-            value={values.cantidad}
-          />
-
-          {selectedPlan && (
-            <div style={{ marginTop: '6px', marginBottom: '12px', fontSize: '0.84rem', color: '#64748b' }}>
-              <span>Límite del {getPlanName(selectedPlan)}: </span>
-              <strong>${planMin.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</strong>
-              {planMax > 0 ? (
-                <> a <strong>${planMax.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong></>
-              ) : (
-                ' MXN en adelante'
-              )}
+          <div className="hero-amount-field">
+            <div className={`hero-amount-box ${firstFieldError(fieldErrors, 'cantidad') || firstFieldError(fieldErrors, 'monto') ? 'has-error' : ''}`}>
+              <span className="hero-amount-currency" aria-hidden="true">$</span>
+              <input
+                autoFocus
+                className="hero-amount-input"
+                id="loan-amount"
+                inputMode="decimal"
+                max={planMax > 0 ? planMax : undefined}
+                min={planMin || 500}
+                name="cantidad"
+                onChange={handleChange}
+                placeholder="0.00"
+                step="100"
+                type="number"
+                value={values.cantidad}
+              />
+              <span className="hero-amount-suffix" aria-hidden="true">MXN</span>
             </div>
-          )}
+            {(firstFieldError(fieldErrors, 'cantidad') || firstFieldError(fieldErrors, 'monto')) && (
+              <p className="form-error" style={{ margin: '2px 0 0' }}>
+                {firstFieldError(fieldErrors, 'cantidad') || firstFieldError(fieldErrors, 'monto')}
+              </p>
+            )}
+
+            {selectedPlan && (
+              <div className="hero-amount-badge-row">
+                <span style={{ color: '#64748b' }}>
+                  Límites del plan:{' '}
+                  <strong style={{ color: '#334155' }}>
+                    ${planMin.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    {planMax > 0 ? ` a $${planMax.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN` : ' MXN en adelante'}
+                  </strong>
+                </span>
+              </div>
+            )}
+          </div>
 
           {amountNum > 0 && selectedPlan && (
-            <div style={{ marginTop: '14px', padding: '16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+            <div style={{ marginTop: '10px', padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
               {isAmountAboveMax && (
-                <div style={{ padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '0.85rem', marginBottom: '12px' }}>
-                  🚫 El monto ingresado (${amountNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN) supera el tope máximo de <strong>${planMax.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong> para el {getPlanName(selectedPlan)}. Ajusta la cantidad o elige un plan con mayor capacidad.
+                <div style={{ padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '0.82rem', marginBottom: '8px' }}>
+                  El monto supera el tope máximo de <strong>${planMax.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong>.
                 </div>
               )}
 
               {isAmountBelowMin && (
-                <div style={{ padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '0.85rem', marginBottom: '12px' }}>
-                  🚫 El monto ingresado (${amountNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN) es menor al mínimo de <strong>${planMin.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong> para el {getPlanName(selectedPlan)}.
+                <div style={{ padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '0.82rem', marginBottom: '8px' }}>
+                  El monto es menor al mínimo de <strong>${planMin.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong>.
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.88rem' }}>
-                <span style={{ color: '#64748b' }}>Frecuencia de descuento ({frequency}):</span>
-                <strong style={{ color: '#0f172a' }}>${estimatedFee.toFixed(2)} / pago</strong>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', fontSize: '0.86rem' }}>
+                <span style={{ color: '#64748b' }}>Cuota fija estimada ({frequency}):</span>
+                <strong style={{ color: '#0f172a', fontSize: '1rem' }}>${estimatedFee.toFixed(2)} / pago</strong>
               </div>
 
               {isFeeOverLimit ? (
-                <div style={{ padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '0.85rem' }}>
-                  ⚠️ La cuota estimada supera el 30% permitido de tu salario de nómina (${maxAllowedRetention.toFixed(2)}). Reduce el monto o solicita un plan con mayor plazo.
+                <div style={{ padding: '6px 10px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '0.8rem' }}>
+                  ⚠️ Excede el 30% permitido de nómina (${maxAllowedRetention.toFixed(2)}).
                 </div>
               ) : !isAmountAboveMax && !isAmountBelowMin ? (
-                <div style={{ padding: '10px 12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', color: '#166534', fontSize: '0.85rem' }}>
-                  ✓ Cuota y monto dentro de tu capacidad y límites autorizados del plan.
+                <div style={{ padding: '6px 10px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', color: '#166534', fontSize: '0.8rem' }}>
+                  ✓ Cuota dentro del 30% de nómina autorizado.
                 </div>
               ) : null}
 
-              <div style={{ marginTop: '12px', fontSize: '0.82rem', color: isUnderTwoThousand ? '#2563eb' : '#d97706' }}>
+              <div style={{ marginTop: '8px', fontSize: '0.78rem', color: isUnderTwoThousand ? '#2563eb' : '#d97706', fontWeight: 500 }}>
                 {isUnderTwoThousand
-                  ? '✨ Préstamo menor a $2,000.00 MXN: Trámite 100% digital sin papeleo físico (Auto-Garantía con Ahorro o Aval con Código Dinámico).'
-                  : '🛡️ Préstamo a partir de $2,000.00 MXN: Requiere Garantía Reforzada (Código Dinámico de Aval + Pagaré con ambas firmas y documentos).'}
+                  ? '✨ Menor a $2,000.00 MXN: Trámite digital sin aval físico (Auto-Garantía o Código Aval).'
+                  : '🛡️ A partir de $2,000.00 MXN: Requiere Garantía Reforzada (Código Aval + Pagaré).'}
               </div>
             </div>
           )}
 
           {suggestion && (
-            <div style={{ marginTop: '16px', padding: '16px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px' }}>
-              <h4 style={{ margin: '0 0 6px', color: '#1e3a8a' }}>Plan Recomendado</h4>
-              <p style={{ margin: '0 0 10px', fontSize: '0.88rem', color: '#1e40af' }}>
-                La cuota fija para tu capacidad sería de ${suggestion.cuota_fija.toFixed(2)}.
+            <div style={{ marginTop: '12px', padding: '12px 14px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px' }}>
+              <h4 style={{ margin: '0 0 4px', color: '#1e3a8a', fontSize: '0.9rem' }}>Plan Recomendado</h4>
+              <p style={{ margin: '0 0 8px', fontSize: '0.82rem', color: '#1e40af' }}>
+                Cuota fija ajustada a tu capacidad: ${suggestion.cuota_fija.toFixed(2)}.
               </p>
               <Button
+                style={{ fontSize: '0.78rem', padding: '5px 12px', minHeight: '30px' }}
                 onClick={() => {
                   setValues((curr) => ({ ...curr, id_activo: suggestion.plan_id }));
                   setSuggestion(null);
@@ -699,7 +715,7 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
                 <strong>Pagaré Oficial Firmado:</strong> Documento firmado por <strong>ambas partes</strong> (solicitante y aval).
               </li>
               <li>
-                <strong>Expediente Oficial:</strong> Comprobante de domicilio vigente e identificación oficial por ambos lados.
+                <strong>Expediente Oficial:</strong> Comprobante de domicilio vigente e identificaciones oficiales (INE frente y reverso de solicitante y aval).
               </li>
             </ul>
             <div style={{ fontSize: '0.82rem', color: '#059669', background: '#ecfdf5', padding: '8px 12px', borderRadius: '8px' }}>
@@ -832,32 +848,68 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
           </div>
 
           {!isUnderTwoThousand && (
-            <div style={{ marginTop: '20px' }}>
-              <h4 style={{ margin: '0 0 12px', fontSize: '0.95rem', color: '#0f172a' }}>
-                Documentación Obligatoria (Préstamos mayores a $2,000 MXN)
-              </h4>
-              <div className="guided-file-grid">
-                {guarantorDocumentFields.map((field) => (
-                  <div className="form-field" key={field.id}>
-                    <label className="form-label" htmlFor={field.id}>
-                      {field.id === 'doc_solicitud_aval'
-                        ? 'Pagaré Oficial Firmado por Solicitante y Aval'
-                        : field.label}
-                    </label>
-                    <input
-                      accept=".jpg,.jpeg,.png,.pdf"
-                      className="input"
-                      id={field.id}
-                      name={field.id}
-                      onChange={handleFileChange}
-                      type="file"
-                    />
-                    {files[field.id] && <span className="guided-file-name">{files[field.id].name}</span>}
-                    {firstFieldError(fieldErrors, field.id) && (
-                      <p className="form-error">{firstFieldError(fieldErrors, field.id)}</p>
-                    )}
-                  </div>
-                ))}
+            <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <h4 style={{ margin: '0 0 10px', fontSize: '0.92rem', color: '#0f172a', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>📋</span> Documentación del Solicitante y Pagaré
+                </h4>
+                <div className="guided-file-grid">
+                  {guarantorDocumentFields
+                    .filter((field) => field.category === 'solicitante' || !field.category)
+                    .map((field) => (
+                      <div className="form-field" key={field.id}>
+                        <label className="form-label" htmlFor={field.id}>
+                          {field.id === 'doc_solicitud_aval'
+                            ? 'Pagaré Oficial Firmado por Solicitante y Aval'
+                            : field.label}
+                        </label>
+                        <input
+                          accept=".jpg,.jpeg,.png,.pdf"
+                          className="input"
+                          id={field.id}
+                          name={field.id}
+                          onChange={handleFileChange}
+                          type="file"
+                        />
+                        {files[field.id] && <span className="guided-file-name">✓ {files[field.id].name}</span>}
+                        {firstFieldError(fieldErrors, field.id) && (
+                          <p className="form-error">{firstFieldError(fieldErrors, field.id)}</p>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div style={{ paddingTop: '14px', borderTop: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.92rem', color: '#0f172a', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>🛡️</span> Identificación Oficial del Aval (INE)
+                  </h4>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Ambos lados requeridos</span>
+                </div>
+                <div className="guided-file-grid">
+                  {guarantorDocumentFields
+                    .filter((field) => field.category === 'aval')
+                    .map((field) => (
+                      <div className="form-field" key={field.id}>
+                        <label className="form-label" htmlFor={field.id}>
+                          {field.label}
+                        </label>
+                        <input
+                          accept=".jpg,.jpeg,.png,.pdf"
+                          className="input"
+                          id={field.id}
+                          name={field.id}
+                          onChange={handleFileChange}
+                          type="file"
+                        />
+                        {files[field.id] && <span className="guided-file-name">✓ {files[field.id].name}</span>}
+                        {firstFieldError(fieldErrors, field.id) && (
+                          <p className="form-error">{firstFieldError(fieldErrors, field.id)}</p>
+                        )}
+                      </div>
+                    ))}
+                </div>
               </div>
             </div>
           )}
@@ -903,7 +955,7 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
           {!isUnderTwoThousand && (
             <div>
               <dt>Expediente</dt>
-              <dd>{guarantorDocumentFields.filter((f) => files[f.id]).length} documentos adjuntos</dd>
+              <dd>{guarantorDocumentFields.filter((f) => files[f.id]).length} de {guarantorDocumentFields.length} documentos adjuntos</dd>
             </div>
           )}
         </dl>

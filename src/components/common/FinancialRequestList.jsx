@@ -23,20 +23,24 @@ import {
   Banknote,
   WalletCards,
   CheckCircle2,
+  Building2,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Alert from './Alert.jsx';
 import Button from './Button.jsx';
 import Input from './Input.jsx';
+import SuccessAlertModal from './SuccessAlertModal.jsx';
 import {
   updateSavingsFee,
   transferSavings,
+  payLoanSavings,
   withdrawSavings,
   getSavingsMovements,
   pauseSavings,
   resumeSavings,
 } from '../../features/savings/services/savingsService.js';
+import { getClienteSolicitudesRetiro } from '../../features/dashboard/services/dashboardService.js';
 import { normalizeApiError } from '../../api/apiUtils.js';
 import { calculateSavingsProjection } from '../../features/savings/utils/savingsProjection.js';
 import SavingsProjectionModal from '../../features/savings/components/SavingsProjectionModal.jsx';
@@ -54,7 +58,7 @@ import LoanLifecycleAlertBanner from '../../features/loans/components/LoanLifecy
 import LoanAbonoModal from '../../features/loans/components/LoanAbonoModal.jsx';
 import LoanKardexTable from '../../features/loans/components/LoanKardexTable.jsx';
 import LoanStatementModal from '../../features/loans/components/LoanStatementModal.jsx';
-import { getLoanMovements } from '../../features/loans/services/loanService.js';
+import { getLoanMovements, getLoans } from '../../features/loans/services/loanService.js';
 
 function getValue(item, fields) {
   const field = fields.find((key) => item?.[key] !== undefined && item?.[key] !== null && item?.[key] !== '');
@@ -615,11 +619,25 @@ function FinancialRequestList({
   const [activeAction, setActiveAction] = useState(null); // { type: 'fee' | 'transfer' | 'withdraw' | 'kardex', item }
   const [actionFee, setActionFee] = useState('');
   const [actionAmount, setActionAmount] = useState('');
-  const [actionDestinoId, setActionDestinoId] = useState('');
+  const [selectedDestinationKey, setSelectedDestinationKey] = useState('');
+  const [actionPlanFechaFin, setActionPlanFechaFin] = useState('');
+  const [clientLoans, setClientLoans] = useState([]);
+  const [isLoadingClientLoans, setIsLoadingClientLoans] = useState(false);
   const [actionPausePeriodos, setActionPausePeriodos] = useState(4);
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
+  const actionSuccessTimerRef = useRef(null);
+  const [withdrawalAlert, setWithdrawalAlert] = useState({
+    isOpen: false,
+    title: 'Retiro solicitado',
+    message: '',
+  });
+  const [kardexActiveTab, setKardexActiveTab] = useState('movements');
+  const [kardexWithdrawals, setKardexWithdrawals] = useState([]);
+  const [isKardexWithdrawalsLoading, setIsKardexWithdrawalsLoading] = useState(false);
+  const [kardexWithdrawalSearch, setKardexWithdrawalSearch] = useState('');
+  const [kardexWithdrawalFilter, setKardexWithdrawalFilter] = useState('ALL');
   const [kardexMovements, setKardexMovements] = useState([]);
   const [isKardexLoading, setIsKardexLoading] = useState(false);
   const [kardexSearch, setKardexSearch] = useState('');
@@ -818,6 +836,33 @@ function FinancialRequestList({
     );
   }, [items, activeAction]);
 
+  const availableNewPlans = useMemo(() => {
+    if (!plans || !Array.isArray(plans)) return [];
+    return plans.filter((p) => Number(p?.status ?? 1) === 1);
+  }, [plans]);
+
+  const activeDebts = useMemo(() => {
+    return (clientLoans || []).filter(
+      (l) => [1, 2, 5].includes(Number(l.status ?? l.id_status ?? 0)) && Number(l.saldo_restante ?? 0) > 0
+    );
+  }, [clientLoans]);
+
+  const [destType, destId] = useMemo(() => {
+    if (!selectedDestinationKey) return ['', ''];
+    const parts = selectedDestinationKey.split(':');
+    return [parts[0] || '', parts[1] || ''];
+  }, [selectedDestinationKey]);
+
+  const selectedPlanDetails = useMemo(() => {
+    if (destType !== 'new_plan' || !destId) return null;
+    return availableNewPlans.find((p) => String(p.id) === String(destId)) || null;
+  }, [availableNewPlans, destType, destId]);
+
+  const selectedLoanDetails = useMemo(() => {
+    if (destType !== 'loan' || !destId) return null;
+    return activeDebts.find((l) => String(l.id) === String(destId)) || null;
+  }, [activeDebts, destType, destId]);
+
   const currentItemFreq = useMemo(() => {
     const raw = String(activeAction?.item?.frecuencia_pago || suggestedFrequency || 'Semanal').toLowerCase();
     if (raw.includes('quin') || raw.includes('15')) {
@@ -961,6 +1006,64 @@ function FinancialRequestList({
     return { totalIngresos, totalEgresos };
   }, [processedKardexMovements]);
 
+  const processedKardexWithdrawals = useMemo(() => {
+    if (type !== 'savings') return [];
+    let list = [...kardexWithdrawals];
+
+    if (kardexAccountFilter !== 'ALL') {
+      list = list.filter((w) => String(w.id_ahorro) === String(kardexAccountFilter));
+    }
+
+    if (kardexWithdrawalSearch.trim()) {
+      const q = kardexWithdrawalSearch.toLowerCase().trim();
+      list = list.filter((w) => {
+        const folioStr = String(w.folio || '').toLowerCase();
+        const origenStr = String(w.origen_cuenta || '').toLowerCase();
+        const statusStr = String(w.status_label || '').toLowerCase();
+        const dateStr = formatMovementDate(w.fecha_solicitud).toLowerCase();
+        const amountStr = String(w.cantidad ?? '');
+        return (
+          folioStr.includes(q) ||
+          origenStr.includes(q) ||
+          statusStr.includes(q) ||
+          dateStr.includes(q) ||
+          amountStr.includes(q)
+        );
+      });
+    }
+
+    if (kardexWithdrawalFilter !== 'ALL') {
+      list = list.filter((w) => {
+        const statusNum = Number(w.status ?? 0);
+        if (kardexWithdrawalFilter === 'PENDING') return statusNum === 0 || w.status_label?.includes('proceso');
+        if (kardexWithdrawalFilter === 'APPROVED') return [1, 3, 4].includes(statusNum) || w.status_label === 'Transferido';
+        if (kardexWithdrawalFilter === 'REJECTED') return [2, 5].includes(statusNum) || w.status_label === 'Rechazado';
+        return true;
+      });
+    }
+
+    return list;
+  }, [kardexWithdrawals, kardexAccountFilter, kardexWithdrawalSearch, kardexWithdrawalFilter, type]);
+
+  const kardexWithdrawalsSummary = useMemo(() => {
+    if (type !== 'savings') return { pendingCount: 0, pendingAmount: 0, transferredCount: 0, transferredAmount: 0, rejectedCount: 0 };
+    let list = kardexWithdrawals;
+    if (kardexAccountFilter !== 'ALL') {
+      list = list.filter((w) => String(w.id_ahorro) === String(kardexAccountFilter));
+    }
+    const pending = list.filter((w) => Number(w.status ?? 0) === 0 || w.status_label?.includes('proceso'));
+    const transferred = list.filter((w) => [1, 3, 4].includes(Number(w.status ?? 0)) || w.status_label === 'Transferido');
+    const rejected = list.filter((w) => [2, 5].includes(Number(w.status ?? 0)) || w.status_label === 'Rechazado');
+
+    return {
+      pendingCount: pending.length,
+      pendingAmount: pending.reduce((sum, w) => sum + Number(w.cantidad ?? 0), 0),
+      transferredCount: transferred.length,
+      transferredAmount: transferred.reduce((sum, w) => sum + Number(w.cantidad ?? 0), 0),
+      rejectedCount: rejected.length,
+    };
+  }, [kardexWithdrawals, kardexAccountFilter, type]);
+
   const handleOpenAction = (actionType, item) => {
     setActiveAction({ type: actionType, item });
     setActionFee(item.cuota ? String(item.cuota) : '');
@@ -972,14 +1075,36 @@ function FinancialRequestList({
     setActionError('');
     setActionSuccess('');
 
+    if (actionType === 'transfer') {
+      setActionAmount('');
+      setSelectedDestinationKey('');
+      setActionPlanFechaFin('');
+
+      setIsLoadingClientLoans(true);
+      getLoans({ orden: 'fecha_desc' })
+        .then((res) => {
+          const list = res?.data ?? [];
+          setClientLoans(Array.isArray(list) ? list : []);
+        })
+        .catch(() => {
+          setClientLoans([]);
+        })
+        .finally(() => {
+          setIsLoadingClientLoans(false);
+        });
+    }
+
     if (actionType === 'kardex') {
       setIsKardexLoading(true);
+      setKardexActiveTab('movements');
       setKardexMovements([]);
       setKardexSearch('');
       setKardexFilterType('ALL');
-      setKardexAccountFilter('ALL');
+      setKardexAccountFilter(item ? String(item.id) : 'ALL');
       setKardexSortField('fecha');
       setKardexSortDirection('desc');
+      setKardexWithdrawalSearch('');
+      setKardexWithdrawalFilter('ALL');
       const fetchFn = type === 'loans'
         ? getLoanMovements
         : (type === 'investments' ? getInvestmentMovements : getSavingsMovements);
@@ -993,6 +1118,18 @@ function FinancialRequestList({
         .finally(() => {
           setIsKardexLoading(false);
         });
+
+      if (type === 'savings') {
+        setIsKardexWithdrawalsLoading(true);
+        getClienteSolicitudesRetiro()
+          .then((res) => {
+            setKardexWithdrawals(res?.data?.data || []);
+          })
+          .catch(() => {})
+          .finally(() => {
+            setIsKardexWithdrawalsLoading(false);
+          });
+      }
     }
   };
 
@@ -1000,7 +1137,6 @@ function FinancialRequestList({
     if (isSubmittingAction) return;
     setActiveAction(null);
     setActionError('');
-    setActionSuccess('');
   };
 
   const handleSubmitAction = async (e) => {
@@ -1024,20 +1160,49 @@ function FinancialRequestList({
         setActionSuccess(res?.message || 'Cuota actualizada correctamente.');
       } else if (activeAction.type === 'transfer') {
         const amountNum = Number(actionAmount);
-        if (!actionDestinoId) {
-          throw new Error('Selecciona el ahorro destino.');
+        if (!selectedDestinationKey) {
+          throw new Error('Selecciona el destino de la transferencia.');
         }
         if (!Number.isFinite(amountNum) || amountNum <= 0) {
-          throw new Error('Ingresa un monto a transferir mayor a 0.');
+          throw new Error('Ingresa un monto válido mayor a 0.');
         }
         if (amountNum > Number(activeAction.item.saldo_disponible ?? 0)) {
           throw new Error('El monto no puede superar tu saldo disponible.');
         }
-        const res = await transferSavings(activeAction.item.id, {
-          destino_id: actionDestinoId,
-          monto: amountNum,
-        });
-        setActionSuccess(res?.message || 'Transferencia realizada con éxito.');
+
+        const [type, id] = selectedDestinationKey.split(':');
+        let res;
+        if (type === 'saving') {
+          res = await transferSavings(activeAction.item.id, {
+            destino_id: Number(id),
+            monto: amountNum,
+          });
+        } else if (type === 'new_plan') {
+          const selectedPlan = availableNewPlans.find((p) => String(p.id) === String(id));
+          const allowsCustomEnd = Boolean(Number(selectedPlan?.permite_fecha_personalizada) === 1);
+          if (allowsCustomEnd && !actionPlanFechaFin) {
+            throw new Error('Indica la fecha objetivo para tu nueva meta de ahorro.');
+          }
+          res = await transferSavings(activeAction.item.id, {
+            destino_tipo: 'nuevo_plan',
+            nuevo_plan_id: Number(id),
+            monto: amountNum,
+            cuota: Number(selectedPlan?.monto_minimo || 50),
+            fecha_fin: actionPlanFechaFin || undefined,
+          });
+        } else if (type === 'loan') {
+          const selectedLoan = activeDebts.find((l) => String(l.id) === String(id));
+          const maxDebt = Number(selectedLoan?.saldo_restante ?? 0);
+          if (maxDebt > 0 && amountNum > maxDebt) {
+            throw new Error(`El monto supera el saldo adeudado del préstamo (${formatMoney(maxDebt)}).`);
+          }
+          res = await payLoanSavings(activeAction.item.id, {
+            prestamo_id: Number(id),
+            monto: amountNum,
+          });
+        }
+
+        setActionSuccess(res?.data?.message || res?.message || 'Transferencia realizada con éxito.');
       } else if (activeAction.type === 'withdraw') {
         const amountNum = Number(actionAmount);
         if (!Number.isFinite(amountNum) || amountNum <= 0) {
@@ -1049,7 +1214,20 @@ function FinancialRequestList({
         const res = await withdrawSavings(activeAction.item.id, {
           monto: amountNum,
         });
-        setActionSuccess(res?.message || 'Retiro solicitado con éxito.');
+        const successMsg =
+          res?.data?.message ||
+          res?.message ||
+          'Su transacción será verificada; la verá reflejada en su cuenta en un máximo de 48 hrs.';
+
+        handleCloseAction();
+        onRefresh?.();
+
+        setWithdrawalAlert({
+          isOpen: true,
+          title: 'Retiro solicitado',
+          message: successMsg,
+        });
+        return;
       } else if (activeAction.type === 'pause') {
         const res = await pauseSavings(activeAction.item.id, { periodos: actionPausePeriodos });
         setActionSuccess(res?.data?.message || res?.message || 'Aportaciones pausadas temporalmente.');
@@ -1072,39 +1250,148 @@ function FinancialRequestList({
 
   return (
     <section className="request-list motion-scroll" aria-live="polite">
-      <div className="request-list-heading">
-        <h2>{title}</h2>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-          {(type === 'savings' || type === 'investments' || type === 'loans') && items.length > 0 && (
-            <Button
-              className="button-secondary icon-button"
-              style={{ fontSize: '0.78rem', minHeight: '34px', padding: '6px 12px' }}
-              onClick={() => handleOpenStatement('ALL')}
-              title="Descargar Estado de Cuenta Oficial en PDF"
-            >
-              <FileText size={15} aria-hidden="true" />
-              Estado de Cuenta
-            </Button>
-          )}
-          {type === 'savings' && items.length > 0 && (
-            <Button
-              className="button-secondary icon-button"
-              style={{ fontSize: '0.78rem', minHeight: '34px', padding: '6px 12px' }}
-              onClick={() => setIsProjectionOpen(true)}
-              title="Ver proyección estimada de ahorro"
-            >
-              <TrendingUp size={15} aria-hidden="true" />
-              Proyección de Ahorro
-            </Button>
-          )}
-          {onRefresh && (
-            <Button className="button-secondary icon-button" disabled={isLoading} onClick={onRefresh}>
-              <RefreshCw size={18} aria-hidden="true" />
-              Actualizar
-            </Button>
-          )}
+      {/* Executive Toolbar for Savings */}
+      {type === 'savings' ? (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '12px',
+            flexWrap: 'wrap',
+            gap: '8px',
+          }}
+        >
+          <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#64748b' }}>
+            {items.length === 1 ? '1 cuenta activa' : `${items.length} cuentas activas`}
+          </span>
+          <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+            {items.length > 0 && (
+              <Button
+                className="button-secondary icon-button"
+                style={{ fontSize: '0.74rem', minHeight: '30px', padding: '4px 10px', borderRadius: '8px' }}
+                onClick={() => handleOpenStatement('ALL')}
+                title="Descargar Estado de Cuenta Oficial en PDF"
+              >
+                <FileText size={13} aria-hidden="true" />
+                Estado de Cuenta
+              </Button>
+            )}
+            {items.length > 0 && (
+              <Button
+                className="button-secondary icon-button"
+                style={{ fontSize: '0.74rem', minHeight: '30px', padding: '4px 10px', borderRadius: '8px' }}
+                onClick={() => setIsProjectionOpen(true)}
+                title="Ver proyección estimada de ahorro"
+              >
+                <TrendingUp size={13} aria-hidden="true" />
+                Proyección
+              </Button>
+            )}
+            {onRefresh && (
+              <Button
+                className="button-secondary icon-button"
+                style={{ minHeight: '30px', padding: '4px 8px', borderRadius: '8px' }}
+                disabled={isLoading}
+                onClick={onRefresh}
+                title="Actualizar datos"
+              >
+                <RefreshCw size={14} aria-hidden="true" className={isLoading ? 'animate-spin' : ''} />
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      ) : type === 'loans' ? (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '10px',
+            flexWrap: 'wrap',
+            gap: '8px',
+          }}
+        >
+          <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#64748b' }}>
+            {currentLoans.length === 1 ? '1 crédito activo' : `${currentLoans.length} créditos activos`}
+          </span>
+          <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+            {items.length > 0 && (
+              <Button
+                className="button-secondary icon-button"
+                style={{ fontSize: '0.74rem', minHeight: '30px', padding: '4px 10px', borderRadius: '8px' }}
+                onClick={() => handleOpenStatement('ALL')}
+                title="Descargar Estado de Cuenta Oficial en PDF"
+              >
+                <FileText size={13} aria-hidden="true" />
+                Estado de Cuenta
+              </Button>
+            )}
+            {onRefresh && (
+              <Button
+                className="button-secondary icon-button"
+                style={{ minHeight: '30px', padding: '4px 8px', borderRadius: '8px' }}
+                disabled={isLoading}
+                onClick={onRefresh}
+                title="Actualizar datos"
+              >
+                <RefreshCw size={14} aria-hidden="true" className={isLoading ? 'animate-spin' : ''} />
+              </Button>
+            )}
+          </div>
+        </div>
+      ) : type === 'investments' ? (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '10px',
+            flexWrap: 'wrap',
+            gap: '8px',
+          }}
+        >
+          <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#64748b' }}>
+            {items.length === 1 ? '1 inversión registrada' : `${items.length} inversiones registradas`}
+          </span>
+          <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+            {items.length > 0 && (
+              <Button
+                className="button-secondary icon-button"
+                style={{ fontSize: '0.74rem', minHeight: '30px', padding: '4px 10px', borderRadius: '8px' }}
+                onClick={() => handleOpenStatement('ALL')}
+                title="Descargar Estado de Cuenta Oficial en PDF"
+              >
+                <FileText size={13} aria-hidden="true" />
+                Estado de Cuenta
+              </Button>
+            )}
+            {onRefresh && (
+              <Button
+                className="button-secondary icon-button"
+                style={{ minHeight: '30px', padding: '4px 8px', borderRadius: '8px' }}
+                disabled={isLoading}
+                onClick={onRefresh}
+                title="Actualizar datos"
+              >
+                <RefreshCw size={14} aria-hidden="true" className={isLoading ? 'animate-spin' : ''} />
+              </Button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="request-list-heading">
+          {title ? <h2>{title}</h2> : null}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            {onRefresh && (
+              <Button className="button-secondary icon-button" disabled={isLoading} onClick={onRefresh}>
+                <RefreshCw size={18} aria-hidden="true" />
+                Actualizar
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Dynamic Investment Portfolio KPIs Header */}
       {type === 'investments' && investmentStats && (
@@ -1230,16 +1517,19 @@ function FinancialRequestList({
       {actionSuccess && (
         <div style={{ marginBottom: '14px', position: 'relative' }}>
           <Alert type="success">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '12px' }}>
               <span>{actionSuccess}</span>
-              <button
+              <Button
                 type="button"
-                onClick={() => setActionSuccess('')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: '2px 4px', display: 'flex' }}
-                aria-label="Cerrar aviso"
+                className="button-secondary"
+                style={{ fontSize: '0.75rem', padding: '3px 12px', minHeight: '26px' }}
+                onClick={() => {
+                  if (actionSuccessTimerRef.current) clearTimeout(actionSuccessTimerRef.current);
+                  setActionSuccess('');
+                }}
               >
-                <X size={16} />
-              </button>
+                Aceptar
+              </Button>
             </div>
           </Alert>
         </div>
@@ -1271,7 +1561,7 @@ function FinancialRequestList({
         />
       )}
 
-      {searchable && (
+      {searchable && items.length >= 4 && (
         <label className="request-search">
           <Search size={18} aria-hidden="true" />
           <span className="sr-only">Buscar registros</span>
@@ -1333,6 +1623,10 @@ function FinancialRequestList({
               const status = getStatus(item);
               const isActive = Number(item?.status) === 1 || String(status).toLowerCase().includes('activ');
               const saldoDisp = Number(item?.saldo_disponible ?? 0);
+              const montoColocado = Number(item?.monto_ahorro ?? 0);
+              const saldoTotal = Number(item?.saldo_fecha ?? 0) > 0
+                ? Number(item.saldo_fecha)
+                : Number((montoColocado + saldoDisp).toFixed(2));
               const frequency = item?.frecuencia_pago || 'Semanal';
               const yieldText = item?.rendimiento !== null && item?.rendimiento !== undefined
                 ? `${item.rendimiento}% anual`
@@ -1363,7 +1657,7 @@ function FinancialRequestList({
                       }
                     }}
                   >
-                    {/* Línea 1: Nombre + Badge + Saldo Disponible + Chevron */}
+                    {/* Línea 1: Nombre + Badge + Saldo del Plan + Chevron */}
                     <div className="financial-compact-line-1">
                       <div className="financial-compact-title-group">
                         <h3 className="financial-compact-title">
@@ -1402,7 +1696,7 @@ function FinancialRequestList({
                         )}
                         <div className="financial-compact-amount-group">
                           <span className="financial-compact-amount" style={{ color: saldoDisp > 0 ? '#16a34a' : 'var(--color-primary)' }}>
-                            {formatMoney(item.saldo_disponible)}
+                            {formatMoney(saldoTotal)}
                           </span>
                           <span className="financial-compact-chevron" aria-hidden="true">
                             <ChevronDown size={17} />
@@ -1411,7 +1705,7 @@ function FinancialRequestList({
                       </div>
                     </div>
 
-                    {/* Línea 2: Cuota / Frecuencia + Tasa + Progreso */}
+                    {/* Línea 2: Cuota / Frecuencia + Tasa + Progreso (solo planes con plazo) */}
                     <div className="financial-compact-line-2">
                       <div className="financial-compact-subtext">
                         <span>{item.esta_pausado ? 'Aportaciones pausadas' : `${formatMoney(item.cuota)} / ${frequency}`}</span>
@@ -1431,8 +1725,8 @@ function FinancialRequestList({
                         )}
                       </div>
 
-                      {isActive && projection?.progressPct !== undefined && (
-                        <div className="financial-compact-progress-pill" title={`Meta: ${formatMoney(projection.montoProyectado)} (${projection.progressPct}%)`}>
+                      {isActive && !projection?.isPermanente && projection?.progressPct !== null && projection?.progressPct !== undefined ? (
+                        <div className="financial-compact-progress-pill" title={`Meta al vencimiento: ${formatMoney(projection.montoProyectado)} (${projection.progressPct}%)`}>
                           <span style={{ fontSize: '0.70rem', fontWeight: 700, color: 'var(--color-primary)' }}>
                             {projection.progressPct}%
                           </span>
@@ -1447,85 +1741,26 @@ function FinancialRequestList({
                             />
                           </div>
                         </div>
-                      )}
+                      ) : isActive && projection?.isPermanente ? (
+                        <span style={{ fontSize: '0.70rem', fontWeight: 600, color: '#15803d' }}>
+                          Liquidez inmediata
+                        </span>
+                      ) : null}
                     </div>
                   </div>
 
                   {/* Drawer expandible al clic */}
                   {isExpanded && (
-                    <div className="financial-expanded-drawer">
-                      <div className="financial-drawer-grid">
-                        <div className="financial-drawer-field">
-                          <span className="financial-drawer-label">Total Ahorrado</span>
-                          <span className="financial-drawer-val" style={{ color: 'var(--color-primary)' }}>{formatMoney(item.monto_ahorro)}</span>
-                        </div>
-                        <div className="financial-drawer-field">
-                          <span className="financial-drawer-label">Saldo Disponible</span>
-                          <span className="financial-drawer-val" style={{ color: saldoDisp > 0 ? '#16a34a' : '#64748b' }}>{formatMoney(item.saldo_disponible)}</span>
-                        </div>
-                        <div className="financial-drawer-field">
-                          <span className="financial-drawer-label">Cuota Periódica</span>
-                          <span className="financial-drawer-val">{item.esta_pausado ? '$0.00 (Pausado)' : `${formatMoney(item.cuota)} (${frequency})`}</span>
-                        </div>
-                        <div className="financial-drawer-field">
-                          <span className="financial-drawer-label">Rendimiento Anual</span>
-                          <span className="financial-drawer-val">{yieldText}</span>
-                        </div>
-                        <div className="financial-drawer-field">
-                          <span className="financial-drawer-label">{item.en_ventana_retiro ? 'Límite de Retiro' : 'Vence / Corte'}</span>
-                          <span className="financial-drawer-val">
-                            {item.en_ventana_retiro && item.fecha_limite_retiro
-                              ? formatDate(item.fecha_limite_retiro)
-                              : (endDate ? formatDate(endDate) : 'Permanente')}
-                          </span>
-                        </div>
-                        {isActive && projection?.montoProyectado && (
-                          <div className="financial-drawer-field">
-                            <span className="financial-drawer-label">Meta Proyectada</span>
-                            <span className="financial-drawer-val">{formatMoney(projection.montoProyectado)}</span>
-                          </div>
-                        )}
-                        {Number(item.monto_pendiente_validacion) > 0 && (
-                          <div className="financial-drawer-field">
-                            <span className="financial-drawer-label">En Validación</span>
-                            <span className="financial-drawer-val" style={{ color: '#d97706' }}>+{formatMoney(item.monto_pendiente_validacion)}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Botones de acción */}
+                    <div className="financial-expanded-drawer financial-savings-drawer">
+                      {/* Acciones Rápidas Prioritarias */}
                       {isActive && (
-                        <div className="financial-drawer-actions">
-                          <Button
-                            className="button-secondary icon-button"
-                            style={{ fontSize: '0.74rem', padding: '6px 12px', minHeight: '32px' }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenAction('kardex', item);
-                            }}
-                            title="Ver historial de movimientos y transacciones"
-                          >
-                            <History size={13} aria-hidden="true" />
-                            Movimientos
-                          </Button>
-                          <Button
-                            className="button-secondary icon-button"
-                            style={{ fontSize: '0.74rem', padding: '6px 12px', minHeight: '32px' }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenAction('fee', item);
-                            }}
-                            title="Actualizar cuota periódica de nómina"
-                          >
-                            <Pencil size={13} aria-hidden="true" />
-                            Cuota
-                          </Button>
+                        <div className="savings-drawer-primary-actions">
                           <Button
                             className="button-primary icon-button btn-action-primary"
                             style={{
-                              fontSize: '0.74rem',
-                              padding: '6px 14px',
-                              minHeight: '32px',
+                              fontSize: '0.78rem',
+                              padding: '7px 14px',
+                              minHeight: '34px',
                               fontWeight: 600,
                               background: '#16a34a',
                               borderColor: '#15803d',
@@ -1536,39 +1771,39 @@ function FinancialRequestList({
                             }}
                             title="Realizar una aportación voluntaria a este ahorro (SPEI)"
                           >
-                            <PlusCircle size={13} aria-hidden="true" />
+                            <PlusCircle size={14} aria-hidden="true" />
                             Aportar
                           </Button>
                           <Button
                             className="button-secondary icon-button"
                             style={{
-                              fontSize: '0.74rem',
-                              padding: '6px 12px',
-                              minHeight: '32px',
-                              opacity: canDebit ? 1 : 0.4,
+                              fontSize: '0.78rem',
+                              padding: '7px 14px',
+                              minHeight: '34px',
+                              opacity: canDebit ? 1 : 0.45,
                               cursor: canDebit ? 'pointer' : 'not-allowed',
                             }}
                             disabled={!canDebit}
                             title={
                               isLockedByTerm
                                 ? `Meta con plazo: disponible al vencer (${formatDate(endDate)})`
-                                : (saldoDisp <= 0 ? 'Sin saldo disponible para transferir' : 'Transferir a otro ahorro')
+                                : (saldoDisp <= 0 ? 'Sin saldo disponible para transferir' : 'Transferir a otro ahorro o deuda')
                             }
                             onClick={(e) => {
                               e.stopPropagation();
                               handleOpenAction('transfer', item);
                             }}
                           >
-                            <ArrowRightLeft size={13} aria-hidden="true" />
+                            <ArrowRightLeft size={14} aria-hidden="true" />
                             Transferir
                           </Button>
                           <Button
                             className="button-secondary icon-button"
                             style={{
-                              fontSize: '0.74rem',
-                              padding: '6px 12px',
-                              minHeight: '32px',
-                              opacity: canDebit ? 1 : 0.4,
+                              fontSize: '0.78rem',
+                              padding: '7px 14px',
+                              minHeight: '34px',
+                              opacity: canDebit ? 1 : 0.45,
                               cursor: canDebit ? 'pointer' : 'not-allowed',
                             }}
                             disabled={!canDebit}
@@ -1582,19 +1817,87 @@ function FinancialRequestList({
                               handleOpenAction('withdraw', item);
                             }}
                           >
-                            <ArrowDownToLine size={13} aria-hidden="true" />
+                            <ArrowDownToLine size={14} aria-hidden="true" />
                             Retirar
                           </Button>
-                          <Button
-                            className="button-secondary icon-button"
-                            style={{
-                              fontSize: '0.74rem',
-                              padding: '6px 12px',
-                              minHeight: '32px',
-                              color: item.esta_pausado ? '#15803d' : '#64748b',
-                              borderColor: item.esta_pausado ? '#86efac' : '#cbd5e1',
-                              background: item.esta_pausado ? '#f0fdf4' : '#ffffff',
+                        </div>
+                      )}
+
+                      {/* Ficha Contextual No-Redundante */}
+                      <div className="savings-drawer-context-strip">
+                        <div className="savings-drawer-context-item">
+                          <span className="savings-drawer-context-label">Apertura</span>
+                          <span className="savings-drawer-context-value">
+                            {formatDate(item.fecha_inicio || item.created_at)}
+                          </span>
+                        </div>
+
+                        {isActive && !projection?.isPermanente && projection?.montoProyectado && (
+                          <div className="savings-drawer-context-item">
+                            <span className="savings-drawer-context-label">Meta Proyectada</span>
+                            <span className="savings-drawer-context-value" style={{ color: 'var(--color-primary)' }}>
+                              {formatMoney(projection.montoProyectado)}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="savings-drawer-context-item">
+                          <span className="savings-drawer-context-label">Disponibilidad</span>
+                          <span className="savings-drawer-context-value">
+                            {item.en_ventana_retiro
+                              ? `Retiro abierto hasta ${formatDate(item.fecha_limite_retiro)}`
+                              : isLockedByTerm
+                                ? `Al vencer (${formatDate(endDate)})`
+                                : 'Inmediata'}
+                          </span>
+                        </div>
+
+                        {Number(item.monto_pendiente_validacion) > 0 && (
+                          <div className="savings-drawer-context-item">
+                            <span className="savings-drawer-context-label">En Validación</span>
+                            <span className="savings-drawer-context-value" style={{ color: '#d97706' }}>
+                              +{formatMoney(item.monto_pendiente_validacion)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Herramientas y Gestión Sutil */}
+                      {isActive && (
+                        <div className="savings-drawer-utils-bar">
+                          <button
+                            type="button"
+                            className="savings-drawer-util-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenAction('kardex', item);
                             }}
+                            title="Ver historial de movimientos y transacciones"
+                          >
+                            <History size={13} aria-hidden="true" />
+                            Movimientos
+                          </button>
+
+                          <span className="savings-drawer-util-sep" aria-hidden="true">•</span>
+
+                          <button
+                            type="button"
+                            className="savings-drawer-util-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenAction('fee', item);
+                            }}
+                            title="Actualizar cuota periódica de nómina"
+                          >
+                            <Pencil size={13} aria-hidden="true" />
+                            Modificar Cuota
+                          </button>
+
+                          <span className="savings-drawer-util-sep" aria-hidden="true">•</span>
+
+                          <button
+                            type="button"
+                            className={`savings-drawer-util-btn ${item.esta_pausado ? 'is-paused' : ''}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleOpenAction(item.esta_pausado ? 'resume' : 'pause', item);
@@ -1602,8 +1905,8 @@ function FinancialRequestList({
                             title={item.esta_pausado ? 'Reanudar aportaciones' : 'Pausar aportaciones temporalmente'}
                           >
                             {item.esta_pausado ? <Play size={12} aria-hidden="true" /> : <Pause size={12} aria-hidden="true" />}
-                            {item.esta_pausado ? 'Reanudar' : 'Pausar'}
-                          </Button>
+                            {item.esta_pausado ? 'Reanudar Plan' : 'Pausar Plan'}
+                          </button>
                         </div>
                       )}
                     </div>
@@ -2581,7 +2884,7 @@ function FinancialRequestList({
                 </div>
                 <h2 style={{ margin: '3px 0 0', fontSize: '1.18rem', color: '#0f172a' }}>
                   {activeAction.type === 'fee' && 'Actualizar Cuota de Nómina'}
-                  {activeAction.type === 'transfer' && 'Transferir entre Ahorros'}
+                  {activeAction.type === 'transfer' && 'Transferir Fondos'}
                   {activeAction.type === 'withdraw' && 'Solicitar Retiro'}
                   {activeAction.type === 'kardex' && 'Historial de Movimientos (Kardex)'}
                   {activeAction.type === 'pause' && 'Pausar Aportaciones de Nómina'}
@@ -2598,13 +2901,83 @@ function FinancialRequestList({
               </Button>
             </header>
 
+            {activeAction.type === 'kardex' && type === 'savings' && (
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '8px',
+                  padding: '8px 24px 0 24px',
+                  borderBottom: '1px solid #e2e8f0',
+                  background: '#f8fafc',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setKardexActiveTab('movements')}
+                  style={{
+                    padding: '8px 14px',
+                    fontSize: '0.82rem',
+                    fontWeight: kardexActiveTab === 'movements' ? 600 : 500,
+                    color: kardexActiveTab === 'movements' ? 'var(--color-primary, #0284c7)' : '#64748b',
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: kardexActiveTab === 'movements' ? '2px solid var(--color-primary, #0284c7)' : '2px solid transparent',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <WalletCards size={15} />
+                  Movimientos de Ahorro
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setKardexActiveTab('withdrawals')}
+                  style={{
+                    padding: '8px 14px',
+                    fontSize: '0.82rem',
+                    fontWeight: kardexActiveTab === 'withdrawals' ? 600 : 500,
+                    color: kardexActiveTab === 'withdrawals' ? 'var(--color-primary, #0284c7)' : '#64748b',
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: kardexActiveTab === 'withdrawals' ? '2px solid var(--color-primary, #0284c7)' : '2px solid transparent',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <Clock size={15} />
+                  Solicitudes de Retiro
+                  {kardexWithdrawalsSummary.pendingCount > 0 && (
+                    <span
+                      style={{
+                        background: '#fef3c7',
+                        color: '#92400e',
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        padding: '1px 6px',
+                        borderRadius: '9999px',
+                        border: '1px solid #fde68a',
+                      }}
+                    >
+                      {kardexWithdrawalsSummary.pendingCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
+
             <div style={{ padding: activeAction.type === 'kardex' ? '20px 24px' : '18px 20px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto' }}>
               {actionError && <Alert type="error">{actionError}</Alert>}
               {actionSuccess && <Alert type="success">{actionSuccess}</Alert>}
 
               {activeAction.type === 'kardex' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {/* Metric Summary Bar */}
+                  {(kardexActiveTab === 'movements' || type !== 'savings') && (
+                    <>
+                      {/* Metric Summary Bar */}
                   <div
                     style={{
                       background: '#f8fafc',
@@ -2954,7 +3327,36 @@ function FinancialRequestList({
                                       </span>
                                     </td>
                                     <td style={{ padding: '8px 12px', borderRight: '1px solid #f1f5f9', color: '#475569', minWidth: '260px' }}>
-                                      {getMovementConcept(mov)}
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                        <span>{getMovementConcept(mov)}</span>
+                                        {mov.status_label && (
+                                          <span
+                                            style={{
+                                              display: 'inline-flex',
+                                              alignItems: 'center',
+                                              gap: '3px',
+                                              padding: '2px 7px',
+                                              borderRadius: '9999px',
+                                              fontSize: '0.67rem',
+                                              fontWeight: 600,
+                                              background: mov.status_tone === 'warning' ? '#fef3c7' : mov.status_tone === 'danger' ? '#fee2e2' : '#dcfce7',
+                                              color: mov.status_tone === 'warning' ? '#92400e' : mov.status_tone === 'danger' ? '#991b1b' : '#166534',
+                                              border: `1px solid ${mov.status_tone === 'warning' ? '#fde68a' : mov.status_tone === 'danger' ? '#fecaca' : '#bbf7d0'}`,
+                                              whiteSpace: 'nowrap',
+                                            }}
+                                          >
+                                            {mov.status_tone === 'warning' && <Clock size={10} />}
+                                            {mov.status_tone === 'success' && <CheckCircle2 size={10} />}
+                                            {mov.status_tone === 'danger' && <AlertCircle size={10} />}
+                                            {mov.status_label}
+                                          </span>
+                                        )}
+                                        {mov.folio && (
+                                          <span style={{ fontSize: '0.67rem', fontFamily: 'monospace', color: '#64748b', fontWeight: 600 }}>
+                                            ({mov.folio})
+                                          </span>
+                                        )}
+                                      </div>
                                     </td>
                                     <td
                                       style={{
@@ -3020,6 +3422,258 @@ function FinancialRequestList({
                       </div>
                     </>
                   )}
+                    </>
+                  )}
+
+                  {kardexActiveTab === 'withdrawals' && type === 'savings' && (
+                    <>
+                      {/* Metric Summary Bar for Withdrawals */}
+                      <div
+                        style={{
+                          background: '#f8fafc',
+                          padding: '10px 14px',
+                          borderRadius: '8px',
+                          fontSize: '0.8rem',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          border: '1px solid #e2e8f0',
+                          flexWrap: 'wrap',
+                          gap: '8px',
+                        }}
+                      >
+                        <div>
+                          <span style={{ color: '#64748b', fontSize: '0.68rem', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>
+                            En proceso (Máx. 48 hrs)
+                          </span>
+                          <strong style={{ color: '#d97706', fontSize: '0.96rem', marginTop: '1px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Clock size={14} />
+                            {formatMoney(kardexWithdrawalsSummary.pendingAmount)}
+                            <span style={{ fontSize: '0.74rem', color: '#92400e', fontWeight: 500 }}>
+                              ({kardexWithdrawalsSummary.pendingCount} {kardexWithdrawalsSummary.pendingCount === 1 ? 'solicitud' : 'solicitudes'})
+                            </span>
+                          </strong>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <span style={{ color: '#64748b', fontSize: '0.68rem', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>
+                            Total Transferido
+                          </span>
+                          <strong style={{ color: '#16a34a', fontSize: '0.96rem', marginTop: '1px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                            <CheckCircle2 size={14} />
+                            {formatMoney(kardexWithdrawalsSummary.transferredAmount)}
+                            <span style={{ fontSize: '0.74rem', color: '#15803d', fontWeight: 500 }}>
+                              ({kardexWithdrawalsSummary.transferredCount})
+                            </span>
+                          </strong>
+                        </div>
+                      </div>
+
+                      {/* Toolbar for Withdrawals */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', flex: '1 1 320px' }}>
+                          <div style={{ position: 'relative', flex: '1 1 180px', maxWidth: '240px' }}>
+                            <Search size={13} style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                            <input
+                              type="text"
+                              value={kardexWithdrawalSearch}
+                              onChange={(e) => setKardexWithdrawalSearch(e.target.value)}
+                              placeholder="Buscar folio, fecha, plan..."
+                              style={{
+                                width: '100%',
+                                padding: '5px 8px 5px 28px',
+                                fontSize: '0.75rem',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '6px',
+                                outline: 'none',
+                                background: '#ffffff',
+                              }}
+                            />
+                          </div>
+
+                          {/* Filter Pills */}
+                          <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '2px', borderRadius: '6px', gap: '2px' }}>
+                            {[
+                              { id: 'ALL', label: 'Todas' },
+                              { id: 'PENDING', label: 'En proceso' },
+                              { id: 'APPROVED', label: 'Transferidas' },
+                              { id: 'REJECTED', label: 'Rechazadas' },
+                            ].map((pill) => (
+                              <button
+                                key={pill.id}
+                                type="button"
+                                onClick={() => setKardexWithdrawalFilter(pill.id)}
+                                style={{
+                                  background: kardexWithdrawalFilter === pill.id ? '#ffffff' : 'transparent',
+                                  color: kardexWithdrawalFilter === pill.id ? '#0f172a' : '#64748b',
+                                  boxShadow: kardexWithdrawalFilter === pill.id ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  padding: '3px 8px',
+                                  fontSize: '0.72rem',
+                                  fontWeight: kardexWithdrawalFilter === pill.id ? 600 : 500,
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                {pill.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setIsKardexWithdrawalsLoading(true);
+                            try {
+                              const res = await getClienteSolicitudesRetiro();
+                              setKardexWithdrawals(Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []));
+                            } catch (e) {
+                              console.error('Error refreshing client withdrawals:', e);
+                            } finally {
+                              setIsKardexWithdrawalsLoading(false);
+                            }
+                          }}
+                          disabled={isKardexWithdrawalsLoading}
+                          title="Actualizar solicitudes"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            background: 'transparent',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '6px',
+                            padding: '4px 8px',
+                            fontSize: '0.72rem',
+                            color: '#64748b',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <RefreshCw size={12} className={isKardexWithdrawalsLoading ? 'animate-spin' : ''} />
+                          Actualizar
+                        </button>
+                      </div>
+
+                      {/* Table / List */}
+                      {isKardexWithdrawalsLoading ? (
+                        <div style={{ textAlign: 'center', padding: '36px 20px', color: '#64748b', fontSize: '0.84rem' }}>
+                          Cargando solicitudes de retiro...
+                        </div>
+                      ) : processedKardexWithdrawals.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '36px 20px', color: '#64748b', fontSize: '0.84rem', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                          No se encontraron solicitudes de retiro con los filtros seleccionados.
+                        </div>
+                      ) : (
+                        <>
+                          <div style={{ maxHeight: '340px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem', textAlign: 'left' }}>
+                              <thead style={{ background: '#f8fafc', position: 'sticky', top: 0, zIndex: 1, borderBottom: '1px solid #e2e8f0' }}>
+                                <tr>
+                                  <th style={{ padding: '8px 10px', color: '#475569', fontWeight: 600 }}>Folio</th>
+                                  <th style={{ padding: '8px 10px', color: '#475569', fontWeight: 600 }}>Fecha Solicitud</th>
+                                  <th style={{ padding: '8px 10px', color: '#475569', fontWeight: 600 }}>Plan / Origen</th>
+                                  <th style={{ padding: '8px 10px', color: '#475569', fontWeight: 600, textAlign: 'right' }}>Monto</th>
+                                  <th style={{ padding: '8px 10px', color: '#475569', fontWeight: 600, textAlign: 'center' }}>Estatus</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {processedKardexWithdrawals.map((w, idx) => {
+                                  const isPending = Number(w.status ?? 0) === 0 || w.status_label?.includes('proceso');
+                                  const isApproved = [1, 3, 4].includes(Number(w.status ?? 0)) || w.status_label === 'Transferido';
+                                  const isRejected = [2, 5].includes(Number(w.status ?? 0)) || w.status_label === 'Rechazado';
+
+                                  const badgeBg = isPending ? '#fef3c7' : (isApproved ? '#dcfce7' : '#fee2e2');
+                                  const badgeColor = isPending ? '#92400e' : (isApproved ? '#166534' : '#991b1b');
+                                  const badgeBorder = isPending ? '#fde68a' : (isApproved ? '#bbf7d0' : '#fecaca');
+
+                                  return (
+                                    <tr
+                                      key={w.id || idx}
+                                      style={{
+                                        borderBottom: idx === processedKardexWithdrawals.length - 1 ? 'none' : '1px solid #f1f5f9',
+                                        background: idx % 2 === 0 ? '#ffffff' : '#fafafa',
+                                      }}
+                                    >
+                                      <td style={{ padding: '8px 10px', fontFamily: 'monospace', fontWeight: 700, color: '#0f172a' }}>
+                                        {w.folio || `RET-AHO-${w.id}`}
+                                      </td>
+                                      <td style={{ padding: '8px 10px', color: '#475569', whiteSpace: 'nowrap' }}>
+                                        {formatMovementDate(w.fecha_solicitud)}
+                                      </td>
+                                      <td style={{ padding: '8px 10px', color: '#334155' }}>
+                                        <div style={{ fontWeight: 500 }}>{w.origen_cuenta || w.ahorro_nombre || 'Ahorro'}</div>
+                                        {w.banco_destino && (
+                                          <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                                            {w.banco_destino} {w.cuenta_destino ? `• ${w.cuenta_destino.slice(-4)}` : ''}
+                                          </div>
+                                        )}
+                                      </td>
+                                      <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 600, color: '#dc2626' }}>
+                                        {formatMoney(w.cantidad)}
+                                      </td>
+                                      <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                                        <span
+                                          style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            padding: '2px 8px',
+                                            borderRadius: '9999px',
+                                            fontSize: '0.7rem',
+                                            fontWeight: 600,
+                                            background: badgeBg,
+                                            color: badgeColor,
+                                            border: `1px solid ${badgeBorder}`,
+                                            whiteSpace: 'nowrap',
+                                          }}
+                                        >
+                                          {isPending && <Clock size={11} />}
+                                          {isApproved && <CheckCircle2 size={11} />}
+                                          {isRejected && <AlertCircle size={11} />}
+                                          {w.status_label || (isPending ? 'En proceso (Máx. 48 hrs)' : (isApproved ? 'Transferido' : 'Rechazado'))}
+                                        </span>
+                                        {isRejected && w.motivo_rechazo && (
+                                          <div style={{ fontSize: '0.68rem', color: '#dc2626', marginTop: '2px' }}>
+                                            {w.motivo_rechazo}
+                                          </div>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* Footer for Withdrawals */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              fontSize: '0.74rem',
+                              color: '#475569',
+                              padding: '8px 14px',
+                              background: '#f8fafc',
+                              borderRadius: '8px',
+                              border: '1px solid #e2e8f0',
+                              flexWrap: 'wrap',
+                              gap: '10px',
+                              marginTop: '4px',
+                            }}
+                          >
+                            <span>
+                              Mostrando <strong>{processedKardexWithdrawals.length}</strong> de <strong>{kardexWithdrawals.length}</strong> solicitudes
+                            </span>
+                            <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                Total en solicitudes: <strong style={{ color: '#0f172a', fontSize: '0.84rem' }}>{formatMoney(processedKardexWithdrawals.reduce((sum, w) => sum + Number(w.cantidad ?? 0), 0))}</strong>
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2px' }}>
                     <Button type="button" className="button-secondary" style={{ fontSize: '0.76rem', padding: '5px 14px' }} onClick={handleCloseAction}>
@@ -3080,67 +3734,180 @@ function FinancialRequestList({
 
               {activeAction.type === 'transfer' && (
                 <form onSubmit={handleSubmitAction} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ background: '#f1f5f9', padding: '12px 14px', borderRadius: '8px', fontSize: '0.88rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#64748b' }}>Saldo disponible para transferir:</span>
-                      <strong style={{ color: '#16a34a' }}>{formatMoney(activeAction.item.saldo_disponible)}</strong>
+                  {/* Selector de Destino Agrupado */}
+                  <div className="form-field" style={{ margin: 0 }}>
+                    <label className="form-label" htmlFor="transfer-destination-select">
+                      Destino
+                    </label>
+                    <select
+                      id="transfer-destination-select"
+                      className="input"
+                      value={selectedDestinationKey}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedDestinationKey(val);
+                        const [type, id] = val ? val.split(':') : ['', ''];
+                        if (type === 'loan') {
+                          const l = activeDebts.find((deb) => String(deb.id) === String(id));
+                          if (l) {
+                            const targetCuota = Number(l.monto_cuota || l.cuota || 0);
+                            const suggest = targetCuota > 0 && targetCuota <= activeAction.item.saldo_disponible
+                              ? targetCuota
+                              : Math.min(Number(l.saldo_restante), activeAction.item.saldo_disponible);
+                            setActionAmount(String(suggest));
+                          }
+                        }
+                      }}
+                      required
+                      style={{ width: '100%', height: '42px', background: '#fff', borderRadius: '8px', fontSize: '0.86rem' }}
+                    >
+                      <option value="">Selecciona el destino...</option>
+
+                      {destinationOptions.length > 0 && (
+                        <optgroup label="── Tus Ahorros Activos ──">
+                          {destinationOptions.map((opt) => (
+                            <option key={`saving:${opt.id}`} value={`saving:${opt.id}`}>
+                              {getTitle(opt, `Ahorro #${opt.id}`)} (Capital: {formatMoney(opt.monto_ahorro)})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+
+                      {availableNewPlans.length > 0 && (
+                        <optgroup label="── Activar Nuevo Plan de Ahorro ──">
+                          {availableNewPlans.map((pl) => (
+                            <option key={`new_plan:${pl.id}`} value={`new_plan:${pl.id}`}>
+                              + {pl.nombre} ({pl.tasa_vigente || 0}% anual • Mín. {formatMoney(pl.monto_minimo)})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+
+                      {activeDebts.length > 0 && (
+                        <optgroup label="── Abonar a Deuda Activa ──">
+                          {activeDebts.map((deb) => (
+                            <option key={`loan:${deb.id}`} value={`loan:${deb.id}`}>
+                              Préstamo #{deb.id} - {deb.plan?.nombre || deb.nombre || 'Personal'} (Adeudo: {formatMoney(deb.saldo_restante)})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
+                  </div>
+
+                  {/* Campo condicional para Meta Libre con fecha personalizada */}
+                  {destType === 'new_plan' && Boolean(Number(selectedPlanDetails?.permite_fecha_personalizada) === 1) && (
+                    <div className="form-field" style={{ margin: 0 }}>
+                      <label className="form-label" htmlFor="transfer-custom-date">
+                        Fecha objetivo de tu meta *
+                      </label>
+                      <input
+                        id="transfer-custom-date"
+                        type="date"
+                        required
+                        value={actionPlanFechaFin}
+                        onChange={(e) => setActionPlanFechaFin(e.target.value)}
+                        style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', fontWeight: 600 }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Monto Hero Protagonista */}
+                  <div className="form-field" style={{ margin: 0 }}>
+                    <label className="form-label" htmlFor="action-transfer-amount">
+                      {destType === 'loan' ? 'Monto a abonar' : (destType === 'new_plan' ? 'Capital de apertura' : 'Monto a transferir')}
+                    </label>
+                    <div className="hero-amount-field" style={{ margin: 0 }}>
+                      <div className="hero-amount-box">
+                        <span className="hero-amount-currency">$</span>
+                        <input
+                          id="action-transfer-amount"
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          min="1"
+                          max={
+                            destType === 'loan' && selectedLoanDetails
+                              ? Math.min(activeAction.item.saldo_disponible, Number(selectedLoanDetails.saldo_restante))
+                              : activeAction.item.saldo_disponible
+                          }
+                          placeholder="0.00"
+                          value={actionAmount}
+                          onChange={(e) => setActionAmount(e.target.value)}
+                          className="hero-amount-input"
+                          autoFocus
+                          required
+                        />
+                        <span className="hero-amount-suffix">MXN</span>
+                      </div>
+                      <div className="hero-amount-badge-row" style={{ marginTop: '6px' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                          Disponible: <strong style={{ color: '#16a34a' }}>{formatMoney(activeAction.item.saldo_disponible)}</strong>
+                        </span>
+                        <div style={{ display: 'inline-flex', gap: '5px' }}>
+                          {destType === 'loan' && selectedLoanDetails && Number(selectedLoanDetails.monto_cuota || selectedLoanDetails.cuota || 0) > 0 && Number(selectedLoanDetails.monto_cuota || selectedLoanDetails.cuota) <= activeAction.item.saldo_disponible && (
+                            <button
+                              type="button"
+                              onClick={() => setActionAmount(String(selectedLoanDetails.monto_cuota || selectedLoanDetails.cuota))}
+                              style={{
+                                border: '1px solid #cbd5e1',
+                                background: '#ffffff',
+                                borderRadius: '4px',
+                                padding: '2px 8px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                color: '#334155',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              1 Cuota ({formatMoney(selectedLoanDetails.monto_cuota || selectedLoanDetails.cuota)})
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const maxVal = destType === 'loan' && selectedLoanDetails
+                                ? Math.min(activeAction.item.saldo_disponible, Number(selectedLoanDetails.saldo_restante))
+                                : activeAction.item.saldo_disponible;
+                              setActionAmount(String(maxVal));
+                            }}
+                            style={{
+                              border: '1px solid #cbd5e1',
+                              background: '#ffffff',
+                              borderRadius: '4px',
+                              padding: '2px 8px',
+                              fontSize: '0.7rem',
+                              fontWeight: 600,
+                              color: 'var(--color-primary, #0284c7)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {destType === 'loan' && selectedLoanDetails && Number(selectedLoanDetails.saldo_restante) <= activeAction.item.saldo_disponible ? 'Liquidar Todo' : 'Todo'}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {destinationOptions.length === 0 ? (
-                    <div style={{ padding: '12px', background: '#fef3c7', color: '#92400e', borderRadius: '8px', fontSize: '0.88rem' }}>
-                      No tienes otros ahorros activos a los cuales transferir fondos. Abre un segundo plan para mover dinero entre metas.
-                    </div>
-                  ) : (
-                    <>
-                      <div className="form-field">
-                        <label className="form-label" htmlFor="action-destino">
-                          Ahorro de destino
-                        </label>
-                        <select
-                          id="action-destino"
-                          className="input"
-                          value={actionDestinoId}
-                          onChange={(e) => setActionDestinoId(e.target.value)}
-                          required
-                          style={{ width: '100%', height: '42px', background: '#fff' }}
-                        >
-                          <option value="">Selecciona el plan destino...</option>
-                          {destinationOptions.map((opt) => (
-                            <option key={opt.id} value={opt.id}>
-                              {getTitle(opt, `Ahorro #${opt.id}`)} (Capital actual: {formatMoney(opt.monto_ahorro)})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <Input
-                        id="action-transfer-amount"
-                        label="Monto a transferir"
-                        type="number"
-                        step="0.01"
-                        min="1"
-                        max={activeAction.item.saldo_disponible}
-                        value={actionAmount}
-                        onChange={(e) => setActionAmount(e.target.value)}
-                        placeholder={`Máximo ${formatMoney(activeAction.item.saldo_disponible)}`}
-                        required
-                      />
-
-                      <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0, lineHeight: 1.4 }}>
-                        * El dinero saldrá de tu Saldo Disponible en este ahorro y se sumará al capital de tu meta seleccionada (caja bloqueada).
-                      </p>
-
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
-                        <Button type="button" className="button-secondary" onClick={handleCloseAction} disabled={isSubmittingAction}>
-                          Cancelar
-                        </Button>
-                        <Button type="submit" disabled={isSubmittingAction || !actionDestinoId}>
-                          {isSubmittingAction ? 'Transfiriendo...' : 'Confirmar Transferencia'}
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                  {/* Acciones */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
+                    <Button type="button" className="button-secondary" onClick={handleCloseAction} disabled={isSubmittingAction}>
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={
+                        isSubmittingAction ||
+                        !selectedDestinationKey ||
+                        !actionAmount ||
+                        Number(actionAmount) <= 0
+                      }
+                    >
+                      {isSubmittingAction
+                        ? 'Procesando...'
+                        : (destType === 'loan' ? 'Abonar a Deuda' : (destType === 'new_plan' ? 'Activar Plan' : 'Transferir'))}
+                    </Button>
+                  </div>
                 </form>
               )}
 
@@ -3375,6 +4142,13 @@ function FinancialRequestList({
           }}
         />
       )}
+
+      <SuccessAlertModal
+        isOpen={withdrawalAlert.isOpen}
+        onClose={() => setWithdrawalAlert((prev) => ({ ...prev, isOpen: false }))}
+        title={withdrawalAlert.title}
+        message={withdrawalAlert.message}
+      />
     </section>
   );
 }

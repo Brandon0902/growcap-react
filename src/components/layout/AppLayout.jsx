@@ -4,6 +4,7 @@ import { gsap, useGSAP } from '../../animations/gsapSetup.js';
 import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';
 import MobileNav from './MobileNav.jsx';
+import GrowCapAssistantWidget from '../common/GrowCapAssistantWidget.jsx';
 
 function AppLayout() {
   const shellRef = useRef(null);
@@ -43,6 +44,7 @@ function AppLayout() {
         </main>
       </div>
       <MobileNav />
+      <GrowCapAssistantWidget />
     </div>
   );
 }

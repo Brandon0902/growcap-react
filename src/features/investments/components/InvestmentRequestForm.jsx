@@ -8,7 +8,6 @@ import {
 import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import GuidedRequestModal from '../../../components/common/GuidedRequestModal.jsx';
-import Input from '../../../components/common/Input.jsx';
 import WizardStep from '../../../components/common/WizardStep.jsx';
 import { getClienteSaldoDisponible } from '../../dashboard/services/dashboardService.js';
 import DepositModal from '../../deposits/components/DepositModal.jsx';
@@ -348,19 +347,17 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
     if (currentStep === 0) {
       return (
         <WizardStep
-          description="Elige una opcion disponible. Despues te pediremos el monto."
-          question="Que plan quieres elegir?"
+          description="Selecciona el plan de inversión que deseas contratar."
+          question="Selecciona tu plan"
         >
-          <div className="form-field">
-            <label className="form-label" htmlFor="investment-plan">
-              Plan elegido
-            </label>
+          <div className="form-field" style={{ marginBottom: '10px' }}>
             <select
               className="input"
               id="investment-plan"
               name="id_activo"
               onChange={handleChange}
               value={values.id_activo}
+              style={{ fontSize: '0.96rem', fontWeight: 600, padding: '10px 14px' }}
             >
               <option value="">Selecciona un plan</option>
               {plans.map((plan, index) => {
@@ -398,72 +395,85 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
 
       return (
         <WizardStep
-          description="Ajusta la cantidad a invertir con el teclado o deslizando la barra."
-          question="¿Cuánto quieres invertir?"
+          description="Define el capital a invertir con el teclado o deslizando la barra."
+          question="¿Cuánto deseas invertir?"
         >
-          <Input
-            error={firstFieldError(fieldErrors, 'cantidad') || firstFieldError(fieldErrors, 'monto')}
-            id="investment-amount"
-            label="Monto a invertir"
-            min={minAmount ?? 1}
-            max={maxAmount ?? undefined}
-            name="cantidad"
-            onChange={handleChange}
-            step="100"
-            type="number"
-            value={values.cantidad}
-          />
+          <div className="hero-amount-field">
+            <div className={`hero-amount-box ${firstFieldError(fieldErrors, 'cantidad') || firstFieldError(fieldErrors, 'monto') ? 'has-error' : ''}`}>
+              <span className="hero-amount-currency" aria-hidden="true">$</span>
+              <input
+                autoFocus
+                className="hero-amount-input"
+                id="investment-amount"
+                inputMode="decimal"
+                max={maxAmount ?? undefined}
+                min={minAmount ?? 1}
+                name="cantidad"
+                onChange={handleChange}
+                placeholder="0.00"
+                step="100"
+                type="number"
+                value={values.cantidad}
+              />
+              <span className="hero-amount-suffix" aria-hidden="true">MXN</span>
+            </div>
+            {(firstFieldError(fieldErrors, 'cantidad') || firstFieldError(fieldErrors, 'monto')) && (
+              <p className="form-error" style={{ margin: '2px 0 0' }}>
+                {firstFieldError(fieldErrors, 'cantidad') || firstFieldError(fieldErrors, 'monto')}
+              </p>
+            )}
 
-          <div style={{ marginTop: '14px', marginBottom: '8px' }}>
-            <input
-              type="range"
-              min={sliderMin}
-              max={sliderMax}
-              step={sliderStep}
-              value={Math.min(sliderMax, Math.max(sliderMin, currentAmountNum))}
-              onChange={(e) => {
-                setValues((curr) => ({ ...curr, cantidad: e.target.value }));
-                setFieldErrors((curr) => ({ ...curr, cantidad: undefined, monto: undefined }));
-                setError('');
-              }}
-              style={{
-                width: '100%',
-                accentColor: 'var(--color-primary, #9333ea)',
-                cursor: 'pointer',
-                height: '6px',
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
-              <span>Mín. {formatMoney(sliderMin)}</span>
-              <span>Máx. {formatMoney(sliderMax)}</span>
+            <div style={{ marginTop: '8px', marginBottom: '4px' }}>
+              <input
+                type="range"
+                min={sliderMin}
+                max={sliderMax}
+                step={sliderStep}
+                value={Math.min(sliderMax, Math.max(sliderMin, currentAmountNum))}
+                onChange={(e) => {
+                  setValues((curr) => ({ ...curr, cantidad: e.target.value }));
+                  setFieldErrors((curr) => ({ ...curr, cantidad: undefined, monto: undefined }));
+                  setError('');
+                }}
+                style={{
+                  width: '100%',
+                  accentColor: 'var(--color-primary, #9333ea)',
+                  cursor: 'pointer',
+                  height: '6px',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: '#64748b', marginTop: '2px' }}>
+                <span>Mín. {formatMoney(sliderMin)}</span>
+                <span>Máx. {formatMoney(sliderMax)}</span>
+              </div>
             </div>
           </div>
 
           <div
             style={{
-              marginTop: '16px',
+              marginTop: '10px',
               padding: '12px 14px',
               background: '#f8fafc',
               border: '1px solid #e2e8f0',
               borderRadius: '10px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '8px',
+              gap: '6px',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
-                Tu ganancia estimada ({formatPercent(planYield)} anual)
+                Ganancia estimada ({formatPercent(planYield)} anual):
               </span>
-              <strong style={{ fontSize: '0.92rem', color: '#166534', fontWeight: 600 }}>
+              <strong style={{ fontSize: '0.94rem', color: '#166534', fontWeight: 600 }}>
                 +{formatMoney(projections.gain)} MXN
               </strong>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid #e2e8f0' }}>
               <span style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 600 }}>
-                Total a recibir al término
+                Total al vencimiento ({projections.endDate || 'Plazo final'}):
               </span>
-              <strong style={{ fontSize: '1.12rem', color: 'var(--color-primary-dark, #581c87)', fontWeight: 700 }}>
+              <strong style={{ fontSize: '1.15rem', color: 'var(--color-primary-dark, #581c87)', fontWeight: 700 }}>
                 {formatMoney(projections.total)} MXN
               </strong>
             </div>

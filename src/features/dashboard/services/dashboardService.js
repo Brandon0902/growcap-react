@@ -33,3 +33,12 @@ export async function solicitarRetiroSaldoGeneral({ monto, nip, origen_tipo, ori
   };
 }
 
+export async function getClienteSolicitudesRetiro() {
+  const { data } = await axiosClient.get(ENDPOINTS.client.withdrawals);
+
+  return {
+    data,
+    endpoint: ENDPOINTS.client.withdrawals,
+  };
+}
+

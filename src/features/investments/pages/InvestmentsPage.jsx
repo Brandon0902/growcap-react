@@ -1,5 +1,5 @@
 import { AlertCircle, ChartNoAxesColumnIncreasing, ChevronUp, Eye, History, RefreshCw } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { normalizeApiError } from '../../../api/apiUtils.js';
 import Alert from '../../../components/common/Alert.jsx';
@@ -7,6 +7,7 @@ import Button from '../../../components/common/Button.jsx';
 import FinancialRequestList from '../../../components/common/FinancialRequestList.jsx';
 import PageHero from '../../../components/common/PageHero.jsx';
 import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
+import { formatCurrency } from '../../../utils/formatCurrency.js';
 import InvestmentPlanCard from '../components/InvestmentPlanCard.jsx';
 import InvestmentRequestForm from '../components/InvestmentRequestForm.jsx';
 import { parseStripeReturn } from '../../payments/services/stripeReturn.js';
@@ -50,7 +51,8 @@ function InvestmentsPage() {
   const [activeTab, setActiveTab] = useState(() => {
     const viewParam = searchParams.get('view');
     const tabParam = searchParams.get('tab');
-    return viewParam === 'my-records' || tabParam === 'records' ? 'records' : 'plans';
+    if (viewParam === 'plans' || tabParam === 'plans') return 'plans';
+    return 'records';
   });
 
   useGrowcapPageMotion(pageRef);
@@ -66,7 +68,11 @@ function InvestmentsPage() {
       ]);
 
       setPlans(plansResponse.data);
-      setInvestments(investmentsResponse.data);
+      const invs = investmentsResponse.data || [];
+      setInvestments(invs);
+      if (invs.length === 0 && !searchParams.get('tab') && !searchParams.get('view')) {
+        setActiveTab('plans');
+      }
     } catch (requestError) {
       const normalized = normalizeApiError(requestError, 'No fue posible cargar inversiones y planes.');
       setError(normalized.message);
@@ -75,7 +81,7 @@ function InvestmentsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     loadInvestmentsData();
@@ -142,6 +148,47 @@ function InvestmentsPage() {
     handleStripeReturn();
   }, [loadInvestmentsData, searchParams, setSearchParams]);
 
+  const investmentMetrics = useMemo(() => {
+    let totalSaldoVivo = 0;
+    let totalRendimientos = 0;
+    let activeCount = 0;
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayMs = new Date(todayStr).getTime();
+
+    for (const item of investments) {
+      const cap = Number(item.cantidad || item.inversion || item.monto || 0);
+      const rend = Number(item.rendimiento_generado_hoy ?? item.rendimiento_generado ?? item.interes_acumulado ?? 0);
+      const saldoDisp = Number(item.saldo_disponible ?? 0);
+      const saldo = Number(item.capital_actual_hoy ?? item.capital_actual ?? (cap + rend));
+      const statusRaw = item.estado ?? item.estatus ?? item.status ?? item.activo;
+      const statusNum = Number(statusRaw ?? 0);
+
+      const endDate = item.fecha_fin;
+      let diasRestantes = null;
+      if (endDate) {
+        const endMs = new Date(String(endDate).slice(0, 10)).getTime();
+        diasRestantes = Math.ceil((endMs - todayMs) / 86400000);
+      }
+
+      const isInGrace = Boolean(item.en_ventana_retiro) || saldoDisp > 0;
+      const isOngoingActive = (statusNum === 1 || statusNum === 2) && item.payment_status !== 'pending' && Boolean(item.fecha_inicio) && (diasRestantes === null || diasRestantes >= 0);
+      const isInGraceActive = (statusNum === 1 || statusNum === 2 || isInGrace) && saldoDisp > 0;
+
+      if (isOngoingActive) {
+        activeCount += 1;
+        totalSaldoVivo += saldo;
+        totalRendimientos += rend;
+      } else if (isInGraceActive) {
+        activeCount += 1;
+        totalSaldoVivo += saldoDisp;
+        totalRendimientos += rend;
+      }
+    }
+
+    return { totalSaldoVivo, totalRendimientos, activeCount };
+  }, [investments]);
+
   const requestFormRef = useRef(null);
 
   const handlePlanClick = (plan) => {
@@ -154,68 +201,47 @@ function InvestmentsPage() {
   return (
     <div className="page investments-page motion-page" ref={pageRef}>
       <PageHero
-        eyebrow="Inversión"
+        eyebrow="● Inversión y Rendimientos"
         icon={ChartNoAxesColumnIncreasing}
-        stats={[
-          { label: 'Planes disponibles', value: isLoading ? '...' : String(plans.length) },
-          { label: 'Mis inversiones', value: isLoading ? '...' : String(investments.length) },
-        ]}
-        title="Compara planes antes de invertir"
-        actions={
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-            {activeTab === 'plans' ? (
-              <Button
-                type="button"
-                className="button-secondary"
-                onClick={() => {
-                  setActiveTab('records');
-                  setSearchParams({ tab: 'records' });
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  fontWeight: 600,
-                  fontSize: '0.86rem',
-                }}
-              >
-                <Eye size={17} style={{ color: '#6b21a8' }} />
-                <span>Mis inversiones activas ({investments.length})</span>
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                className="button-secondary"
-                onClick={() => {
-                  setActiveTab('plans');
-                  setSearchParams({ tab: 'plans' });
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  fontWeight: 600,
-                  fontSize: '0.86rem',
-                }}
-              >
-                <ChartNoAxesColumnIncreasing size={17} style={{ color: '#6b21a8' }} />
-                <span>Ver planes disponibles</span>
-              </Button>
-            )}
-          </div>
+        stats={
+          investmentMetrics.activeCount > 0 ? [
+            { label: 'Valor Portafolio', value: isLoading ? '...' : formatCurrency(investmentMetrics.totalSaldoVivo) },
+            { label: 'Ganancia Generada', value: isLoading ? '...' : `+${formatCurrency(investmentMetrics.totalRendimientos)}` },
+          ] : [
+            { label: 'Portafolio Activo', value: '$0.00' },
+            { label: 'Planes Disponibles', value: isLoading ? '...' : String(plans.length) },
+          ]
         }
+        title="Crece tu patrimonio con planes de inversión"
       >
-        Planes de inversión diseñados para tu crecimiento financiero.
+        Rendimientos garantizados con tasas fijas y seguimiento en tiempo real de tus pólizas.
       </PageHero>
 
-      {checkoutNotice.message && <Alert type={checkoutNotice.type}>{checkoutNotice.message}</Alert>}
+      {checkoutNotice.message && (
+        <div style={{ marginBottom: '16px' }}>
+          <Alert type={checkoutNotice.type}>{checkoutNotice.message}</Alert>
+        </div>
+      )}
 
       {/* Segmented Top Navigation */}
       <div className="module-nav-tabs" role="tablist" aria-label="Secciones de Inversión">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'records'}
+          className={`module-nav-btn ${activeTab === 'records' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('records');
+            setSearchParams({ tab: 'records' });
+          }}
+        >
+          <Eye size={16} />
+          <span>Mis inversiones</span>
+          <span className={`module-nav-badge ${activeTab === 'records' ? 'active' : 'inactive'}`}>
+            {investments.length}
+          </span>
+        </button>
+
         <button
           type="button"
           role="tab"
@@ -232,81 +258,22 @@ function InvestmentsPage() {
             {plans.length}
           </span>
         </button>
-
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'records'}
-          className={`module-nav-btn ${activeTab === 'records' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('records');
-            setSearchParams({ tab: 'records' });
-          }}
-        >
-          <Eye size={16} />
-          <span>Mis inversiones activas</span>
-          <span className={`module-nav-badge ${activeTab === 'records' ? 'active' : 'inactive'}`}>
-            {investments.length}
-          </span>
-        </button>
       </div>
 
       {activeTab === 'records' && (
         <section className="section-block records-main-section motion-immediate" ref={recordsRef}>
-          <div
-            style={{
-              background: 'var(--color-surface)',
-              border: '1px solid #E9D5FF',
-              borderRadius: 'var(--radius)',
-              boxShadow: '0 16px 38px rgba(17, 24, 39, 0.06)',
-              padding: 'clamp(16px, 2.5vw, 24px)',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '16px',
-                flexWrap: 'wrap',
-                gap: '8px',
-              }}
-            >
-              <div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Registros del cliente
-                </span>
-                <h2 style={{ fontSize: '1.4rem', color: 'var(--purple-950)', margin: '2px 0 0' }}>Mis inversiones</h2>
-                <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '3px 0 0' }}>
-                  Monitorea el capital invertido, rendimientos acumulados, plazos de maduración y movimientos.
-                </p>
-              </div>
-              <Button
-                className="button-secondary icon-button"
-                style={{ fontSize: '0.78rem', padding: '6px 14px', minHeight: '34px' }}
-                onClick={() => {
-                  setActiveTab('plans');
-                  setSearchParams({ tab: 'plans' });
-                }}
-              >
-                <ChartNoAxesColumnIncreasing size={16} aria-hidden="true" />
-                Explorar nuevos planes
-              </Button>
-            </div>
-
-            <FinancialRequestList
-              emptyDescription="Cuando completes una solicitud, aparecerá aquí."
-              emptyTitle="Aún no tienes inversiones registradas."
-              error={error}
-              isLoading={isLoading}
-              items={investments}
-              plans={plans}
-              onRefresh={loadInvestmentsData}
-              searchable
-              title="Historial de inversiones"
-              type="investments"
-            />
-          </div>
+          <FinancialRequestList
+            emptyDescription="Cuando completes una solicitud, aparecerá aquí."
+            emptyTitle="Aún no tienes inversiones registradas."
+            error={error}
+            isLoading={isLoading}
+            items={investments}
+            plans={plans}
+            onRefresh={loadInvestmentsData}
+            searchable
+            title=""
+            type="investments"
+          />
         </section>
       )}
 

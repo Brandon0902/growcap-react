@@ -1,7 +1,11 @@
 import {
+  AlertCircle,
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
+  Building2,
+  CheckCircle2,
+  Clock,
   FileText,
   RefreshCw,
   Search,
@@ -13,7 +17,10 @@ import { createPortal } from 'react-dom';
 import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import { normalizeApiError } from '../../../api/apiUtils.js';
-import { getClienteMovimientosSaldo } from '../services/dashboardService.js';
+import {
+  getClienteMovimientosSaldo,
+  getClienteSolicitudesRetiro,
+} from '../services/dashboardService.js';
 
 function formatMoney(amount) {
   const num = Number(amount ?? 0);
@@ -52,28 +59,43 @@ export default function GeneralKardexModal({
   isOpen,
   onClose,
   availableBalance = 0,
+  initialTab = 'movements',
 }) {
   const modalId = useId();
 
+  // Pestaña activa: 'movements' | 'withdrawals'
+  const [activeTab, setActiveTab] = useState(initialTab || 'movements');
+
+  // Estados para Movimientos (Kardex)
   const [movements, setMovements] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Filtros y ordenamiento (Estándar Inversiones)
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('ALL');
   const [sortField, setSortField] = useState('fecha');
   const [sortDirection, setSortDirection] = useState('desc');
 
+  // Estados para Solicitudes de Retiro
+  const [withdrawals, setWithdrawals] = useState([]);
+  const [isLoadingWithdrawals, setIsLoadingWithdrawals] = useState(false);
+  const [withdrawalsError, setWithdrawalsError] = useState('');
+  const [withdrawalSearch, setWithdrawalSearch] = useState('');
+  const [withdrawalFilter, setWithdrawalFilter] = useState('ALL');
+
   useEffect(() => {
     if (isOpen) {
+      setActiveTab(initialTab || 'movements');
       setSearch('');
       setFilterType('ALL');
       setSortField('fecha');
       setSortDirection('desc');
+      setWithdrawalSearch('');
+      setWithdrawalFilter('ALL');
       loadMovements();
+      loadWithdrawals();
     }
-  }, [isOpen]);
+  }, [isOpen, initialTab]);
 
   const loadMovements = async () => {
     setIsLoading(true);
@@ -86,6 +108,20 @@ export default function GeneralKardexModal({
       setError(normalized.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadWithdrawals = async () => {
+    setIsLoadingWithdrawals(true);
+    setWithdrawalsError('');
+    try {
+      const res = await getClienteSolicitudesRetiro();
+      setWithdrawals(res?.data?.data || []);
+    } catch (err) {
+      const normalized = normalizeApiError(err, 'No fue posible cargar las solicitudes de retiro.');
+      setWithdrawalsError(normalized.message);
+    } finally {
+      setIsLoadingWithdrawals(false);
     }
   };
 
@@ -184,6 +220,55 @@ export default function GeneralKardexModal({
     };
   }, [processedMovements]);
 
+  // Procesamiento de Solicitudes de Retiro
+  const processedWithdrawals = useMemo(() => {
+    let list = [...withdrawals];
+
+    if (withdrawalSearch.trim()) {
+      const q = withdrawalSearch.toLowerCase().trim();
+      list = list.filter((w) => {
+        const folioStr = String(w.folio || '').toLowerCase();
+        const origenStr = String(w.origen_cuenta || '').toLowerCase();
+        const statusStr = String(w.status_label || '').toLowerCase();
+        const dateStr = formatMovementDate(w.fecha_solicitud).toLowerCase();
+        const amountStr = String(w.cantidad ?? '');
+        return (
+          folioStr.includes(q) ||
+          origenStr.includes(q) ||
+          statusStr.includes(q) ||
+          dateStr.includes(q) ||
+          amountStr.includes(q)
+        );
+      });
+    }
+
+    if (withdrawalFilter !== 'ALL') {
+      list = list.filter((w) => {
+        const statusNum = Number(w.status ?? 0);
+        if (withdrawalFilter === 'PENDING') return statusNum === 0 || w.status_label?.includes('proceso');
+        if (withdrawalFilter === 'APPROVED') return [1, 3, 4].includes(statusNum) || w.status_label === 'Transferido';
+        if (withdrawalFilter === 'REJECTED') return [2, 5].includes(statusNum) || w.status_label === 'Rechazado';
+        return true;
+      });
+    }
+
+    return list;
+  }, [withdrawals, withdrawalSearch, withdrawalFilter]);
+
+  const withdrawalsSummary = useMemo(() => {
+    const pending = withdrawals.filter((w) => Number(w.status ?? 0) === 0 || w.status_label?.includes('proceso'));
+    const transferred = withdrawals.filter((w) => [1, 3, 4].includes(Number(w.status ?? 0)) || w.status_label === 'Transferido');
+    const rejected = withdrawals.filter((w) => [2, 5].includes(Number(w.status ?? 0)) || w.status_label === 'Rechazado');
+
+    return {
+      pendingCount: pending.length,
+      pendingAmount: pending.reduce((sum, w) => sum + Number(w.cantidad ?? 0), 0),
+      transferredCount: transferred.length,
+      transferredAmount: transferred.reduce((sum, w) => sum + Number(w.cantidad ?? 0), 0),
+      rejectedCount: rejected.length,
+    };
+  }, [withdrawals]);
+
   const handlePrint = () => {
     window.print();
   };
@@ -263,9 +348,13 @@ export default function GeneralKardexModal({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <WalletCards size={18} color="var(--color-primary)" />
+            {activeTab === 'movements' ? (
+              <WalletCards size={18} color="var(--color-primary)" />
+            ) : (
+              <Clock size={18} color="var(--color-primary)" />
+            )}
             <h2 id={`${modalId}-title`} style={{ fontSize: '1.02rem', fontWeight: 700, margin: 0, color: '#0f172a' }}>
-              Historial de Movimientos (Kardex) - Saldo General
+              {activeTab === 'movements' ? 'Historial de Movimientos - Saldo General' : 'Mis Solicitudes de Retiro'}
             </h2>
           </div>
           <Button
@@ -278,6 +367,74 @@ export default function GeneralKardexModal({
           </Button>
         </header>
 
+        {/* Pestañas de navegación */}
+        <div
+          className="kardex-no-print"
+          style={{
+            display: 'flex',
+            gap: '8px',
+            padding: '8px 24px 0 24px',
+            borderBottom: '1px solid #e2e8f0',
+            background: '#f8fafc',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setActiveTab('movements')}
+            style={{
+              padding: '8px 14px',
+              fontSize: '0.82rem',
+              fontWeight: activeTab === 'movements' ? 600 : 500,
+              color: activeTab === 'movements' ? 'var(--color-primary, #0284c7)' : '#64748b',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'movements' ? '2px solid var(--color-primary, #0284c7)' : '2px solid transparent',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <WalletCards size={15} />
+            Movimientos de Saldo
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('withdrawals')}
+            style={{
+              padding: '8px 14px',
+              fontSize: '0.82rem',
+              fontWeight: activeTab === 'withdrawals' ? 600 : 500,
+              color: activeTab === 'withdrawals' ? 'var(--color-primary, #0284c7)' : '#64748b',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'withdrawals' ? '2px solid var(--color-primary, #0284c7)' : '2px solid transparent',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <Clock size={15} />
+            Solicitudes de Retiro
+            {withdrawalsSummary.pendingCount > 0 && (
+              <span
+                style={{
+                  background: '#fef3c7',
+                  color: '#92400e',
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  padding: '1px 6px',
+                  borderRadius: '9999px',
+                  border: '1px solid #fde68a',
+                }}
+              >
+                {withdrawalsSummary.pendingCount}
+              </span>
+            )}
+          </button>
+        </div>
+
         {/* Contenido principal */}
         <div
           style={{
@@ -288,9 +445,9 @@ export default function GeneralKardexModal({
             overflowY: 'auto',
           }}
         >
-          {error && <Alert type="error">{error}</Alert>}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {activeTab === 'movements' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {error && <Alert type="error">{error}</Alert>}
             {/* Metric Summary Bar (Estándar de Inversiones) */}
             <div
               style={{
@@ -739,18 +896,284 @@ export default function GeneralKardexModal({
                 </div>
               </>
             )}
-
-            {/* Botón de cierre en footer */}
-            <div className="kardex-no-print" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2px' }}>
-              <Button
-                type="button"
-                className="button-secondary"
-                style={{ fontSize: '0.76rem', padding: '5px 14px' }}
-                onClick={onClose}
-              >
-                Cerrar
-              </Button>
             </div>
+          )}
+
+          {activeTab === 'withdrawals' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {withdrawalsError && <Alert type="error">{withdrawalsError}</Alert>}
+
+              {/* Metric Summary Bar */}
+              <div
+                style={{
+                  background: '#f8fafc',
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  fontSize: '0.8rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  border: '1px solid #e2e8f0',
+                  flexWrap: 'wrap',
+                  gap: '12px',
+                }}
+              >
+                <div>
+                  <span style={{ color: '#64748b', fontSize: '0.68rem', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>
+                    En proceso de dispersión (Máx. 48 hrs)
+                  </span>
+                  <strong style={{ color: '#d97706', fontSize: '0.96rem', marginTop: '1px', display: 'block' }}>
+                    {formatMoney(withdrawalsSummary.pendingAmount)} ({withdrawalsSummary.pendingCount})
+                  </strong>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ color: '#64748b', fontSize: '0.68rem', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>
+                    Total Transferido
+                  </span>
+                  <strong style={{ color: '#16a34a', fontSize: '0.96rem', marginTop: '1px', display: 'block' }}>
+                    {formatMoney(withdrawalsSummary.transferredAmount)} ({withdrawalsSummary.transferredCount})
+                  </strong>
+                </div>
+              </div>
+
+              {/* Toolbar: Search + Filtros + Botón actualizar */}
+              <div
+                className="kardex-no-print"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '10px',
+                }}
+              >
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', flex: '1 1 320px' }}>
+                  <div style={{ position: 'relative', flex: '1 1 180px', maxWidth: '240px' }}>
+                    <Search
+                      size={13}
+                      style={{
+                        position: 'absolute',
+                        left: '9px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: '#94a3b8',
+                      }}
+                    />
+                    <input
+                      type="text"
+                      value={withdrawalSearch}
+                      onChange={(e) => setWithdrawalSearch(e.target.value)}
+                      placeholder="Buscar por folio o cuenta..."
+                      style={{
+                        width: '100%',
+                        padding: '5px 8px 5px 28px',
+                        fontSize: '0.75rem',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                    {[
+                      { id: 'ALL', label: `Todas (${withdrawals.length})` },
+                      { id: 'PENDING', label: `En proceso (${withdrawalsSummary.pendingCount})` },
+                      { id: 'APPROVED', label: `Transferidas (${withdrawalsSummary.transferredCount})` },
+                      { id: 'REJECTED', label: `Rechazadas (${withdrawalsSummary.rejectedCount})` },
+                    ].map((pill) => (
+                      <button
+                        key={pill.id}
+                        type="button"
+                        onClick={() => setWithdrawalFilter(pill.id)}
+                        style={{
+                          padding: '3px 8px',
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          borderRadius: '4px',
+                          border: '1px solid',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          background: withdrawalFilter === pill.id ? 'var(--color-primary)' : '#f8fafc',
+                          color: withdrawalFilter === pill.id ? '#ffffff' : '#64748b',
+                          borderColor: withdrawalFilter === pill.id ? 'var(--color-primary)' : '#e2e8f0',
+                        }}
+                      >
+                        {pill.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={loadWithdrawals}
+                  disabled={isLoadingWithdrawals}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 10px',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    color: '#475569',
+                    background: '#f8fafc',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <RefreshCw size={12} className={isLoadingWithdrawals ? 'animate-spin' : ''} />
+                  Actualizar
+                </button>
+              </div>
+
+              {/* Contenido tabla Solicitudes */}
+              {isLoadingWithdrawals ? (
+                <div style={{ padding: '36px 0', textAlign: 'center', color: '#64748b', fontSize: '0.82rem' }}>
+                  <RefreshCw size={18} className="animate-spin" style={{ margin: '0 auto 8px', display: 'block' }} />
+                  Cargando solicitudes de retiro...
+                </div>
+              ) : processedWithdrawals.length === 0 ? (
+                <div
+                  style={{
+                    padding: '36px 16px',
+                    textAlign: 'center',
+                    background: '#f8fafc',
+                    borderRadius: '8px',
+                    border: '1px dashed #cbd5e1',
+                    color: '#64748b',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  <Clock size={24} style={{ margin: '0 auto 8px', display: 'block', color: '#94a3b8' }} />
+                  No se encontraron solicitudes de retiro
+                  {withdrawalSearch || withdrawalFilter !== 'ALL' ? ' con los filtros aplicados.' : '.'}
+                </div>
+              ) : (
+                <>
+                  <div
+                    style={{
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      background: '#ffffff',
+                    }}
+                  >
+                    <div style={{ overflowX: 'auto', maxHeight: '420px' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.75rem' }}>
+                        <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 1 }}>
+                          <tr>
+                            <th style={{ padding: '8px 12px', fontWeight: 600, color: '#475569' }}>Folio</th>
+                            <th style={{ padding: '8px 12px', fontWeight: 600, color: '#475569' }}>Fecha Solicitud</th>
+                            <th style={{ padding: '8px 12px', fontWeight: 600, color: '#475569' }}>Origen</th>
+                            <th style={{ padding: '8px 12px', fontWeight: 600, color: '#475569', textAlign: 'right' }}>Monto</th>
+                            <th style={{ padding: '8px 12px', fontWeight: 600, color: '#475569', textAlign: 'center' }}>Estatus</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {processedWithdrawals.map((w, idx) => {
+                            const isPending = Number(w.status ?? 0) === 0 || w.status_label?.includes('proceso');
+                            const isApproved = [1, 3, 4].includes(Number(w.status ?? 0)) || w.status_label === 'Transferido';
+                            const isRejected = [2, 5].includes(Number(w.status ?? 0)) || w.status_label === 'Rechazado';
+
+                            return (
+                              <tr
+                                key={w.id || idx}
+                                style={{
+                                  borderBottom: '1px solid #f1f5f9',
+                                  background: idx % 2 === 0 ? '#ffffff' : '#fcfcfd',
+                                }}
+                              >
+                                <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontWeight: 600, color: '#1e293b' }}>
+                                  {w.folio || `RET-${w.id}`}
+                                </td>
+                                <td style={{ padding: '8px 12px', color: '#475569', whiteSpace: 'nowrap' }}>
+                                  {formatMovementDate(w.fecha_solicitud)}
+                                </td>
+                                <td style={{ padding: '8px 12px', color: '#334155' }}>
+                                  <span style={{ fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                    <Building2 size={13} style={{ color: '#64748b' }} />
+                                    {w.origen_cuenta || 'Cuenta disponible'}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
+                                  {formatMoney(w.cantidad)}
+                                </td>
+                                <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                      padding: '3px 8px',
+                                      borderRadius: '9999px',
+                                      fontSize: '0.68rem',
+                                      fontWeight: 600,
+                                      background: isPending ? '#fef3c7' : isApproved ? '#dcfce7' : '#fee2e2',
+                                      color: isPending ? '#92400e' : isApproved ? '#166534' : '#991b1b',
+                                      border: `1px solid ${isPending ? '#fde68a' : isApproved ? '#bbf7d0' : '#fecaca'}`,
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                  >
+                                    {isPending && <Clock size={11} />}
+                                    {isApproved && <CheckCircle2 size={11} />}
+                                    {isRejected && <AlertCircle size={11} />}
+                                    {w.status_label || (isPending ? 'En proceso' : isApproved ? 'Transferido' : 'Rechazado')}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Footer metrics de Solicitudes */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: '0.75rem',
+                      color: '#475569',
+                      padding: '8px 14px',
+                      background: '#f8fafc',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      flexWrap: 'wrap',
+                      gap: '10px',
+                      marginTop: '4px',
+                    }}
+                  >
+                    <span>
+                      Mostrando <strong>{processedWithdrawals.length}</strong> de <strong>{withdrawals.length}</strong> solicitudes
+                    </span>
+                    <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        En proceso: <strong style={{ color: '#d97706', fontSize: '0.84rem' }}>{formatMoney(withdrawalsSummary.pendingAmount)}</strong>
+                      </span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        Transferido: <strong style={{ color: '#16a34a', fontSize: '0.84rem' }}>{formatMoney(withdrawalsSummary.transferredAmount)}</strong>
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Botón de cierre en footer */}
+          <div className="kardex-no-print" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2px' }}>
+            <Button
+              type="button"
+              className="button-secondary"
+              style={{ fontSize: '0.76rem', padding: '5px 14px' }}
+              onClick={onClose}
+            >
+              Cerrar
+            </Button>
           </div>
         </div>
       </div>
