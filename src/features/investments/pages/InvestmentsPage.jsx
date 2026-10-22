@@ -6,7 +6,6 @@ import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import FinancialRequestList from '../../../components/common/FinancialRequestList.jsx';
 import PageHero from '../../../components/common/PageHero.jsx';
-import FinancialTipCarousel from '../../../components/common/FinancialTipCarousel.jsx';
 import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
 import { formatCurrency } from '../../../utils/formatCurrency.js';
 import InvestmentPlanCard from '../components/InvestmentPlanCard.jsx';
@@ -214,9 +213,7 @@ function InvestmentsPage() {
           ]
         }
         title="Crece tu patrimonio con planes de inversión"
-      >
-        <FinancialTipCarousel context="investments" />
-      </PageHero>
+      />
 
       {checkoutNotice.message && (
         <div style={{ marginBottom: '16px' }}>

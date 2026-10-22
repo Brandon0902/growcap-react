@@ -8,7 +8,6 @@ import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import FinancialRequestList from '../../../components/common/FinancialRequestList.jsx';
 import PageHero from '../../../components/common/PageHero.jsx';
-import FinancialTipCarousel from '../../../components/common/FinancialTipCarousel.jsx';
 import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
 import SavingsPlanCard from '../components/SavingsPlanCard.jsx';
 import SavingsRequestForm from '../components/SavingsRequestForm.jsx';
@@ -324,9 +323,7 @@ function SavingsPage() {
           { label: 'Saldo Disponible', value: isLoadingPlans ? '...' : formatCurrency(savingsMetrics.totalDisponible) },
         ]}
         title="Haz crecer tu dinero con GrowCap"
-      >
-        <FinancialTipCarousel context="savings" />
-      </PageHero>
+      />
 
       {checkoutNotice.message && <Alert type={checkoutNotice.type}>{checkoutNotice.message}</Alert>}
 

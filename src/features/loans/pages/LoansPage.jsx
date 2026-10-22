@@ -6,7 +6,6 @@ import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import FinancialRequestList from '../../../components/common/FinancialRequestList.jsx';
 import PageHero from '../../../components/common/PageHero.jsx';
-import FinancialTipCarousel from '../../../components/common/FinancialTipCarousel.jsx';
 import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
 import LoanWizard from '../components/LoanWizard.jsx';
 import LoanLifecycleAlertBanner from '../components/LoanLifecycleAlertBanner.jsx';
@@ -404,9 +403,7 @@ function LoansPage() {
           ]
         }
         title="Línea de Financiamiento y Préstamos"
-      >
-        <FinancialTipCarousel context="loans" />
-      </PageHero>
+      />
 
       {checkoutNotice.message && (
         <div style={{ marginBottom: '16px' }}>

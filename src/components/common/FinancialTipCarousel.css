@@ -128,6 +128,17 @@
   cursor: not-allowed;
 }
 
+.tip-close-btn {
+  margin-left: 4px;
+}
+
+.tip-close-btn:hover:not(:disabled) {
+  color: #FCA5A5;
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.45);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
+}
+
 .tip-counter {
   font-size: 0.70rem;
   font-weight: 500;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Lightbulb, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Lightbulb, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { assistantService } from '../../services/assistantService.js';
 import './FinancialTipCarousel.css';
 
@@ -11,6 +11,14 @@ const DEFAULT_TIPS = [
 ];
 
 export default function FinancialTipCarousel({ context = 'all' }) {
+  const [isDismissed, setIsDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem('growcap_financial_tip_dismissed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   const [tips, setTips] = useState(() => {
     try {
       const cached = sessionStorage.getItem('growcap_financial_tips_list');
@@ -119,8 +127,17 @@ export default function FinancialTipCarousel({ context = 'all' }) {
     }, 200);
   };
 
-  if (phase === 'hidden') {
-    return <div className="financial-tip-carousel-wrap" aria-hidden="true" />;
+  const handleDismiss = () => {
+    setIsDismissed(true);
+    try {
+      sessionStorage.setItem('growcap_financial_tip_dismissed', 'true');
+    } catch {
+      // ignore
+    }
+  };
+
+  if (isDismissed || phase === 'hidden') {
+    return null;
   }
 
   return (
@@ -173,6 +190,15 @@ export default function FinancialTipCarousel({ context = 'all' }) {
               disabled={tips.length <= 1}
             >
               <ChevronRight size={14} />
+            </button>
+            <button
+              type="button"
+              onClick={handleDismiss}
+              title="Ocultar consejos"
+              className="tip-nav-btn tip-close-btn"
+              aria-label="Ocultar consejos financieros"
+            >
+              <X size={13} />
             </button>
           </div>
         </div>

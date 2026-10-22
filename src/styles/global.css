@@ -3142,7 +3142,7 @@ h3 {
 
   .page-hero {
     box-shadow: var(--shadow);
-    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     min-height: auto;
   }
 
@@ -3151,7 +3151,7 @@ h3 {
   }
 
   .hero-index {
-    font-size: 1.75rem;
+    display: none !important;
   }
 
   .page-hero-copy,
