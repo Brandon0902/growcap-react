@@ -86,6 +86,9 @@ export default function GrowCapAssistantWidget() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const fabRef = useRef(null);
+  const containerRef = useRef(null);
+  const rafRef = useRef(null);
+  const currentPosRef = useRef(null);
 
   // Globito de bienvenida interactivo al entrar
   const { user } = useAuth();
@@ -157,46 +160,78 @@ export default function GrowCapAssistantWidget() {
     height: 46,
   });
 
-  const clampPosition = (x, y, elWidth = 145, elHeight = 46) => {
-    const pad = 12;
-    const maxX = Math.max(pad, window.innerWidth - elWidth - pad);
-    const maxY = Math.max(pad, window.innerHeight - elHeight - pad);
-    return {
-      x: Math.min(Math.max(pad, x), maxX),
-      y: Math.min(Math.max(pad, y), maxY),
+  // Cálculo de límites de pantalla y posición por defecto adaptada a móvil y desktop
+  const getBounds = (elWidth = 145, elHeight = 46) => {
+    if (typeof window === 'undefined') {
+      return { minX: 12, maxX: 300, minY: 64, maxY: 600, isMobile: false, defaultPos: { x: 200, y: 500 } };
+    }
+    const isMobile = window.innerWidth <= 768;
+    const pad = isMobile ? 14 : 24;
+    const minX = isMobile ? 14 : 16;
+    const maxX = Math.max(minX, window.innerWidth - elWidth - minX);
+    const minY = isMobile ? 64 : 16;
+    // En móvil se deja margen de seguridad sobre la barra inferior (mobile-nav ~76px)
+    const maxY = Math.max(minY, window.innerHeight - elHeight - (isMobile ? 86 : 24));
+
+    const defaultPos = {
+      x: window.innerWidth - elWidth - pad,
+      y: isMobile ? window.innerHeight - elHeight - 88 : window.innerHeight - elHeight - pad,
     };
+
+    return { minX, maxX, minY, maxY, isMobile, defaultPos };
   };
 
   useEffect(() => {
-    const handleResize = () => {
+    const ensureValidPosition = () => {
+      const w = fabRef.current?.offsetWidth || 145;
+      const h = fabRef.current?.offsetHeight || 46;
+      const { minX, maxX, minY, maxY, isMobile, defaultPos } = getBounds(w, h);
+
       setPosition((prev) => {
-        if (!prev) return null;
-        const rect = fabRef.current?.getBoundingClientRect();
-        const w = rect?.width || 145;
-        const h = rect?.height || 46;
-        return clampPosition(prev.x, prev.y, w, h);
+        if (!prev) return defaultPos;
+        let x = Math.min(Math.max(minX, prev.x), maxX);
+        let y = Math.min(Math.max(minY, prev.y), maxY);
+
+        // En móvil mantener siempre anclado magnéticamente a uno de los laterales
+        if (isMobile) {
+          x = (x + w / 2 < window.innerWidth / 2) ? minX : maxX;
+        }
+
+        return { x: Math.round(x), y: Math.round(y) };
       });
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    ensureValidPosition();
+    window.addEventListener('resize', ensureValidPosition);
+    return () => window.removeEventListener('resize', ensureValidPosition);
   }, []);
 
   const handlePointerDown = (e) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
 
-    const rect = fabRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    const w = fabRef.current?.offsetWidth || 145;
+    const h = fabRef.current?.offsetHeight || 46;
+    const containerRect = containerRef.current?.getBoundingClientRect();
+
+    const initX = containerRect ? containerRect.left : (position?.x ?? 0);
+    const initY = containerRect ? containerRect.top : (position?.y ?? 0);
 
     dragRef.current = {
       active: true,
       hasMoved: false,
       startX: e.clientX,
       startY: e.clientY,
-      initX: rect.left,
-      initY: rect.top,
-      width: rect.width,
-      height: rect.height,
+      initX,
+      initY,
+      width: w,
+      height: h,
     };
+    currentPosRef.current = { x: initX, y: initY };
+
+    if (containerRef.current) {
+      containerRef.current.style.transition = 'none';
+      containerRef.current.style.willChange = 'transform';
+    }
 
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -211,16 +246,25 @@ export default function GrowCapAssistantWidget() {
     const dx = e.clientX - dragRef.current.startX;
     const dy = e.clientY - dragRef.current.startY;
 
-    if (!dragRef.current.hasMoved && Math.hypot(dx, dy) > 5) {
+    if (!dragRef.current.hasMoved && Math.hypot(dx, dy) > 6) {
       dragRef.current.hasMoved = true;
       setIsDragging(true);
     }
 
     if (dragRef.current.hasMoved) {
-      const nextX = dragRef.current.initX + dx;
-      const nextY = dragRef.current.initY + dy;
-      const clamped = clampPosition(nextX, nextY, dragRef.current.width, dragRef.current.height);
-      setPosition(clamped);
+      const { minX, maxX, minY, maxY } = getBounds(dragRef.current.width, dragRef.current.height);
+      const nextX = Math.min(Math.max(minX, dragRef.current.initX + dx), maxX);
+      const nextY = Math.min(Math.max(minY, dragRef.current.initY + dy), maxY);
+
+      currentPosRef.current = { x: nextX, y: nextY };
+
+      // Renderizado directo GPU a 120Hz sin provocar re-renders de React
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        if (containerRef.current) {
+          containerRef.current.style.transform = `translate3d(${nextX}px, ${nextY}px, 0)`;
+        }
+      });
     }
   };
 
@@ -233,21 +277,46 @@ export default function GrowCapAssistantWidget() {
       // ignore
     }
 
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+
     const moved = dragRef.current.hasMoved;
     dragRef.current.active = false;
     setIsDragging(false);
 
     if (moved) {
-      setPosition((curr) => {
-        if (curr) {
-          try {
-            localStorage.setItem('growcap_assistant_fab_pos', JSON.stringify(curr));
-          } catch {
-            // ignore
-          }
-        }
-        return curr;
-      });
+      const w = dragRef.current.width || 145;
+      const h = dragRef.current.height || 46;
+      const { minX, maxX, minY, maxY, isMobile } = getBounds(w, h);
+
+      let finalX = currentPosRef.current?.x ?? dragRef.current.initX;
+      let finalY = currentPosRef.current?.y ?? dragRef.current.initY;
+
+      // Anclaje magnético (Magnetic Edge Docking): en móvil se adhiere suavemente a la orilla
+      if (isMobile) {
+        const centerX = finalX + w / 2;
+        finalX = centerX < window.innerWidth / 2 ? minX : maxX;
+      } else {
+        if (finalX < minX + 24) finalX = minX;
+        else if (finalX > maxX - 24) finalX = maxX;
+      }
+      finalY = Math.min(Math.max(minY, finalY), maxY);
+
+      // Deslizamiento elástico físico y natural
+      if (containerRef.current) {
+        containerRef.current.style.transition = 'transform 0.32s cubic-bezier(0.18, 0.89, 0.32, 1.15)';
+        containerRef.current.style.transform = `translate3d(${finalX}px, ${finalY}px, 0)`;
+      }
+
+      const finalPos = { x: Math.round(finalX), y: Math.round(finalY) };
+      setPosition(finalPos);
+      try {
+        localStorage.setItem('growcap_assistant_fab_pos', JSON.stringify(finalPos));
+      } catch {
+        // ignore
+      }
     } else {
       setIsOpen(true);
     }
@@ -384,18 +453,15 @@ export default function GrowCapAssistantWidget() {
       {/* Botón Flotante (FAB) Arrastrable con Globito de Bienvenida */}
       {!isOpen && (
         <div
-          className="growcap-assistant-fab-container"
-          style={
-            position
-              ? {
-                  position: 'fixed',
-                  left: `${position.x}px`,
-                  top: `${position.y}px`,
-                  bottom: 'auto',
-                  right: 'auto',
-                }
-              : undefined
-          }
+          ref={containerRef}
+          className={`growcap-assistant-fab-container ${isDragging ? 'is-dragging-container' : ''}`}
+          style={{
+            transform: position
+              ? `translate3d(${position.x}px, ${position.y}px, 0)`
+              : 'translate3d(0, 0, 0)',
+            opacity: position ? 1 : 0,
+            pointerEvents: position ? 'auto' : 'none',
+          }}
         >
           {/* Globito de bienvenida con vibración sutil */}
           {showGreetingBubble && !isDragging && (

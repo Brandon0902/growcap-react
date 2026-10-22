@@ -5,12 +5,21 @@
 /* --- CONTENEDOR DEL FAB Y GLOBITO --- */
 .growcap-assistant-fab-container {
   position: fixed;
-  bottom: 24px;
-  right: 26px;
+  top: 0;
+  left: 0;
   z-index: 9999;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: transform;
+}
+
+.growcap-assistant-fab-container > * {
+  pointer-events: auto;
 }
 
 /* --- BOTÓN FLOTANTE (FAB) ARRASTRABLE Y MÁS DESTACADO --- */
@@ -31,7 +40,9 @@
   font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: 0.015em;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  touch-action: none;
+  -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -44,10 +55,10 @@
 
 .growcap-assistant-fab.is-dragging {
   cursor: grabbing !important;
-  transform: scale(1.05) !important;
-  box-shadow: 0 14px 32px rgba(88, 28, 135, 0.55), 0 6px 14px rgba(0, 0, 0, 0.22) !important;
-  border-color: rgba(250, 204, 21, 0.9) !important;
-  transition: none !important;
+  transform: scale(1.06) !important;
+  box-shadow: 0 14px 34px rgba(88, 28, 135, 0.55), 0 6px 16px rgba(0, 0, 0, 0.24) !important;
+  border-color: rgba(250, 204, 21, 0.95) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
 }
 
 /* --- GLOBITO DE DIÁLOGO DE BIENVENIDA CON VIBRACIÓN SUTIL --- */
@@ -674,8 +685,6 @@
 /* --- ADAPTACIÓN RESPONSIVA (MÓVILES) --- */
 @media (max-width: 900px) {
   .growcap-assistant-fab {
-    bottom: 76px;
-    right: 14px;
     padding: 9px 15px 9px 11px;
     font-size: 0.82rem;
     gap: 7px;
