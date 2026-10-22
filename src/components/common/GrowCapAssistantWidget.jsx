@@ -5,9 +5,12 @@ import {
   Send, 
   RotateCcw, 
   Sparkles, 
-  ChevronRight 
+  ChevronRight,
+  GripVertical
 } from 'lucide-react';
 import { assistantService } from '../../services/assistantService.js';
+import useAuth from '../../features/auth/hooks/useAuth.js';
+import { getUserFirstName } from '../../utils/userFormatting.js';
 import './GrowCapAssistantWidget.css';
 
 const INITIAL_SUGGESTIONS = [
@@ -82,6 +85,202 @@ export default function GrowCapAssistantWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const fabRef = useRef(null);
+
+  // Globito de bienvenida interactivo al entrar
+  const { user } = useAuth();
+  const [showGreetingBubble, setShowGreetingBubble] = useState(false);
+  const [bubbleExiting, setBubbleExiting] = useState(false);
+
+  useEffect(() => {
+    // Limpiar cualquier flag heredado para asegurar que siempre se presente al entrar a la app
+    try {
+      sessionStorage.removeItem('growcap_assistant_bubble_shown');
+    } catch {
+      // ignore
+    }
+
+    let exitTimer = null;
+    let hideTimer = null;
+
+    // Aparece con una vibración sutil a los 2 segundos de entrar a la app
+    const showTimer = setTimeout(() => {
+      setShowGreetingBubble(true);
+
+      // Permanece visible 6.5 segundos para que no estorbe y desaparece suavemente
+      exitTimer = setTimeout(() => {
+        setBubbleExiting(true);
+        hideTimer = setTimeout(() => {
+          setShowGreetingBubble(false);
+          setBubbleExiting(false);
+        }, 400);
+      }, 6500);
+    }, 2000);
+
+    return () => {
+      clearTimeout(showTimer);
+      if (exitTimer) clearTimeout(exitTimer);
+      if (hideTimer) clearTimeout(hideTimer);
+    };
+  }, []);
+
+  const dismissBubble = () => {
+    setShowGreetingBubble(false);
+    setBubbleExiting(false);
+  };
+
+  // Posición flotante arrastrable (persistente en localStorage)
+  const [position, setPosition] = useState(() => {
+    try {
+      const saved = localStorage.getItem('growcap_assistant_fab_pos');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') {
+          return parsed;
+        }
+      }
+    } catch {
+      // Ignorar fallo de storage
+    }
+    return null;
+  });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef({
+    active: false,
+    hasMoved: false,
+    startX: 0,
+    startY: 0,
+    initX: 0,
+    initY: 0,
+    width: 145,
+    height: 46,
+  });
+
+  const clampPosition = (x, y, elWidth = 145, elHeight = 46) => {
+    const pad = 12;
+    const maxX = Math.max(pad, window.innerWidth - elWidth - pad);
+    const maxY = Math.max(pad, window.innerHeight - elHeight - pad);
+    return {
+      x: Math.min(Math.max(pad, x), maxX),
+      y: Math.min(Math.max(pad, y), maxY),
+    };
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setPosition((prev) => {
+        if (!prev) return null;
+        const rect = fabRef.current?.getBoundingClientRect();
+        const w = rect?.width || 145;
+        const h = rect?.height || 46;
+        return clampPosition(prev.x, prev.y, w, h);
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handlePointerDown = (e) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+    const rect = fabRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    dragRef.current = {
+      active: true,
+      hasMoved: false,
+      startX: e.clientX,
+      startY: e.clientY,
+      initX: rect.left,
+      initY: rect.top,
+      width: rect.width,
+      height: rect.height,
+    };
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handlePointerMove = (e) => {
+    if (!dragRef.current.active) return;
+
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+
+    if (!dragRef.current.hasMoved && Math.hypot(dx, dy) > 5) {
+      dragRef.current.hasMoved = true;
+      setIsDragging(true);
+    }
+
+    if (dragRef.current.hasMoved) {
+      const nextX = dragRef.current.initX + dx;
+      const nextY = dragRef.current.initY + dy;
+      const clamped = clampPosition(nextX, nextY, dragRef.current.width, dragRef.current.height);
+      setPosition(clamped);
+    }
+  };
+
+  const handlePointerUp = (e) => {
+    if (!dragRef.current.active) return;
+
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+
+    const moved = dragRef.current.hasMoved;
+    dragRef.current.active = false;
+    setIsDragging(false);
+
+    if (moved) {
+      setPosition((curr) => {
+        if (curr) {
+          try {
+            localStorage.setItem('growcap_assistant_fab_pos', JSON.stringify(curr));
+          } catch {
+            // ignore
+          }
+        }
+        return curr;
+      });
+    } else {
+      setIsOpen(true);
+    }
+  };
+
+  // Posición dinámica e inteligente de la ventana de chat respecto al botón
+  const getWindowStyle = () => {
+    if (!position || typeof window === 'undefined' || window.innerWidth <= 768) {
+      return undefined;
+    }
+
+    const isLeft = position.x < window.innerWidth / 2;
+    const isTop = position.y < window.innerHeight / 2;
+
+    const style = {};
+    if (isLeft) {
+      style.left = `${Math.max(16, Math.min(position.x, window.innerWidth - 440))}px`;
+      style.right = 'auto';
+    } else {
+      style.right = `${Math.max(16, window.innerWidth - position.x - 160)}px`;
+      style.left = 'auto';
+    }
+
+    if (isTop) {
+      style.top = `${Math.max(16, Math.min(position.y + 54, window.innerHeight - 620))}px`;
+      style.bottom = 'auto';
+    } else {
+      style.bottom = `${Math.max(20, window.innerHeight - position.y + 12)}px`;
+      style.top = 'auto';
+    }
+
+    return style;
+  };
 
   // Escuchar evento personalizado para abrir desde el Sidebar
   useEffect(() => {
@@ -175,28 +374,94 @@ export default function GrowCapAssistantWidget() {
     sessionStorage.removeItem('growcap_assistant_chat');
   };
 
+  const firstName = getUserFirstName(user);
+  const greetingHeading = firstName ? `¡Hola ${firstName}!` : '¡Hola!';
+  const isTopPosition = position ? position.y < (typeof window !== 'undefined' ? window.innerHeight / 2 : 500) : false;
+  const isLeftPosition = position ? position.x < (typeof window !== 'undefined' ? window.innerWidth / 2 : 500) : false;
+
   return (
     <>
-      {/* Botón Flotante (FAB) */}
+      {/* Botón Flotante (FAB) Arrastrable con Globito de Bienvenida */}
       {!isOpen && (
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="growcap-assistant-fab"
-          aria-label="Abrir Asistente Virtual GrowCap"
+        <div
+          className="growcap-assistant-fab-container"
+          style={
+            position
+              ? {
+                  position: 'fixed',
+                  left: `${position.x}px`,
+                  top: `${position.y}px`,
+                  bottom: 'auto',
+                  right: 'auto',
+                }
+              : undefined
+          }
         >
-          <div className="assistant-fab-icon-wrap">
-            <Bot size={22} className="assistant-fab-icon" />
-            <span className="assistant-fab-pulse" />
-          </div>
-          <span className="assistant-fab-label">Asistente GrowCap</span>
-        </button>
+          {/* Globito de bienvenida con vibración sutil */}
+          {showGreetingBubble && !isDragging && (
+            <div
+              className={`assistant-speech-bubble ${bubbleExiting ? 'is-exiting' : ''} ${isTopPosition ? 'bubble-bottom' : 'bubble-top'} ${isLeftPosition ? 'bubble-align-left' : 'bubble-align-right'}`}
+              onClick={() => {
+                dismissBubble();
+                setIsOpen(true);
+              }}
+              role="status"
+              aria-live="polite"
+              title="Haz clic para abrir el asistente virtual"
+            >
+              <div className="assistant-bubble-content">
+                <div className="assistant-bubble-bot-badge" aria-hidden="true">
+                  <Bot size={15} />
+                </div>
+                <div className="assistant-bubble-body">
+                  <span className="assistant-bubble-text">
+                    <strong className="assistant-bubble-name">{greetingHeading}</strong> Soy tu asistente virtual y estoy para ayudarte.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dismissBubble();
+                  }}
+                  className="assistant-bubble-close"
+                  aria-label="Cerrar saludo"
+                  title="Cerrar saludo"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+              <div className="assistant-bubble-arrow" />
+            </div>
+          )}
+
+          <button
+            ref={fabRef}
+            type="button"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            className={`growcap-assistant-fab ${isDragging ? 'is-dragging' : ''}`}
+            style={{ touchAction: 'none' }}
+            aria-label="Abrir Asistente Virtual GrowCap"
+            title="Arrastra para mover por la pantalla o haz clic para abrir"
+          >
+            <GripVertical size={13} className="assistant-fab-grip" aria-hidden="true" />
+            <div className="assistant-fab-icon-wrap">
+              <Bot size={20} className="assistant-fab-icon" />
+              <span className="assistant-fab-pulse" />
+            </div>
+            <span className="assistant-fab-label">Asistente</span>
+          </button>
+        </div>
       )}
 
       {/* Ventana de Chat Flotante */}
       {isOpen && (
         <div 
           className="growcap-assistant-window"
+          style={getWindowStyle()}
           role="dialog"
           aria-label="Ventana de chat con Asistente GrowCap"
         >
@@ -247,10 +512,10 @@ export default function GrowCapAssistantWidget() {
                     <FormattedMessageText text={msg.text} isUser={isUser} />
                   </div>
 
-                  {/* Sugerencias interactivas debajo de la respuesta del modelo */}
-                  {!isUser && msg.suggestions && msg.suggestions.length > 0 && (
+                  {/* Sugerencias interactivas consecutivas debajo de la última respuesta del modelo */}
+                  {!isUser && index === messages.length - 1 && msg.suggestions && msg.suggestions.length > 0 && (
                     <div className="assistant-suggestions-wrap">
-                      <span className="assistant-suggestions-title">Preguntas sugeridas:</span>
+                      <span className="assistant-suggestions-title">Preguntas sugeridas siguientes:</span>
                       <div className="assistant-suggestions-list">
                         {msg.suggestions.map((sug, sIdx) => (
                           <button

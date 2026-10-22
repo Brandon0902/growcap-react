@@ -2,38 +2,221 @@
    GROWCAP ASISTENTE VIRTUAL IA - ESTILOS INMERSIVOS
    ========================================================================== */
 
-/* --- BOTÓN FLOTANTE (FAB) --- */
-.growcap-assistant-fab {
+/* --- CONTENEDOR DEL FAB Y GLOBITO --- */
+.growcap-assistant-fab-container {
   position: fixed;
-  bottom: 26px;
-  right: 28px;
+  bottom: 24px;
+  right: 26px;
   z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* --- BOTÓN FLOTANTE (FAB) ARRASTRABLE Y MÁS DESTACADO --- */
+.growcap-assistant-fab {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 20px 12px 16px;
+  gap: 8px;
+  padding: 10px 18px 10px 12px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #581C87 0%, #6B21A8 50%, #7E22CE 100%);
+  background: linear-gradient(135deg, #4A154B 0%, #581C87 60%, #6B21A8 100%);
   color: #FFFFFF;
-  border: 1.5px solid rgba(250, 204, 21, 0.55);
-  box-shadow: 0 10px 25px -3px rgba(88, 28, 135, 0.45), 0 4px 10px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 6px 20px -2px rgba(88, 28, 135, 0.4), 0 3px 8px rgba(0, 0, 0, 0.12);
+  cursor: grab;
   font-family: inherit;
   font-size: 0.88rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, background 0.22s ease;
+  letter-spacing: 0.015em;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 .growcap-assistant-fab:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 14px 30px -2px rgba(88, 28, 135, 0.55), 0 6px 14px rgba(0, 0, 0, 0.2);
-  border-color: rgba(250, 204, 21, 0.85);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -2px rgba(88, 28, 135, 0.48), 0 4px 10px rgba(0, 0, 0, 0.16);
+  border-color: rgba(250, 204, 21, 0.75);
 }
 
-.growcap-assistant-fab:active {
-  transform: translateY(0) scale(0.97);
+.growcap-assistant-fab.is-dragging {
+  cursor: grabbing !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 14px 32px rgba(88, 28, 135, 0.55), 0 6px 14px rgba(0, 0, 0, 0.22) !important;
+  border-color: rgba(250, 204, 21, 0.9) !important;
+  transition: none !important;
+}
+
+/* --- GLOBITO DE DIÁLOGO DE BIENVENIDA CON VIBRACIÓN SUTIL --- */
+.assistant-speech-bubble {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  right: 0;
+  width: 275px;
+  max-width: calc(100vw - 36px);
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(74, 21, 75, 0.96) 0%, rgba(88, 28, 135, 0.93) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(250, 204, 21, 0.55);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px -4px rgba(88, 28, 135, 0.52), 0 0 18px rgba(250, 204, 21, 0.22);
+  cursor: pointer;
+  animation: assistantBubbleEntrance 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  z-index: 10;
+  user-select: none;
+}
+
+.assistant-speech-bubble.is-exiting {
+  animation: assistantBubbleExit 0.4s ease-out forwards;
+}
+
+.assistant-speech-bubble.bubble-bottom {
+  bottom: auto;
+  top: calc(100% + 14px);
+}
+
+.assistant-speech-bubble.bubble-align-left {
+  right: auto;
+  left: 0;
+}
+
+.assistant-bubble-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.assistant-bubble-bot-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(250, 204, 21, 0.2);
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  color: #FDE047;
+  flex-shrink: 0;
+}
+
+.assistant-bubble-body {
+  flex: 1;
+}
+
+.assistant-bubble-text {
+  font-size: 0.82rem;
+  color: #FFFFFF;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+
+.assistant-bubble-name {
+  color: #FDE047;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.assistant-bubble-close {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.assistant-bubble-close:hover {
+  color: #FDE047;
+  background: rgba(250, 204, 21, 0.22);
+  border-color: rgba(250, 204, 21, 0.5);
+}
+
+.assistant-bubble-arrow {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: rgba(74, 21, 75, 0.96);
+  border-right: 1.5px solid rgba(250, 204, 21, 0.55);
+  border-bottom: 1.5px solid rgba(250, 204, 21, 0.55);
+  bottom: -6px;
+  right: 28px;
+  transform: rotate(45deg);
+}
+
+.assistant-speech-bubble.bubble-bottom .assistant-bubble-arrow {
+  bottom: auto;
+  top: -6px;
+  border-right: none;
+  border-bottom: none;
+  border-left: 1.5px solid rgba(250, 204, 21, 0.55);
+  border-top: 1.5px solid rgba(250, 204, 21, 0.55);
+}
+
+.assistant-speech-bubble.bubble-align-left .assistant-bubble-arrow {
+  right: auto;
+  left: 28px;
+}
+
+/* Animación de entrada con vibración sutil */
+@keyframes assistantBubbleEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.85);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.04);
+  }
+  45% {
+    transform: translateY(0) scale(1.01) rotate(-2.8deg);
+  }
+  60% {
+    transform: translateY(0) scale(1) rotate(2.5deg);
+  }
+  75% {
+    transform: translateY(0) scale(1) rotate(-1.5deg);
+  }
+  90% {
+    transform: translateY(0) scale(1) rotate(0.8deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes assistantBubbleExit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+  }
+}
+
+.assistant-fab-grip {
+  color: rgba(255, 255, 255, 0.45);
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+  margin-right: -2px;
+}
+
+.growcap-assistant-fab:hover .assistant-fab-grip {
+  color: rgba(250, 204, 21, 0.85);
 }
 
 .assistant-fab-icon-wrap {
@@ -49,15 +232,15 @@
 }
 
 .growcap-assistant-fab:hover .assistant-fab-icon {
-  transform: rotate(10deg);
+  transform: rotate(8deg);
 }
 
 .assistant-fab-pulse {
   position: absolute;
   top: -2px;
   right: -2px;
-  width: 9px;
-  height: 9px;
+  width: 7.5px;
+  height: 7.5px;
   background: #22C55E;
   border: 1.5px solid #581C87;
   border-radius: 50%;
@@ -70,7 +253,7 @@
     opacity: 1;
   }
   50% {
-    transform: scale(1.35);
+    transform: scale(1.25);
     opacity: 0.75;
   }
 }
@@ -491,10 +674,11 @@
 /* --- ADAPTACIÓN RESPONSIVA (MÓVILES) --- */
 @media (max-width: 900px) {
   .growcap-assistant-fab {
-    bottom: 84px;
-    right: 18px;
-    padding: 10px 16px;
+    bottom: 76px;
+    right: 14px;
+    padding: 9px 15px 9px 11px;
     font-size: 0.82rem;
+    gap: 7px;
   }
 
   .growcap-assistant-window {

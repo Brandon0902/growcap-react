@@ -186,9 +186,21 @@ export default function GeneralWithdrawalModal({
         origen_tipo: selectedAccount?.origen_tipo,
         origen_id: selectedAccount?.id,
       });
-      const msg =
-        res?.data?.message ||
-        'Su transacción será verificada; la verá reflejada en su cuenta en un máximo de 48 hrs.';
+      const defaultMsg = (() => {
+        const tipo = selectedAccount?.origen_tipo;
+        if (tipo === 'inversion') {
+          return 'Solicitud realizada con éxito. Verás el depósito reflejado en tu cuenta en un máximo de 15 días hábiles.';
+        }
+        if (tipo === 'ahorro') {
+          const nombre = String(selectedAccount?.label || selectedAccount?.nombre || '').toLowerCase();
+          if (nombre.includes('siempre disponible')) {
+            return 'Solicitud realizada con éxito. Verás el depósito reflejado en tu cuenta en un lapso de 24 a 48 hrs hábiles.';
+          }
+          return 'Solicitud realizada con éxito. Tu retiro se pagará en el periodo de nómina siguiente a la semana de tu solicitud (no se paga en la semana en curso).';
+        }
+        return 'Solicitud realizada con éxito. Verás el depósito reflejado en tu cuenta en un lapso de 24 a 48 hrs hábiles.';
+      })();
+      const msg = res?.data?.message || res?.message || defaultMsg;
       onSuccess?.(msg);
       onClose();
     } catch (err) {
@@ -316,7 +328,7 @@ export default function GeneralWithdrawalModal({
                   Solicitud realizada con éxito
                 </h4>
                 <p style={{ margin: 0, fontSize: '0.84rem', color: '#475569', lineHeight: 1.45 }}>
-                  Lo verás reflejado en tu cuenta en un máximo de <strong>48 hrs</strong>.
+                  {successMsg ? successMsg.replace(/^Solicitud realizada con éxito\.\s*/i, '') : 'Tu solicitud se encuentra en proceso de dispersión.'}
                 </p>
               </div>
               <div

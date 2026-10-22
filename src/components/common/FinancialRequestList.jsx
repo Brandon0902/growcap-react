@@ -1214,10 +1214,21 @@ function FinancialRequestList({
         const res = await withdrawSavings(activeAction.item.id, {
           monto: amountNum,
         });
+        const planName = String(
+          activeAction.item.plan?.nombre ||
+          activeAction.item.plan_nombre ||
+          activeAction.item.nombre ||
+          ''
+        ).toLowerCase();
+        const isSiempreDisp = planName.includes('siempre disponible');
+        const defaultMsg = isSiempreDisp
+          ? 'Solicitud realizada con éxito. Verás el depósito reflejado en tu cuenta en un lapso de 24 a 48 hrs hábiles.'
+          : 'Solicitud realizada con éxito. Tu retiro se pagará en el periodo de nómina siguiente a la semana de tu solicitud (no se paga en la semana en curso).';
+
         const successMsg =
           res?.data?.message ||
           res?.message ||
-          'Su transacción será verificada; la verá reflejada en su cuenta en un máximo de 48 hrs.';
+          defaultMsg;
 
         handleCloseAction();
         onRefresh?.();
@@ -2100,12 +2111,17 @@ function FinancialRequestList({
                           <div className="financial-compact-line-2">
                             <div className="financial-compact-subtext">
                               <span>Cuota: {formatMoney(cuotaFija)} ({frecuencia})</span>
-                              {loanEndDate && (
+                              {isDisbursementPending && item?.fecha_estimada_deposito ? (
+                                <>
+                                  <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
+                                  <span style={{ color: '#6d28d9', fontWeight: 600 }}>Depósito est.: {formatDate(item.fecha_estimada_deposito)}</span>
+                                </>
+                              ) : loanEndDate ? (
                                 <>
                                   <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
                                   <span style={{ color: '#475569', fontWeight: 600 }}>Vence: {formatDate(loanEndDate)}</span>
                                 </>
-                              )}
+                              ) : null}
                               <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
                               <span>Folio #{item?.id}</span>
                               {moraAcumulada > 0 && (
@@ -2157,11 +2173,20 @@ function FinancialRequestList({
                                   color: '#4c1d95',
                                   display: 'flex',
                                   alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  flexWrap: 'wrap',
                                   gap: '8px',
                                 }}
                               >
-                                <AlertCircle size={15} style={{ color: '#6d28d9', flexShrink: 0 }} />
-                                <span>Crédito autorizado por comité. En proceso de dispersión bancaria.</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <AlertCircle size={15} style={{ color: '#6d28d9', flexShrink: 0 }} />
+                                  <span>Crédito autorizado por comité. En proceso de dispersión bancaria.</span>
+                                </div>
+                                {item?.fecha_estimada_deposito && (
+                                  <span style={{ fontWeight: 600, color: '#5b21b6', whiteSpace: 'nowrap' }}>
+                                    📅 Depósito estimado: {formatDate(item.fecha_estimada_deposito)}
+                                  </span>
+                                )}
                               </div>
                             )}
 
@@ -2198,6 +2223,14 @@ function FinancialRequestList({
                                 <div className="financial-drawer-field">
                                   <span className="financial-drawer-label">Aval Asignado</span>
                                   <span className="financial-drawer-val">{item.aval_nombre}</span>
+                                </div>
+                              )}
+                              {item?.fecha_estimada_deposito && (
+                                <div className="financial-drawer-field">
+                                  <span className="financial-drawer-label">Fecha Est. Depósito</span>
+                                  <span className="financial-drawer-val" style={{ color: '#6d28d9', fontWeight: 600 }}>
+                                    {formatDate(item.fecha_estimada_deposito)}
+                                  </span>
                                 </div>
                               )}
                               {moraAcumulada > 0 && (
@@ -3444,7 +3477,7 @@ function FinancialRequestList({
                       >
                         <div>
                           <span style={{ color: '#64748b', fontSize: '0.68rem', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>
-                            En proceso (Máx. 48 hrs)
+                            En proceso
                           </span>
                           <strong style={{ color: '#d97706', fontSize: '0.96rem', marginTop: '1px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <Clock size={14} />
@@ -3629,7 +3662,7 @@ function FinancialRequestList({
                                           {isPending && <Clock size={11} />}
                                           {isApproved && <CheckCircle2 size={11} />}
                                           {isRejected && <AlertCircle size={11} />}
-                                          {w.status_label || (isPending ? 'En proceso (Máx. 48 hrs)' : (isApproved ? 'Transferido' : 'Rechazado'))}
+                                          {w.status_label || (isPending ? 'En proceso' : (isApproved ? 'Transferido' : 'Rechazado'))}
                                         </span>
                                         {isRejected && w.motivo_rechazo && (
                                           <div style={{ fontSize: '0.68rem', color: '#dc2626', marginTop: '2px' }}>
@@ -3951,7 +3984,9 @@ function FinancialRequestList({
                   />
 
                   <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0, lineHeight: 1.4 }}>
-                    * El monto será debitado de tu saldo disponible y será procesado para depósito en tu próxima nómina o cuenta registrada.
+                    {String(activeAction.item?.plan?.nombre || activeAction.item?.plan_nombre || activeAction.item?.nombre || '').toLowerCase().includes('siempre disponible')
+                      ? '* Tu retiro se verá reflejado en tu cuenta en un lapso de 24 a 48 hrs hábiles.'
+                      : '* Tu retiro se pagará en el periodo de nómina siguiente a la semana de tu solicitud (no se paga en la semana en curso).'}
                   </p>
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
@@ -4137,7 +4172,15 @@ function FinancialRequestList({
           plans={plans}
           onClose={() => setInvestmentActionModal({ isOpen: false, mode: 'mover_saldo', item: null })}
           onSuccess={(msg) => {
-            setActionSuccess(msg);
+            if (investmentActionModal.mode === 'retirar') {
+              setWithdrawalAlert({
+                isOpen: true,
+                title: 'Retiro solicitado',
+                message: msg || 'Solicitud realizada con éxito. Verás el depósito reflejado en tu cuenta en un máximo de 15 días hábiles.',
+              });
+            } else {
+              setActionSuccess(msg);
+            }
             if (onRefresh) onRefresh();
           }}
         />

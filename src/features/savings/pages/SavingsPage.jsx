@@ -8,6 +8,7 @@ import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import FinancialRequestList from '../../../components/common/FinancialRequestList.jsx';
 import PageHero from '../../../components/common/PageHero.jsx';
+import FinancialTipCarousel from '../../../components/common/FinancialTipCarousel.jsx';
 import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
 import SavingsPlanCard from '../components/SavingsPlanCard.jsx';
 import SavingsRequestForm from '../components/SavingsRequestForm.jsx';
@@ -324,7 +325,7 @@ function SavingsPage() {
         ]}
         title="Haz crecer tu dinero con GrowCap"
       >
-        Monitorea el crecimiento de tus cuentas de ahorro.
+        <FinancialTipCarousel context="savings" />
       </PageHero>
 
       {checkoutNotice.message && <Alert type={checkoutNotice.type}>{checkoutNotice.message}</Alert>}

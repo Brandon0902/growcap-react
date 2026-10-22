@@ -83,5 +83,6 @@ export const ENDPOINTS = {
   assistant: {
     chat: '/assistant/chat',
     health: '/assistant/health',
+    financialTip: '/assistant/financial-tip',
   },
 };

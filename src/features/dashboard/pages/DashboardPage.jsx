@@ -1,4 +1,4 @@
-import { ArrowDownLeft, Banknote, ChartNoAxesColumnIncreasing, ChevronRight, FileText, HandCoins, PlusCircle, ShieldCheck } from 'lucide-react';
+import { ArrowDownLeft, Banknote, ChartNoAxesColumnIncreasing, ChevronRight, FileText, HandCoins, Lightbulb, PlusCircle, ShieldCheck, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { normalizeApiError } from '../../../api/apiUtils.js';
 import Alert from '../../../components/common/Alert.jsx';
@@ -16,6 +16,8 @@ import AvalAuthorizeModal from '../../loans/components/AvalAuthorizeModal.jsx';
 import DepositModal from '../../deposits/components/DepositModal.jsx';
 import useAuth from '../../auth/hooks/useAuth.js';
 import { getFullGreeting, getFormalDate } from '../../../utils/userFormatting.js';
+import { assistantService } from '../../../services/assistantService.js';
+import FinancialTipCarousel from '../../../components/common/FinancialTipCarousel.jsx';
 
 
 function getNumericValue(value) {
@@ -215,7 +217,7 @@ function DashboardPage() {
         ]}
         title={greetingText}
         actions={
-          <div style={{ display: 'inline-flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'inline-flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginTop: '16px' }}>
             <Button
               type="button"
               className="button-primary"
@@ -271,7 +273,7 @@ function DashboardPage() {
           </div>
         }
       >
-        Monitorea el crecimiento de tu capital.
+        <FinancialTipCarousel context="dashboard" />
       </PageHero>
 
       {notice.message && (
@@ -426,7 +428,7 @@ function DashboardPage() {
           setWithdrawalAlert({
             isOpen: true,
             title: 'Retiro solicitado',
-            message: msg || 'Su transacción será verificada; la verá reflejada en su cuenta en un máximo de 48 hrs.',
+            message: msg || 'Solicitud realizada con éxito. Verás el depósito reflejado en tu cuenta en un lapso de 24 a 48 hrs hábiles.',
           });
           loadBalance();
         }}

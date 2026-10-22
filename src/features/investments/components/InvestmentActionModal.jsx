@@ -161,7 +161,7 @@ export default function InvestmentActionModal({
           return;
         }
         const res = await solicitarRetiroInversion(item.id, { monto: parsedAmount, nip });
-        const msg = res?.data?.message || 'Solicitud de retiro registrada exitosamente.';
+        const msg = res?.data?.message || 'Solicitud realizada con éxito. Verás el depósito reflejado en tu cuenta en un máximo de 15 días hábiles.';
         setSuccessMsg(msg);
         setTimeout(() => {
           onSuccess?.(msg);
@@ -672,7 +672,7 @@ export default function InvestmentActionModal({
             {/* Texto descriptivo sobrio de una sola línea */}
             <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b', lineHeight: 1.4 }}>
               {mode === 'mover_saldo' && 'Los fondos seleccionados se traspasarán a tu saldo disponible general en caja.'}
-              {mode === 'retirar' && 'La solicitud pasará a procesamiento para dispersión a tu cuenta bancaria registrada.'}
+              {mode === 'retirar' && 'Verás el depósito reflejado en tu cuenta en un máximo de 15 días hábiles.'}
               {mode === 'reinvertir' && 'Se activará una póliza con los rendimientos calculados al nuevo plazo contratado.'}
             </p>
           </div>

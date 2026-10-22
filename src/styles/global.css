@@ -369,12 +369,150 @@ h3 {
   max-width: 620px;
 }
 
-.page-hero p {
+.page-hero p,
+.page-hero-content {
   color: var(--muted);
   font-size: 1rem;
   font-weight: 400;
   margin-bottom: 0;
-  max-width: 560px;
+  max-width: 620px;
+}
+
+/* --- CONSEJO FINANCIERO DINÁMICO (HERO DASHBOARD) --- */
+.dashboard-page .page-hero h1 {
+  margin-bottom: 0;
+}
+
+.hero-financial-tip-wrapper {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  margin-top: 16px;
+  margin-bottom: 4px;
+}
+
+/* Fase 1: Animación de entrada llamativa ("¡Tip Financiero!") */
+.hero-tip-teaser {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(88, 28, 135, 0.12) 0%, rgba(250, 204, 21, 0.22) 100%);
+  border: 1.5px solid rgba(250, 204, 21, 0.75);
+  color: #581C87;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(250, 204, 21, 0.25);
+  animation: heroTipTeaserPop 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  user-select: none;
+  will-change: opacity, transform, filter;
+}
+
+.hero-tip-teaser.is-exiting {
+  animation: heroTipTeaserFadeOut 0.28s ease-out forwards;
+}
+
+.hero-tip-bulb-pulse {
+  color: #D97706;
+  animation: heroTipBulbPulse 1.2s infinite ease-in-out;
+}
+
+/* Fase 2: Revelación ultra suave y fluida del consejo financiero */
+.hero-tip-revealed {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  line-height: 1.45;
+  animation: heroTipSmoothEntrance 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: opacity, transform, filter;
+}
+
+.hero-tip-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: #F3E8FF;
+  border: 1px solid #D8B4FE;
+  color: #6B21A8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  user-select: none;
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
+}
+
+.hero-tip-message {
+  font-size: 0.88rem;
+  color: #334155;
+  font-weight: 500;
+  line-height: 1.45;
+  max-width: 600px;
+}
+
+@keyframes heroTipTeaserPop {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.94);
+    filter: blur(4px);
+  }
+  35% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes heroTipTeaserFadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+    filter: blur(2px);
+  }
+}
+
+@keyframes heroTipBulbPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.4));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 7px rgba(245, 158, 11, 0.95));
+    transform: scale(1.18);
+  }
+}
+
+@keyframes heroTipSmoothEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(5px);
+  }
+  30% {
+    opacity: 0.35;
+  }
+  70% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
 
 .hero-stat-stack {

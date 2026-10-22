@@ -281,6 +281,11 @@ export default function LoanLifecycleAlertBanner({ items = [], onAbonar, onCance
                   </h4>
                   <p style={{ margin: '2px 0 0', fontSize: '0.76rem', color: '#6d28d9' }}>
                     Tu crédito por <strong>{formatMoney(alert.montoSolicitado)} MXN</strong> fue aprobado. La transferencia bancaria está en proceso de dispersión por tesorería.
+                    {alert.item?.fecha_estimada_deposito && (
+                      <span style={{ display: 'block', marginTop: '3px', fontWeight: 600 }}>
+                        📅 Fecha estimada de depósito: {formatDate(alert.item.fecha_estimada_deposito)}
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>

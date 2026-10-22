@@ -12,7 +12,7 @@ function PageHero({ actions, children, eyebrow, icon: Icon, stats = [], title })
           </span>
         )}
         <h1>{title}</h1>
-        {children && <p>{children}</p>}
+        {children && (typeof children === 'string' ? <p>{children}</p> : <div className="page-hero-content">{children}</div>)}
         {actions && <div className="hero-actions">{actions}</div>}
       </div>
       {stats.length > 0 && (

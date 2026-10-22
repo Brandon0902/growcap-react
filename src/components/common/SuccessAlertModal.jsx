@@ -6,7 +6,7 @@ function SuccessAlertModal({
   isOpen,
   onClose,
   title = 'Retiro solicitado',
-  message = 'Su solicitud se realizó con éxito y se verá reflejada en su cuenta en un máximo de 48 hrs.',
+  message = 'Solicitud realizada con éxito. Verás el depósito reflejado en tu cuenta en un lapso de 24 a 48 hrs hábiles.',
   buttonText = 'Aceptar',
   autoCloseMs = 10000,
 }) {
