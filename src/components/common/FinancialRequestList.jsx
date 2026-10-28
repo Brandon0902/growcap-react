@@ -1353,6 +1353,7 @@ function FinancialRequestList({
         </div>
       ) : type === 'investments' ? (
         <div
+          className="financial-records-toolbar"
           style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -1360,6 +1361,7 @@ function FinancialRequestList({
             marginBottom: '10px',
             flexWrap: 'wrap',
             gap: '8px',
+            width: '100%',
           }}
         >
           <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#64748b' }}>
@@ -2385,7 +2387,7 @@ function FinancialRequestList({
                       }
                     }}
                   >
-                    {/* Línea 1: Nombre + Badge + Saldo Actual + Chevron */}
+                    {/* Línea 1: Nombre + Badge + Monto + Chevron */}
                     <div className="financial-compact-line-1">
                       <div className="financial-compact-title-group">
                         <h3 className="financial-compact-title">
@@ -2406,13 +2408,15 @@ function FinancialRequestList({
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: '4px',
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0,
                             }}
                           >
                             <CheckCircle2 size={12} className="text-slate-600" aria-hidden="true" />
-                            Liquidada • Ciclo Concluido
+                            Liquidada
                           </span>
                         ) : (
-                          <span className={`request-card-label status-${statusBadge.tone}`} style={{ margin: 0, fontSize: '0.66rem', padding: '1px 7px', borderRadius: '10px' }}>
+                          <span className={`request-card-label status-${statusBadge.tone}`} style={{ margin: 0, fontSize: '0.66rem', padding: '1px 7px', borderRadius: '10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
                             {statusBadge.label}
                           </span>
                         )}
@@ -2427,13 +2431,30 @@ function FinancialRequestList({
                               color: '#15803d',
                               border: '1px solid #bbf7d0',
                               fontWeight: 700,
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0,
                             }}
                           >
                             Disponible: {formatMoney(item.saldo_disponible)}
                           </span>
                         )}
                       </div>
-                      <div className="financial-compact-line-1-right">
+                      <div className="financial-compact-amount-group">
+                        <span
+                          className="financial-compact-amount"
+                          style={{ color: isLiquidated ? '#64748b' : 'var(--color-primary)' }}
+                        >
+                          {formatMoney(capitalActual > 0 ? capitalActual : capitalInicial + rendGenerado)}
+                        </span>
+                        <span className="financial-compact-chevron" aria-hidden="true">
+                          <ChevronDown size={17} />
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Línea 2: Vencimiento / Conclusión + Barra de progreso */}
+                    <div className="financial-compact-line-2">
+                      <div className="financial-compact-expire-wrap">
                         {endDate && (
                           <span
                             className={`financial-compact-expire-tag ${isLiquidated ? 'is-liquidated' : ''}`}
@@ -2442,34 +2463,10 @@ function FinancialRequestList({
                             {isLiquidated ? `Concluida: ${formatDate(endDate)}` : `Vence: ${formatDate(endDate)}`}
                           </span>
                         )}
-                        <div className="financial-compact-amount-group">
-                          <span
-                            className="financial-compact-amount"
-                            style={{ color: isLiquidated ? '#64748b' : 'var(--color-primary)' }}
-                          >
-                            {formatMoney(capitalActual > 0 ? capitalActual : capitalInicial + rendGenerado)}
-                          </span>
-                          <span className="financial-compact-chevron" aria-hidden="true">
-                            <ChevronDown size={17} />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Línea 2: Tasa + Plazo + Ganancia + Barra de avance adaptativa */}
-                    <div className="financial-compact-line-2">
-                      <div className="financial-compact-subtext">
-                        <span>{yieldText}</span>
-                        <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
-                        <span>{plazoText}</span>
-                        <span style={{ margin: '0 5px', color: '#cbd5e1' }}>•</span>
-                        <span style={{ color: isLiquidated ? '#059669' : '#16a34a', fontWeight: 600 }}>
-                          +{formatMoney(rendGenerado)} ganancia {isLiquidated ? 'generada' : ''}
-                        </span>
                       </div>
                       {isLiquidated ? (
                         <div className="financial-compact-progress-pill is-liquidated" title="Póliza 100% liquidada y ciclo concluido">
-                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#475569' }}>
+                          <span style={{ fontSize: '0.70rem', fontWeight: 700, color: '#475569' }}>
                             100% Liquidada
                           </span>
                           <div className="financial-compact-micro-bar">
@@ -2486,7 +2483,7 @@ function FinancialRequestList({
                       ) : (
                         endDate && (
                           <div className="financial-compact-progress-pill" title={`Maduración: ${progresoMaduracion}% (${diasRestantes !== null && diasRestantes <= 0 ? 'Plazo cumplido' : `${diasRestantes}d restantes`})`}>
-                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: diasRestantes !== null && diasRestantes <= 0 ? '#10b981' : 'var(--color-primary)' }}>
+                            <span style={{ fontSize: '0.70rem', fontWeight: 700, color: diasRestantes !== null && diasRestantes <= 0 ? '#10b981' : 'var(--color-primary)' }}>
                               {diasRestantes !== null && diasRestantes <= 0 ? 'Cumplido' : `${progresoMaduracion}%`}
                             </span>
                             <div className="financial-compact-micro-bar">
@@ -2506,6 +2503,17 @@ function FinancialRequestList({
                           </div>
                         )
                       )}
+                    </div>
+
+                    {/* Línea 3: Rendimiento, Plazo y Ganancia pactada/generada */}
+                    <div className="financial-compact-line-3">
+                      <span>{yieldText}</span>
+                      <span style={{ color: '#cbd5e1' }}>•</span>
+                      <span>{plazoText}</span>
+                      <span style={{ color: '#cbd5e1' }}>•</span>
+                      <span style={{ color: isLiquidated ? '#059669' : '#16a34a', fontWeight: 600 }}>
+                        +{formatMoney(rendGenerado)} ganancia {isLiquidated ? 'generada' : ''}
+                      </span>
                     </div>
 
                     {/* Línea de Acciones de Gracia cuando hay saldo liberado */}

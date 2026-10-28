@@ -6,6 +6,7 @@ const introTargets = [
   '.page-kicker',
   '.page-hero h1',
   '.page-hero p',
+  '.page-hero .page-hero-content',
   '.hero-stat',
   '.motion-item',
   '.motion-section',
@@ -42,10 +43,13 @@ function useGrowcapPageMotion(scopeRef, { desktopScroll = true } = {}) {
           const { reduceMotion, isDesktop } = context.conditions;
 
           if (reduceMotion) {
-            gsap.set(introTargets, {
-              autoAlpha: 1,
-              clearProps: 'transform,visibility',
-            });
+            const targets = gsap.utils.toArray(introTargets, scopeRef.current);
+            if (targets.length) {
+              gsap.set(targets, {
+                autoAlpha: 1,
+                clearProps: 'transform,visibility',
+              });
+            }
             return;
           }
 
@@ -56,28 +60,36 @@ function useGrowcapPageMotion(scopeRef, { desktopScroll = true } = {}) {
             },
           });
 
-          intro
-            .from('.page-hero', { autoAlpha: 0, y: 16, scale: 0.988 })
-            .from('.hero-index', { xPercent: -100, duration: 0.48 }, '<0.06')
-            .from('.page-kicker', { autoAlpha: 0, y: 8, duration: 0.34 }, '<0.12')
-            .from('.page-hero h1', { autoAlpha: 0, y: 16 }, '<0.08')
-            .from('.page-hero p', { autoAlpha: 0, y: 10, duration: 0.42 }, '<0.08')
-            .from(
-              '.hero-stat',
-              {
-                autoAlpha: 0,
-                x: isDesktop ? 20 : 0,
-                y: isDesktop ? 0 : 10,
-                duration: 0.42,
-                stagger: 0.09,
-              },
-              '<0.12',
-            );
+          const animateIfExists = (selector, vars, position) => {
+            const targets = gsap.utils.toArray(selector, scopeRef.current);
+            if (targets.length > 0) {
+              const hasTweens = intro.getChildren().length > 0;
+              intro.from(targets, vars, hasTweens && position ? position : undefined);
+            }
+          };
+
+          animateIfExists('.page-hero', { autoAlpha: 0, y: 16, scale: 0.988 });
+          animateIfExists('.hero-index', { xPercent: -100, duration: 0.48 }, '<0.06');
+          animateIfExists('.page-kicker', { autoAlpha: 0, y: 8, duration: 0.34 }, '<0.12');
+          animateIfExists('.page-hero h1', { autoAlpha: 0, y: 16 }, '<0.08');
+          animateIfExists('.page-hero p, .page-hero .page-hero-content', { autoAlpha: 0, y: 10, duration: 0.42 }, '<0.08');
+          animateIfExists(
+            '.hero-stat',
+            {
+              autoAlpha: 0,
+              x: isDesktop ? 20 : 0,
+              y: isDesktop ? 0 : 10,
+              duration: 0.42,
+              stagger: 0.09,
+            },
+            '<0.12',
+          );
 
           const firstSection = scopeRef.current?.querySelector('.motion-section, .motion-item');
           if (firstSection) {
             const immediateTargets = gsap.utils.toArray(
               '.motion-immediate, .motion-immediate .motion-item, .motion-immediate .form-field, .motion-immediate .button',
+              scopeRef.current,
             );
             const reveal = revealCollection(immediateTargets, { y: 20, stagger: 0.07 });
 
@@ -86,7 +98,7 @@ function useGrowcapPageMotion(scopeRef, { desktopScroll = true } = {}) {
             }
           }
 
-          const scrollTargets = gsap.utils.toArray('.motion-scroll');
+          const scrollTargets = gsap.utils.toArray('.motion-scroll', scopeRef.current);
           if (isDesktop && desktopScroll && scrollTargets.length) {
             scrollTargets.forEach((target, index) => {
               const children = target.querySelectorAll(

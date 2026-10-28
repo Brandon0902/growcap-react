@@ -1029,6 +1029,21 @@ h3 {
   height: 4px;
 }
 
+.records-main-section {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.records-main-section .request-list {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 16px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .section-heading {
   align-items: end;
   display: flex;
@@ -1410,11 +1425,11 @@ h3 {
 }
 
 .savings-plan-card-top {
-  align-items: flex-start;
+  align-items: center;
   display: flex;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  min-height: 76px;
+  min-height: auto;
 }
 
 .savings-plan-icon {
@@ -1465,6 +1480,29 @@ h3 {
 }
 
 /* Badges discretos en encabezado */
+
+.plan-help-btn {
+  align-items: center;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  height: 28px;
+  justify-content: center;
+  padding: 0;
+  transition: all 150ms ease;
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.plan-help-btn:hover {
+  background: #f5f3ff;
+  border-color: #c084fc;
+  color: #6b21a8;
+}
+
 .plan-status-badge {
   align-items: center;
   border-radius: 9999px;
@@ -3395,6 +3433,9 @@ h3 {
 
   .main-content {
     padding: 14px 12px 100px;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
 
   .page {
@@ -3516,26 +3557,23 @@ h3 {
   }
 
   .savings-plan-card {
-    border-radius: 12px;
-    box-shadow: 0 4px 16px var(--color-shadow);
-    gap: 6px;
-    min-height: auto;
-    padding: 10px 12px;
+    border-radius: 14px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    gap: 3px !important;
+    min-height: auto !important;
+    padding: 12px 14px !important;
   }
 
   .savings-plan-card::after {
-    height: 3px;
-  }
-
-  .savings-plan-card {
-    padding: 16px;
-    min-height: 190px;
+    height: 2.5px !important;
   }
 
   .savings-plan-card-top {
-    align-items: flex-start;
-    display: flex;
-    gap: 10px;
+    align-items: flex-start !important;
+    display: flex !important;
+    gap: 8px !important;
+    min-height: auto !important;
+    margin-bottom: 0 !important;
   }
 
   .savings-plan-icon {
@@ -3545,13 +3583,13 @@ h3 {
   }
 
   .savings-plan-icon svg {
-    height: 20px;
-    width: 20px;
+    height: 18px !important;
+    width: 18px !important;
   }
 
   .savings-plan-card h3,
   .savings-plan-title {
-    font-size: 1rem !important;
+    font-size: 0.9375rem !important;
     font-weight: 700 !important;
     line-height: 1.2 !important;
     margin: 0 !important;
@@ -3559,9 +3597,10 @@ h3 {
 
   .savings-plan-card p,
   .savings-plan-desc {
-    font-size: 0.72rem !important;
+    font-size: 0.6875rem !important;
     line-height: 1.25 !important;
-    margin: 2px 0 0 0 !important;
+    margin: 1px 0 0 0 !important;
+    -webkit-line-clamp: 2 !important;
   }
 
   .savings-plan-rate {
@@ -3570,16 +3609,18 @@ h3 {
     border: none !important;
     box-shadow: none !important;
     flex-direction: column !important;
-    margin: 4px 0 !important;
-    padding: 8px 0 !important;
+    margin: 0 !important;
+    padding: 5px 0 !important;
+    gap: 1px !important;
   }
 
   .savings-plan-rate span {
-    font-size: 0.7rem !important;
+    font-size: 0.65rem !important;
+    margin-bottom: 0 !important;
   }
 
   .savings-plan-rate strong {
-    font-size: 1.5rem !important;
+    font-size: 1.35rem !important;
     line-height: 1.1 !important;
   }
 
@@ -3587,34 +3628,48 @@ h3 {
     display: flex !important;
     justify-content: space-between !important;
     border-top: 1px solid #f1f5f9 !important;
-    padding-top: 8px !important;
-    gap: 12px !important;
+    padding-top: 5px !important;
+    gap: 8px !important;
   }
 
   .savings-plan-summary small {
-    font-size: 0.7rem !important;
+    font-size: 0.65rem !important;
+    line-height: 1.15 !important;
   }
 
   .savings-plan-summary strong {
-    font-size: 0.82rem !important;
+    font-size: 0.8rem !important;
+    line-height: 1.2 !important;
   }
 
   .plan-card-action {
-    font-size: 0.8125rem !important;
-    padding-top: 8px !important;
+    font-size: 0.775rem !important;
+    padding-top: 5px !important;
+    margin-top: 1px !important;
+    gap: 3px !important;
+  }
+
+  .plan-card-action .action-arrow {
+    width: 13px !important;
+    height: 13px !important;
   }
 
   .savings-plan-status-banner {
-    font-size: 0.72rem !important;
-    padding: 6px 8px !important;
+    font-size: 0.6875rem !important;
+    padding: 4px 6px !important;
+  }
+
+  .plan-status-badge {
+    font-size: 0.6rem !important;
+    padding: 1px 6px !important;
   }
 
   .plan-locked-badge {
-    border-radius: 8px;
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    right: 8px;
-    top: 8px;
+    border-radius: 6px !important;
+    font-size: 0.62rem !important;
+    padding: 1px 5px !important;
+    right: 6px !important;
+    top: 6px !important;
   }
 
   .savings-plans-state {
@@ -3887,6 +3942,29 @@ h3 {
 }
 
 @media (max-width: 480px) {
+  .savings-plan-card {
+    padding: 10px 12px !important;
+    gap: 2px !important;
+    border-radius: 12px !important;
+  }
+
+  .savings-plan-rate {
+    padding: 3px 0 !important;
+  }
+
+  .savings-plan-rate strong {
+    font-size: 1.25rem !important;
+  }
+
+  .savings-plan-summary {
+    padding-top: 4px !important;
+  }
+
+  .plan-card-action {
+    padding-top: 4px !important;
+    font-size: 0.75rem !important;
+  }
+
   .wealth-stage {
     width: 205px;
     height: 145px;
@@ -5752,6 +5830,8 @@ h3 {
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .financial-compact-card:hover {
@@ -5967,6 +6047,28 @@ h3 {
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.financial-compact-expire-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.financial-compact-line-3 {
+  display: flex;
+  align-items: center;
+  font-size: 0.74rem;
+  color: #64748b;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-top: 1px solid rgba(226, 232, 240, 0.6);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
 .financial-expanded-drawer {
   padding: 16px 18px;
   background: #fafafa;
@@ -6114,42 +6216,94 @@ h3 {
 }
 
 @media (max-width: 640px) {
+  .financial-records-toolbar {
+    width: 100%;
+    gap: 8px !important;
+  }
+
+  .records-main-section .request-list {
+    padding: 12px 10px;
+  }
+
   .financial-compact-header {
-    padding: 10px 14px;
-    gap: 4px;
+    padding: 10px 12px;
+    gap: 6px;
   }
 
   .financial-compact-line-1 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
-    flex-wrap: wrap;
+    width: 100%;
+    min-height: auto;
+    flex-wrap: nowrap;
   }
 
-  .financial-compact-line-1-right {
-    gap: 8px;
-  }
-
-  .financial-compact-expire-tag {
-    font-size: 0.68rem;
-    padding: 1px 5px;
+  .financial-compact-title-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
   }
 
   .financial-compact-title {
-    font-size: 0.9rem;
-    max-width: 160px;
+    font-size: 0.92rem;
+    max-width: 125px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+  }
+
+  .financial-compact-amount-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .financial-compact-amount {
     font-size: 0.95rem;
+    font-weight: 700;
   }
 
   .financial-compact-line-2 {
-    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
+    font-size: 0.72rem;
+    min-height: auto;
+    width: 100%;
+  }
+
+  .financial-compact-expire-tag {
+    font-size: 0.68rem;
+    padding: 1px 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .financial-compact-progress-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .financial-compact-micro-bar {
-    width: 88px;
-    height: 8px;
+    width: 60px;
+    height: 6px;
+  }
+
+  .financial-compact-line-3 {
+    font-size: 0.71rem;
+    gap: 4px;
+    padding-top: 5px;
+    margin-top: 2px;
   }
 
   .financial-expanded-drawer {

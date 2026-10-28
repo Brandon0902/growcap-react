@@ -113,16 +113,13 @@ function InvestmentPlanCard({ description, name, plan, onClick }) {
         <span className="savings-plan-icon" aria-hidden="true">
           <ChartNoAxesColumnIncreasing size={22} />
         </span>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-            <h3 className="savings-plan-title">{planName}</h3>
-            {status !== null && (
-              <span className={`plan-status-badge ${formatStatus(status) === 'Activo' ? 'plan-status-badge-active' : 'plan-status-badge-inactive'}`}>
-                {formatStatus(status)}
-              </span>
-            )}
-          </div>
-          <p className="savings-plan-desc">{planDescription}</p>
+        <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+          <h3 className="savings-plan-title">{planName}</h3>
+          {status !== null && (
+            <span className={`plan-status-badge ${formatStatus(status) === 'Activo' ? 'plan-status-badge-active' : 'plan-status-badge-inactive'}`}>
+              {formatStatus(status)}
+            </span>
+          )}
         </div>
       </div>
 

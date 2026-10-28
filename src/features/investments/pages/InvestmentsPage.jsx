@@ -1,4 +1,4 @@
-import { AlertCircle, ChartNoAxesColumnIncreasing, ChevronUp, Eye, History, RefreshCw } from 'lucide-react';
+import { AlertCircle, HelpCircle, ChartNoAxesColumnIncreasing, ChevronUp, Eye, History, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { normalizeApiError } from '../../../api/apiUtils.js';
@@ -10,6 +10,7 @@ import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
 import { formatCurrency } from '../../../utils/formatCurrency.js';
 import InvestmentPlanCard from '../components/InvestmentPlanCard.jsx';
 import InvestmentRequestForm from '../components/InvestmentRequestForm.jsx';
+import PlansHelpModal from '../../../components/common/PlansHelpModal.jsx';
 import { parseStripeReturn } from '../../payments/services/stripeReturn.js';
 import {
   confirmInvestmentCheckout,
@@ -48,6 +49,7 @@ function InvestmentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [checkoutNotice, setCheckoutNotice] = useState({ message: '', type: 'info' });
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
     const viewParam = searchParams.get('view');
     const tabParam = searchParams.get('tab');
@@ -276,8 +278,18 @@ function InvestmentsPage() {
           <section className="section-block savings-plans-section motion-immediate">
             <div className="section-heading savings-plans-heading">
               <div>
-                <span>Comparador</span>
-                <h2>Planes disponibles</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h2 style={{ margin: 0 }}>Planes disponibles</h2>
+                  <button
+                    type="button"
+                    className="plan-help-btn"
+                    onClick={() => setIsHelpModalOpen(true)}
+                    aria-label="Conoce cómo funciona cada plan de inversión"
+                    title="Conoce cómo funciona cada plan"
+                  >
+                    <HelpCircle size={15} />
+                  </button>
+                </div>
               </div>
             </div>
             {isLoading && <PlanCardsSkeleton />}
@@ -311,7 +323,14 @@ function InvestmentsPage() {
             )}
           </section>
 
-          <InvestmentRequestForm
+          <PlansHelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+        title="Información de Planes de Inversión"
+        type="investments"
+        plans={plans}
+      />
+      <InvestmentRequestForm
             ref={requestFormRef}
             onCreated={() => {
               loadInvestmentsData();

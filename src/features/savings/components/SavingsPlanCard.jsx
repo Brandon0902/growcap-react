@@ -341,24 +341,19 @@ function SavingsPlanCard({ plan, index, onClick, disabled = false }) {
         <span className="savings-plan-icon" aria-hidden="true" style={isPlanInactive ? { filter: 'grayscale(0.6)', opacity: 0.7 } : undefined}>
           <Icon size={22} />
         </span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-            <h3 className="savings-plan-title" style={{ margin: 0, color: isPlanInactive ? '#64748b' : undefined }}>{toText(title)}</h3>
-            {isPlanInactive ? (
-              <span className="plan-status-badge plan-status-badge-inactive">
-                <Lock size={10} aria-hidden="true" />
-                Inactivo
-              </span>
-            ) : isContractActive ? (
-              <span className="plan-status-badge plan-status-badge-active">
-                <Lock size={10} aria-hidden="true" />
-                Activo
-              </span>
-            ) : null}
-          </div>
-          {(planDescriptions[toText(title)] || getValue(plan, descriptionFields)) && (
-            <p className="savings-plan-desc">{planDescriptions[toText(title)] || getValue(plan, descriptionFields)}</p>
-          )}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+          <h3 className="savings-plan-title" style={{ margin: 0, color: isPlanInactive ? '#64748b' : undefined }}>{toText(title)}</h3>
+          {isPlanInactive ? (
+            <span className="plan-status-badge plan-status-badge-inactive">
+              <Lock size={10} aria-hidden="true" />
+              Inactivo
+            </span>
+          ) : isContractActive ? (
+            <span className="plan-status-badge plan-status-badge-active">
+              <Lock size={10} aria-hidden="true" />
+              Activo
+            </span>
+          ) : null}
         </div>
       </div>
 

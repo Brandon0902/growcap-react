@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowRight, Banknote, ChevronUp, Eye, HandCoins, RefreshCw, Lock, ShieldCheck, XCircle } from 'lucide-react';
+import { AlertCircle, ArrowRight, Banknote, ChevronUp, Eye, HandCoins, HelpCircle, RefreshCw, Lock, ShieldCheck, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { normalizeApiError } from '../../../api/apiUtils.js';
@@ -8,6 +8,7 @@ import FinancialRequestList from '../../../components/common/FinancialRequestLis
 import PageHero from '../../../components/common/PageHero.jsx';
 import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
 import LoanWizard from '../components/LoanWizard.jsx';
+import PlansHelpModal from '../../../components/common/PlansHelpModal.jsx';
 import LoanLifecycleAlertBanner from '../components/LoanLifecycleAlertBanner.jsx';
 import LoanAbonoModal from '../components/LoanAbonoModal.jsx';
 import LoanCancelModal from '../components/LoanCancelModal.jsx';
@@ -168,7 +169,7 @@ function LoanPlanCard({ index, plan, onClick }) {
               </span>
             )}
           </div>
-          <p className="savings-plan-desc">{description}</p>
+
         </div>
       </div>
 
@@ -210,6 +211,7 @@ function LoansPage() {
   const [error, setError] = useState('');
   const [lockedPlan, setLockedPlan] = useState(null);
   const [plansError, setPlansError] = useState('');
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
     const viewParam = searchParams.get('view');
     const tabParam = searchParams.get('tab');
@@ -562,8 +564,18 @@ function LoansPage() {
           <section className="section-block savings-plans-section motion-immediate">
             <div className="section-heading savings-plans-heading">
               <div>
-                <span>Opciones disponibles</span>
-                <h2>Planes de préstamo</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h2 style={{ margin: 0 }}>Planes de préstamo</h2>
+                  <button
+                    type="button"
+                    className="plan-help-btn"
+                    onClick={() => setIsHelpModalOpen(true)}
+                    aria-label="Conoce las condiciones de cada plan de préstamo"
+                    title="Conoce las condiciones de cada plan"
+                  >
+                    <HelpCircle size={15} />
+                  </button>
+                </div>
               </div>
             </div>
             {isLoading && <PlanCardsSkeleton />}
@@ -596,6 +608,14 @@ function LoansPage() {
               </div>
             )}
           </section>
+
+          <PlansHelpModal
+            isOpen={isHelpModalOpen}
+            onClose={() => setIsHelpModalOpen(false)}
+            title="Información de Planes de Préstamo"
+            type="loans"
+            plans={plans}
+          />
 
           <section className="guided-request-section">
             {!plansError && (

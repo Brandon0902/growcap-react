@@ -1,9 +1,9 @@
-import { AlertCircle, ChevronUp, Eye, EyeOff, HandCoins, History, PiggyBank, RefreshCw, TrendingUp } from 'lucide-react';
+import { AlertCircle, HelpCircle, ChevronUp, Eye, EyeOff, HandCoins, History, PiggyBank, RefreshCw, TrendingUp } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { normalizeApiError } from '../../../api/apiUtils.js';
-import { gsap, useGSAP } from '../../../animations/gsapSetup.js';
+
 import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
 import FinancialRequestList from '../../../components/common/FinancialRequestList.jsx';
@@ -11,6 +11,7 @@ import PageHero from '../../../components/common/PageHero.jsx';
 import useGrowcapPageMotion from '../../../hooks/useGrowcapPageMotion.js';
 import SavingsPlanCard from '../components/SavingsPlanCard.jsx';
 import SavingsRequestForm from '../components/SavingsRequestForm.jsx';
+import PlansHelpModal from '../../../components/common/PlansHelpModal.jsx';
 import SavingsProjectionModal from '../components/SavingsProjectionModal.jsx';
 import { formatCurrency } from '../../../utils/formatCurrency.js';
 import { parseStripeReturn } from '../../payments/services/stripeReturn.js';
@@ -84,6 +85,7 @@ function SavingsPage() {
     return viewParam === 'my-records' || tabParam === 'records' ? 'records' : 'plans';
   });
   const [isPlanProjectionOpen, setIsPlanProjectionOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [selectedPlanToProject, setSelectedPlanToProject] = useState(null);
 
   const activePlans = useMemo(() => {
@@ -363,8 +365,17 @@ function SavingsPage() {
         <>
           <section className="section-block savings-plans-section motion-section" ref={plansRef}>
             <div className="section-heading savings-plans-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <h2>Planes de ahorro</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h2 style={{ margin: 0 }}>Planes de ahorro</h2>
+                <button
+                  type="button"
+                  className="plan-help-btn"
+                  onClick={() => setIsHelpModalOpen(true)}
+                  aria-label="Conoce cómo funciona cada plan de ahorro"
+                  title="Conoce cómo funciona cada plan"
+                >
+                  <HelpCircle size={15} />
+                </button>
               </div>
               {activePlans.length > 0 && (
                 <Button
@@ -432,7 +443,14 @@ function SavingsPage() {
             )}
           </section>
 
-          <SavingsRequestForm
+          <PlansHelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+        title="Información de Planes de Ahorro"
+        type="savings"
+        plans={activePlans.length > 0 ? activePlans : plans}
+      />
+      <SavingsRequestForm
             ref={requestFormRef}
             onCreated={() => {
               loadSavingsPlans();
