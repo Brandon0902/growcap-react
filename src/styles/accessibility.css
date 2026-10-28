@@ -1,8 +1,23 @@
 :focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
+/* Eliminar recuadro/outline en campos de monto de modales */
+.hero-amount-input,
+.hero-amount-input:focus,
+.hero-amount-input:focus-visible,
+.hero-amount-box input,
+.hero-amount-box input:focus,
+.hero-amount-box input:focus-visible,
+.hero-date-box input,
+.hero-date-box input:focus,
+.hero-date-box input:focus-visible {
+  border: none !important;
+  outline: none !important;
+  outline-color: transparent !important;
+  box-shadow: none !important;
+}
 .skip-link {
   background: var(--color-primary-dark);
   color: var(--color-on-primary);

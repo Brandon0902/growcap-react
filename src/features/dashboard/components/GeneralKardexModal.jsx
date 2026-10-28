@@ -557,7 +557,7 @@ export default function GeneralKardexModal({
                       style={{
                         fontSize: '0.69rem',
                         padding: '2px 8px',
-                        borderRadius: '12px',
+                        borderRadius: '4px',
                         border: isSelected ? '1px solid var(--color-primary)' : '1px solid #e2e8f0',
                         background: isSelected ? 'var(--color-primary)' : '#ffffff',
                         color: isSelected ? '#ffffff' : '#64748b',

@@ -8,14 +8,14 @@ function SummaryCard({ helper, icon: Icon, label, value, to, onClick, actionLabe
       title={helper || undefined}
     >
       <div className="portfolio-card-header">
-        <span className="page-kicker">
-          {Icon && <Icon size={14} aria-hidden="true" />}
+        <div className="portfolio-card-title">
+          {Icon && <Icon size={16} className="portfolio-card-title-icon" aria-hidden="true" />}
           <span>{label}</span>
-        </span>
+        </div>
         {(to || onClick) && (
           <span className="portfolio-card-action">
             <span>{actionLabel}</span>
-            <ArrowUpRight size={13} aria-hidden="true" />
+            <ArrowUpRight size={14} aria-hidden="true" />
           </span>
         )}
       </div>
@@ -23,21 +23,21 @@ function SummaryCard({ helper, icon: Icon, label, value, to, onClick, actionLabe
       <span className="portfolio-card-value">{value}</span>
 
       {Array.isArray(breakdown) && breakdown.length > 0 ? (
-        <div className="portfolio-card-chips">
+        <div className="portfolio-card-breakdown">
           {breakdown.map((item) => (
             <div
               key={item.label}
-              className={`portfolio-chip is-${item.tone || 'neutral'}`}
+              className="portfolio-breakdown-item"
               title={item.tooltip || helper || undefined}
             >
-              <span className="portfolio-chip-dot" aria-hidden="true" />
-              <span className="portfolio-chip-label">{item.label}:</span>
-              <span className="portfolio-chip-val">{item.value}</span>
+              <span className={`portfolio-breakdown-dot is-${item.tone || 'neutral'}`} aria-hidden="true" />
+              <span className="portfolio-breakdown-label">{item.label}:</span>
+              <span className="portfolio-breakdown-val">{item.value}</span>
             </div>
           ))}
         </div>
       ) : (
-        <div className="portfolio-card-chips portfolio-card-chips-empty" />
+        <div className="portfolio-card-breakdown portfolio-card-breakdown-empty" />
       )}
     </div>
   );

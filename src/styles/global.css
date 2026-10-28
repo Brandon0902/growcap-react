@@ -16,7 +16,7 @@
   --color-neutral: #64748B;
   --color-accent: #FACC15;
   --color-accent-strong: #FFD400;
-  --color-focus: #FACC15;
+  --color-focus: rgba(147, 51, 234, 0.4);
   --color-on-primary: #FFFFFF;
   --color-shadow: rgba(17, 24, 39, 0.07);
   --color-primary-shadow: rgba(88, 28, 135, 0.14);
@@ -515,6 +515,91 @@ h3 {
   }
 }
 
+/* ==========================================================================
+   Hero Action Pills (Option 4 - Floating Action Pills)
+   ========================================================================== */
+.hero-action-pills {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  max-width: 440px;
+  width: 100%;
+}
+
+.hero-pill-btn {
+  align-items: center;
+  border-radius: 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-flex;
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 700;
+  gap: 6px;
+  justify-content: center;
+  min-height: 44px;
+  outline: none;
+  padding: 10px 8px;
+  touch-action: manipulation;
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
+  user-select: none;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hero-pill-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.hero-pill-primary {
+  background: var(--color-primary, #7c3aed);
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px rgba(124, 58, 237, 0.2);
+  color: #ffffff;
+}
+
+.hero-pill-primary:hover:not(:disabled) {
+  background: var(--color-primary-dark, #6d28d9);
+  box-shadow: 0 1px 3px rgba(124, 58, 237, 0.3);
+}
+
+.hero-pill-secondary {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  box-shadow: none;
+  color: #334155;
+}
+
+.hero-pill-secondary:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  box-shadow: none;
+}
+
+.hero-pill-btn:disabled {
+  filter: grayscale(0.6);
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .hero-action-pills {
+    gap: 6px;
+    margin-top: 14px;
+    max-width: 100%;
+  }
+
+  .hero-pill-btn {
+    border-radius: 12px;
+    font-size: 0.74rem;
+    gap: 5px;
+    min-height: 42px;
+    padding: 8px 6px;
+  }
+}
+
 .hero-stat-stack {
   align-self: stretch;
   display: grid;
@@ -618,6 +703,10 @@ h3 {
 }
 
 .portfolio-item-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 14px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -625,17 +714,163 @@ h3 {
   height: 100%;
   padding: 16px 18px;
   gap: 8px;
-  border-radius: 14px;
 }
 
+.portfolio-item-card::before {
+  display: none !important;
+}
+
+.portfolio-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.portfolio-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+
+.portfolio-card-title-icon {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.portfolio-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-primary, #7c3aed);
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  text-decoration: none;
+  transition: color 0.15s ease, text-decoration 0.15s ease;
+}
+
+.portfolio-card-link:hover .portfolio-card-action,
+.balance-hero-card-interactive:hover .portfolio-card-action,
+.portfolio-card-action:hover {
+  text-decoration: underline;
+  color: var(--color-primary-dark, #581c87);
+  background: transparent;
+  border: none;
+}
+
+.balance-hero-card-interactive {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.portfolio-card-link:hover .portfolio-item-card,
+.balance-hero-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  border-color: #cbd5e1;
+}
+
+.portfolio-card-link:active .portfolio-item-card,
+.balance-hero-card-interactive:active {
+  transform: scale(0.99);
+}
+
+.portfolio-card-value {
+  color: #0f172a;
+  font-size: clamp(1.45rem, 2.8vw, 1.8rem);
+  font-weight: 700;
+  line-height: 1.15;
+  font-family: inherit;
+  display: block;
+  margin: 4px 0 2px 0;
+  letter-spacing: -0.01em;
+}
+
+/* Desglose de saldos limpio en linea con bullets circulares */
+.portfolio-card-breakdown {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  min-height: 24px;
+}
+
+.portfolio-card-breakdown-empty {
+  border-top: none;
+  min-height: 0;
+  padding-top: 0;
+}
+
+.portfolio-breakdown-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.portfolio-breakdown-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.portfolio-breakdown-dot.is-growing {
+  background-color: #9333ea;
+}
+
+.portfolio-breakdown-dot.is-available {
+  background-color: #16a34a;
+}
+
+.portfolio-breakdown-dot.is-warning {
+  background-color: #d97706;
+}
+
+.portfolio-breakdown-dot.is-neutral {
+  background-color: #94a3b8;
+}
+
+.portfolio-breakdown-label {
+  font-weight: 500;
+  color: #64748b;
+}
+
+.portfolio-breakdown-val {
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+}
+
+/* Backward compatibility for any remaining chips */
 .portfolio-card-chips {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
-  padding-top: 8px;
+  gap: 16px;
+  padding-top: 10px;
   border-top: 1px solid #f1f5f9;
-  min-height: 28px;
+  min-height: 24px;
 }
 
 .portfolio-card-chips-empty {
@@ -647,137 +882,56 @@ h3 {
 .portfolio-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.72rem;
-  padding: 3px 8px;
-  border-radius: 6px;
+  gap: 6px;
+  font-size: 0.78rem;
   line-height: 1.2;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 .portfolio-chip-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
   flex-shrink: 0;
+  display: inline-block;
+}
+
+.portfolio-chip.is-growing .portfolio-chip-dot {
+  background-color: #9333ea;
+}
+
+.portfolio-chip.is-available .portfolio-chip-dot {
+  background-color: #16a34a;
+}
+
+.portfolio-chip.is-warning .portfolio-chip-dot {
+  background-color: #d97706;
+}
+
+.portfolio-chip.is-neutral .portfolio-chip-dot {
+  background-color: #94a3b8;
 }
 
 .portfolio-chip-label {
   font-weight: 500;
-  opacity: 0.85;
+  color: #64748b;
 }
 
 .portfolio-chip-val {
   font-weight: 700;
+  color: #0f172a;
   font-variant-numeric: tabular-nums;
-  font-size: 0.74rem;
-}
-
-/* Tone variants */
-.portfolio-chip.is-growing {
-  background: #f5f3ff;
-  border: 1px solid #e9d5ff;
-  color: #6b21a8;
-}
-.portfolio-chip.is-growing .portfolio-chip-dot {
-  background: #7c3aed;
-}
-
-.portfolio-chip.is-available {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #15803d;
-}
-.portfolio-chip.is-available .portfolio-chip-dot {
-  background: #16a34a;
-}
-
-.portfolio-chip.is-warning {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #b45309;
-}
-.portfolio-chip.is-warning .portfolio-chip-dot {
-  background: #d97706;
-}
-
-.portfolio-chip.is-neutral {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #475569;
-}
-.portfolio-chip.is-neutral .portfolio-chip-dot {
-  background: #94a3b8;
-}
-
-.portfolio-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-}
-
-.portfolio-card-header .page-kicker {
-  margin-bottom: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.portfolio-card-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--color-primary, #6b21a8);
-  background: rgba(147, 51, 234, 0.08);
-  border: 1px solid rgba(147, 51, 234, 0.14);
-  padding: 4px 10px;
-  border-radius: 999px;
-  transition: all 0.2s ease;
-}
-
-.portfolio-card-link:hover .portfolio-card-action,
-.balance-hero-card-interactive:hover .portfolio-card-action {
-  background: var(--color-primary, #6b21a8);
-  color: #ffffff;
-  border-color: var(--color-primary, #6b21a8);
-}
-
-.balance-hero-card-interactive {
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.portfolio-card-link:hover .portfolio-item-card,
-.balance-hero-card-interactive:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(107, 33, 168, 0.12);
-  border-color: var(--purple-300, #d8b4fe);
-}
-
-.portfolio-card-link:active .portfolio-item-card,
-.balance-hero-card-interactive:active {
-  transform: scale(0.99);
-}
-
-.portfolio-card-value {
-  color: var(--color-primary-dark);
-  font-size: clamp(1.45rem, 2.8vw, 1.8rem);
-  font-weight: 700;
-  line-height: 1.1;
-  font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
-  display: block;
-  margin: 3px 0;
+  font-size: 0.78rem;
 }
 
 .balance-hero-card .portfolio-chip-val,
 .balance-hero-card strong.portfolio-chip-val {
-  font-size: 0.74rem !important;
+  font-size: 0.78rem !important;
   font-weight: 700 !important;
   line-height: 1.2 !important;
-  color: inherit !important;
+  color: #0f172a !important;
 }
 
 .portfolio-card-helper {
@@ -1192,59 +1346,57 @@ h3 {
 
 .savings-plans-grid {
   display: grid;
-  gap: 12px;
+  gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  grid-auto-rows: 1fr;
+  align-items: stretch;
   padding: 0;
   position: relative;
   z-index: 1;
 }
 
+/* Minimalist Homologated Plan Cards (Préstamos, Ahorro, Inversión) */
 .savings-plan-card {
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(250, 245, 255, 0.92)),
-    var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  box-shadow: 0 14px 34px var(--color-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.92);
-  color: var(--ink);
-  display: grid;
-  gap: 12px;
-  min-height: 208px;
+  background: #ffffff !important;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  color: #0f172a;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 250px;
   overflow: hidden;
-  padding: 15px;
+  padding: 20px;
   position: relative;
-  transform-origin: 50% 60%;
-  will-change: transform, opacity;
+  transform: none;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
 
 .savings-plan-card::before {
-  background:
-    radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.88), transparent 24%),
-    linear-gradient(120deg, rgba(107, 33, 168, 0.08), transparent 42%);
-  content: "";
-  inset: 0;
-  opacity: 0.82;
-  pointer-events: none;
-  position: absolute;
+  display: none !important;
 }
 
 .savings-plan-card::after {
-  background: linear-gradient(90deg, var(--color-primary), var(--color-accent) 72%, var(--color-success));
+  background: linear-gradient(90deg, #6b21a8, #9333ea 70%, #10b981);
   bottom: 0;
   content: "";
-  height: 4px;
+  height: 3px;
   left: 0;
   position: absolute;
   right: 0;
-  transform: scaleX(0.38);
+  transform: scaleX(0.35);
   transform-origin: left center;
-  transition: transform 220ms ease;
+  transition: transform 240ms ease;
 }
 
 .savings-plan-card:hover,
 .savings-plan-card:focus-visible {
-  box-shadow: 0 20px 46px var(--color-primary-shadow), 0 0 0 1px rgba(107, 33, 168, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
   outline: none;
+  transform: translateY(-4px);
 }
 
 .savings-plan-card:hover::after,
@@ -1258,93 +1410,175 @@ h3 {
 }
 
 .savings-plan-card-top {
-  align-items: center;
-  display: grid;
-  gap: 10px;
-  grid-template-columns: auto minmax(0, 1fr);
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  min-height: 76px;
 }
 
 .savings-plan-icon {
   align-items: center;
-  background:
-    radial-gradient(circle at 30% 20%, var(--color-primary-soft), #E9D5FF 48%, var(--color-primary));
-  border-radius: 8px;
-  box-shadow: 0 10px 22px var(--color-primary-shadow), 0 0 0 1px rgba(255, 255, 255, 0.72) inset;
-  color: var(--purple-950);
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #4c1d95 !important;
   display: inline-flex;
-  height: 42px;
+  flex-shrink: 0;
+  height: auto !important;
   justify-content: center;
-  transform-origin: 50% 50%;
-  width: 42px;
-  will-change: transform;
+  min-width: 0 !important;
+  padding: 2px 0 0 0 !important;
+  width: auto !important;
 }
 
+.savings-plan-icon svg {
+  color: #4c1d95 !important;
+  height: 22px;
+  width: 22px;
+}
+
+.savings-plan-title,
 .savings-plan-card h3,
 .savings-plans-state h3 {
-  color: var(--purple-950);
-  font-size: clamp(1.25rem, 2.2vw, 1.58rem);
-  line-height: 1.08;
-  margin-bottom: 0;
+  color: #0f172a !important;
+  font-size: 1.125rem !important; /* text-lg */
+  font-weight: 700 !important; /* font-bold */
+  line-height: 1.25 !important;
+  margin: 0 !important;
 }
 
+.savings-plan-desc,
 .savings-plan-card p,
 .savings-plans-state p {
-  color: var(--muted);
-  font-weight: 400;
-  margin-bottom: 0;
+  color: #64748b !important; /* text-slate-500 */
+  font-size: 0.75rem !important; /* text-xs */
+  font-weight: 400 !important;
+  line-height: 1.35 !important;
+  margin: 4px 0 0 0 !important;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Badges discretos en encabezado */
+.plan-status-badge {
+  align-items: center;
+  border-radius: 9999px;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  gap: 4px;
+  letter-spacing: 0.02em;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.plan-status-badge-active {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+
+.plan-status-badge-locked,
+.plan-status-badge-warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
+}
+
+.plan-status-badge-inactive {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+/* 3. Métrica Central (Hero Metric) */
 .savings-plan-rate {
-  background:
-    linear-gradient(135deg, rgba(107, 33, 168, 0.96), rgba(88, 28, 135, 0.96)),
-    var(--color-primary);
-  border-radius: 8px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  color: var(--white);
-  display: grid;
-  gap: 3px;
-  padding: 12px;
+  align-items: center !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 16px 0 !important;
+  text-align: center !important;
 }
 
-.savings-plan-rate span,
-.savings-plan-summary small {
-  color: rgba(255, 255, 255, 0.64);
-  font-size: 0.74rem;
-  font-weight: 500;
+.savings-plan-rate span {
+  color: #64748b !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+  margin-bottom: 4px !important;
+  text-transform: none !important;
 }
 
 .savings-plan-rate strong {
-  color: var(--color-surface);
-  font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
-  font-size: 2rem;
-  font-weight: 600;
-  line-height: 0.9;
+  font-family: inherit !important;
+  font-size: 1.875rem !important; /* text-3xl */
+  font-weight: 800 !important; /* font-extrabold */
+  letter-spacing: -0.02em !important;
+  line-height: 1.1 !important;
+  margin: 0 !important;
 }
 
+.savings-plan-rate strong.hero-metric-amount {
+  color: #0f172a !important; /* text-slate-900 para montos */
+}
+
+.savings-plan-rate strong.hero-metric-rate,
+.savings-plan-rate strong:not(.hero-metric-amount) {
+  color: #6b21a8 !important; /* text-purple-700 para rendimientos/porcentajes */
+}
+
+/* 4. Datos Secundarios (Fila limpia de 2 columnas) */
 .savings-plan-summary {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: flex-start !important;
+  background: transparent !important;
+  border: none !important;
+  border-top: 1px solid #f1f5f9 !important;
+  display: flex !important;
+  gap: 16px !important;
+  justify-content: space-between !important;
+  margin-top: 0 !important;
+  padding: 12px 0 0 0 !important;
+  width: 100% !important;
 }
 
-.savings-plan-summary span {
-  background: var(--color-primary-soft);
-  border: 1px solid #E9D5FF;
-  border-radius: 8px;
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-  padding: 9px 10px;
+.savings-plan-summary > span,
+.savings-plan-summary > div {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
 }
 
 .savings-plan-summary small {
-  color: var(--muted);
+  color: #94a3b8 !important; /* text-slate-400 */
+  font-size: 0.75rem !important; /* text-xs */
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
 }
 
 .savings-plan-summary strong {
-  color: var(--purple-950);
-  font-size: 0.94rem;
-  line-height: 1.05;
+  color: #1e293b !important; /* text-slate-800 */
+  font-size: 0.875rem !important; /* text-sm */
+  font-weight: 600 !important; /* font-semibold */
+  line-height: 1.25 !important;
   overflow-wrap: anywhere;
 }
 
@@ -1352,43 +1586,52 @@ h3 {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: auto;
+  margin-top: 2px;
 }
 
+/* 5. Botón / Enlace Inferior (CTA Plano con Flecha) */
 .plan-card-action {
-  align-items: center;
-  border-top: 1px dashed rgba(147, 51, 234, 0.2);
-  color: var(--color-primary);
-  display: flex;
-  font-size: 0.8rem;
-  font-weight: 700;
-  justify-content: space-between;
-  margin-top: auto;
-  padding-top: 10px;
-  transition: all 180ms ease;
-  width: 100%;
+  align-items: center !important;
+  background: transparent !important;
+  border: none !important;
+  color: #6b21a8 !important;
+  cursor: pointer;
+  display: flex !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  gap: 4px !important;
+  justify-content: flex-start !important;
+  margin-top: auto !important;
+  padding-top: 12px !important;
+  transition: color 150ms ease !important;
+  width: 100% !important;
 }
 
 .plan-card-action .action-arrow {
-  color: var(--color-primary);
-  transition: transform 200ms ease;
+  color: #6b21a8 !important;
+  transition: transform 200ms ease, color 180ms ease !important;
 }
 
+.savings-plan-card:hover .plan-card-action,
 .savings-plan-card:hover .plan-card-action .action-arrow,
-.savings-plan-card:focus-visible .plan-card-action .action-arrow {
-  transform: translateX(5px);
+.plan-card-action:hover {
+  color: #4c1d95 !important; /* hover:text-purple-900 */
+}
+
+.savings-plan-card:hover .plan-card-action .action-arrow {
+  transform: translateX(4px) !important;
 }
 
 .savings-plan-status-banner {
   align-items: center;
   border-radius: 8px;
   display: flex;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 500;
   gap: 6px;
   justify-content: center;
-  margin-top: 10px;
-  padding: 8px 12px;
+  margin-top: auto;
+  padding: 8px 10px;
 }
 
 .plan-locked-badge {
@@ -1566,7 +1809,7 @@ h3 {
 .input:focus {
   background: var(--color-surface);
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.28), 0 0 0 1px var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.15);
   outline: none;
 }
 
@@ -2516,8 +2759,10 @@ h3 {
 
 .hero-amount-input {
   width: 100%;
-  border: none;
-  outline: none;
+  border: none !important;
+  outline: none !important;
+  outline-color: transparent !important;
+  box-shadow: none !important;
   background: transparent;
   font-family: inherit;
   font-size: 2.15rem;
@@ -2526,6 +2771,17 @@ h3 {
   padding: 2px 0;
   letter-spacing: -0.02em;
   min-width: 0;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.hero-amount-input:focus,
+.hero-amount-input:focus-visible,
+.hero-amount-box input:focus,
+.hero-amount-box input:focus-visible {
+  border: none !important;
+  outline: none !important;
+  outline-color: transparent !important;
+  box-shadow: none !important;
 }
 
 .hero-amount-input::placeholder {
@@ -3106,12 +3362,17 @@ h3 {
 
 @media (max-width: 900px) {
   .auth-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: clamp(218px, 34svh, 292px) minmax(0, 1fr);
-    height: 100svh;
-    min-height: 0;
-    overflow: hidden;
-    row-gap: clamp(8px, 1.6svh, 14px);
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100svh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    grid-template-columns: none;
+    grid-template-rows: none;
+    row-gap: 0;
+    width: 100%;
+    background-size: 32px 32px, 32px 32px, auto, auto, auto;
   }
 
   .app-body {
@@ -3266,116 +3527,86 @@ h3 {
     height: 3px;
   }
 
+  .savings-plan-card {
+    padding: 16px;
+    min-height: 190px;
+  }
+
   .savings-plan-card-top {
-    align-items: center;
+    align-items: flex-start;
     display: flex;
-    gap: 8px;
-    grid-template-columns: none;
+    gap: 10px;
   }
 
   .savings-plan-icon {
-    border-radius: 6px;
-    box-shadow: 0 4px 10px var(--color-primary-shadow);
-    height: 30px;
-    min-width: 30px;
-    width: 30px;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
   }
 
   .savings-plan-icon svg {
-    height: 16px;
-    width: 16px;
+    height: 20px;
+    width: 20px;
   }
 
-  .savings-plan-card h3 {
-    font-size: 0.95rem;
-    font-weight: 700;
-    line-height: 1.15;
-    margin: 0;
-  }
-
-  .savings-plan-card p {
-    color: var(--muted);
-    display: -webkit-box;
-    font-size: 0.72rem;
-    line-height: 1.25;
-    margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
-  }
-
-  .savings-plan-rate {
-    align-items: baseline;
-    border-radius: 6px;
-    display: flex;
-    gap: 8px;
-    justify-content: space-between;
-    padding: 5px 10px;
-  }
-
-  .savings-plan-rate span {
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    opacity: 0.9;
-    text-transform: uppercase;
-  }
-
-  .savings-plan-rate strong {
-    font-size: 1.15rem;
-    line-height: 1;
+  .savings-plan-card h3,
+  .savings-plan-title {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
     margin: 0 !important;
   }
 
-  .savings-plan-summary {
-    display: grid;
-    gap: 6px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .savings-plan-card p,
+  .savings-plan-desc {
+    font-size: 0.72rem !important;
+    line-height: 1.25 !important;
+    margin: 2px 0 0 0 !important;
   }
 
-  .savings-plan-summary span {
-    border-radius: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-height: 0;
-    padding: 4px 8px;
+  .savings-plan-rate {
+    align-items: center !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    flex-direction: column !important;
+    margin: 4px 0 !important;
+    padding: 8px 0 !important;
+  }
+
+  .savings-plan-rate span {
+    font-size: 0.7rem !important;
+  }
+
+  .savings-plan-rate strong {
+    font-size: 1.5rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .savings-plan-summary {
+    display: flex !important;
+    justify-content: space-between !important;
+    border-top: 1px solid #f1f5f9 !important;
+    padding-top: 8px !important;
+    gap: 12px !important;
   }
 
   .savings-plan-summary small {
-    font-size: 0.64rem;
-    line-height: 1.1;
+    font-size: 0.7rem !important;
   }
 
   .savings-plan-summary strong {
-    font-size: 0.82rem;
-    line-height: 1.15;
-  }
-
-  .savings-plan-tags {
-    gap: 4px;
-    margin-top: 0;
-  }
-
-  .savings-plan-tags span {
-    border-radius: 4px;
-    font-size: 0.65rem;
-    padding: 2px 6px;
+    font-size: 0.82rem !important;
   }
 
   .plan-card-action {
-    border-top: 1px dashed rgba(147, 51, 234, 0.18);
-    font-size: 0.75rem;
-    margin-top: 1px;
-    padding-top: 5px;
+    font-size: 0.8125rem !important;
+    padding-top: 8px !important;
   }
 
   .savings-plan-status-banner {
-    border-radius: 6px;
     font-size: 0.72rem !important;
-    margin-top: 2px !important;
-    padding: 4px 8px !important;
+    padding: 6px 8px !important;
   }
 
   .plan-locked-badge {
@@ -3393,69 +3624,112 @@ h3 {
   }
 
   .auth-story {
-    height: 100%;
+    flex: 0 0 auto;
+    height: auto;
     min-height: 0;
+    overflow: visible;
+    width: 100%;
   }
 
   .wealth-scene {
-    grid-template-rows: min-content minmax(0, 1fr);
-    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: auto;
     min-height: 0;
-    padding: clamp(10px, 2.4svh, 18px) clamp(14px, 4vw, 22px) 6px;
+    overflow: visible;
+    padding: 16px 16px 10px;
+    grid-template-rows: none;
   }
 
   .wealth-copy {
-    gap: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+    max-width: 100%;
+    margin-bottom: 2px;
+  }
+
+  .wealth-copy span {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   .wealth-copy h1 {
-    font-size: clamp(2.25rem, 11vw, 3.25rem);
+    font-size: clamp(1.3rem, 5vw, 1.65rem);
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0;
+    color: var(--color-primary-dark);
   }
 
   .wealth-copy p {
-    font-size: clamp(0.78rem, 2.7vw, 0.88rem);
-    max-width: 420px;
+    display: none;
   }
 
   .wealth-stage {
     align-self: center;
-    aspect-ratio: 360 / 320;
-    margin-top: -4px;
-    max-height: min(188px, 26svh);
-    max-width: clamp(210px, 52vw, 320px);
+    width: min(230px, 64vw);
+    height: 160px;
+    aspect-ratio: auto;
+    max-height: none;
+    max-width: none;
+    margin: 0 auto;
+    position: relative;
     overflow: visible;
-    width: min(100%, clamp(210px, 52vw, 320px));
   }
 
   .wealth-illustration {
+    width: 100%;
+    height: 100%;
     overflow: visible;
   }
 
   .wealth-progress {
-    height: 8px;
-    margin-top: -2px;
-    max-width: min(240px, 62vw);
+    height: 6px;
+    margin: 6px auto 0;
+    max-width: 180px;
+    border-radius: 999px;
   }
 
   .wealth-bg-orbit {
-    height: 240px;
-    right: -80px;
-    top: 70px;
-    width: 240px;
+    height: 200px;
+    right: -60px;
+    top: 30px;
+    width: 200px;
   }
 
   .wealth-bg-halo {
-    bottom: -70px;
-    height: 220px;
-    width: 220px;
+    bottom: -60px;
+    height: 180px;
+    left: -20px;
+    width: 180px;
   }
 
   .auth-panel {
+    flex: 1 0 auto;
     align-self: stretch;
     max-height: none;
     margin: 0;
-    overflow: auto;
+    overflow: visible;
     width: 100%;
+    background: var(--color-surface);
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -8px 30px rgba(17, 24, 39, 0.06);
+    border-top: 1px solid var(--color-border);
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: clamp(20px, 4vw, 32px) clamp(16px, 5vw, 28px) clamp(28px, 6vw, 40px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
   }
 
   .form-intro {
@@ -3587,89 +3861,57 @@ h3 {
 }
 
 @media (max-width: 640px) {
-  .auth-layout {
-    grid-template-rows: clamp(230px, 31svh, 270px) minmax(0, 1fr);
-    row-gap: clamp(8px, 1.4svh, 12px);
-    width: 100%;
-  }
-
   .wealth-scene {
-    padding: 10px clamp(12px, 4vw, 18px) 14px;
+    padding: 12px 14px 8px;
   }
 
   .wealth-scene::after {
-    height: 118%;
-    left: 4%;
-    top: -26%;
-    width: 74px;
-  }
-
-  .wealth-copy {
-    gap: 4px;
-    max-width: 100%;
-    text-align: center;
-  }
-
-  .wealth-copy span {
-    font-size: clamp(0.68rem, 2.7vw, 0.78rem);
-  }
-
-  .wealth-copy h1 {
-    font-size: clamp(1.86rem, 9vw, 2.55rem);
-  }
-
-  .wealth-copy p {
     display: none;
   }
 
   .wealth-stage {
-    align-self: center;
-    aspect-ratio: 360 / 320;
-    margin-top: 2px;
-    max-height: min(162px, 21svh);
-    max-width: clamp(150px, 52vw, 206px);
-    width: clamp(150px, 52vw, 206px);
-  }
-
-  .wealth-progress {
-    margin-top: 0;
-    max-width: min(176px, 46vw);
-  }
-
-  .wealth-bg-orbit {
-    height: 190px;
-    right: -86px;
-    top: 38px;
-    width: 190px;
-  }
-
-  .wealth-bg-halo {
-    bottom: -92px;
-    height: 170px;
-    left: -34px;
-    width: 170px;
+    width: min(220px, 60vw);
+    height: 155px;
   }
 
   .spark-one,
   .spark-two,
   .spark-three {
-    transform: scale(0.72);
+    transform: scale(0.65);
   }
 
   .auth-panel {
-    min-width: 0;
-    border-top: 0;
+    padding: 22px 18px 32px;
+    border-radius: 26px 26px 0 0;
   }
 }
 
 @media (max-width: 480px) {
-  .auth-layout {
-    grid-template-rows: clamp(236px, 32svh, 268px) minmax(0, 1fr);
+  .wealth-stage {
+    width: 205px;
+    height: 145px;
   }
 
-  .wealth-stage {
-    max-height: min(156px, 20svh);
-    width: clamp(148px, 50vw, 198px);
+  .login-brand .brand-mark {
+    height: 44px;
+    width: 44px;
+  }
+
+  .login-brand strong {
+    font-size: 1.2rem;
+  }
+
+  .auth-panel {
+    padding: 20px 16px 28px;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .form-intro h2 {
+    font-size: 1.25rem;
+  }
+
+  .form-intro p {
+    font-size: 0.82rem;
   }
 }
 

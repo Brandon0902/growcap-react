@@ -415,6 +415,8 @@ export default function InvestmentActionModal({
               <Input
                 id={`${modalId}-monto`}
                 type="number"
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]*"
                 step="0.01"
                 min="1"
                 max={saldoDisponible}
@@ -503,7 +505,10 @@ export default function InvestmentActionModal({
                         id={`${modalId}-nip`}
                         type={showNip ? 'text' : 'password'}
                         inputMode="numeric"
-                        autoComplete="off"
+                        autoComplete="one-time-code"
+                        name="nip_seguridad"
+                        data-form-type="other"
+                        data-lpignore="true"
                         maxLength={6}
                         value={nip}
                         onChange={(e) => setNip(e.target.value.replace(/\D/g, '').slice(0, 6))}

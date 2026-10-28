@@ -217,59 +217,33 @@ function DashboardPage() {
         ]}
         title={greetingText}
         actions={
-          <div style={{ display: 'inline-flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginTop: '16px' }}>
-            <Button
+          <div className="hero-action-pills">
+            <button
               type="button"
-              className="button-primary"
+              className="hero-pill-btn hero-pill-primary"
               onClick={() => setIsDepositModalOpen(true)}
-              style={{
-                fontSize: '0.82rem',
-                padding: '7px 14px',
-                minHeight: '34px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                borderRadius: '10px',
-              }}
             >
-              <PlusCircle size={15} />
-              <span>Cargar Saldo</span>
-            </Button>
-            <Button
+              <PlusCircle size={16} />
+              <span className="hidden min-[380px]:inline">Cargar Saldo</span>
+            </button>
+            <button
               type="button"
-              className="button-secondary"
+              className="hero-pill-btn hero-pill-secondary"
               onClick={() => setIsWithdrawalModalOpen(true)}
               disabled={Number(generalBalance ?? 0) <= 0}
-              style={{
-                fontSize: '0.82rem',
-                padding: '7px 14px',
-                minHeight: '34px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                borderRadius: '10px',
-              }}
+              title={Number(generalBalance ?? 0) <= 0 ? 'Sin saldo disponible para retirar' : 'Retirar saldo'}
             >
-              <ArrowDownLeft size={15} />
+              <ArrowDownLeft size={16} className="text-purple-600" />
               <span>Retirar</span>
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              className="button-secondary"
+              className="hero-pill-btn hero-pill-secondary"
               onClick={() => setIsKardexModalOpen(true)}
-              style={{
-                fontSize: '0.82rem',
-                padding: '7px 14px',
-                minHeight: '34px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                borderRadius: '10px',
-              }}
             >
-              <FileText size={15} />
+              <FileText size={16} className="text-slate-500" />
               <span>Movimientos</span>
-            </Button>
+            </button>
           </div>
         }
       >

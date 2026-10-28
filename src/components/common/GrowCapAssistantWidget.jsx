@@ -6,7 +6,8 @@ import {
   RotateCcw, 
   Sparkles, 
   ChevronRight,
-  GripVertical
+  GripVertical,
+  GripHorizontal
 } from 'lucide-react';
 import { assistantService } from '../../services/assistantService.js';
 import useAuth from '../../features/auth/hooks/useAuth.js';
@@ -16,8 +17,7 @@ import './GrowCapAssistantWidget.css';
 const INITIAL_SUGGESTIONS = [
   '¿Cuáles son los requisitos para un préstamo?',
   '¿Cómo funciona el aval solidario y la Auto-Garantía?',
-  '¿Cómo solicito un retiro de mi Saldo Disponible?',
-  '¿Cómo y cuándo se descuentan las cuotas por nómina?'
+  '¿Cómo solicito un retiro de mi Saldo Disponible?'
 ];
 
 const INITIAL_MESSAGE = {
@@ -84,11 +84,42 @@ export default function GrowCapAssistantWidget() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const lastModelRowRef = useRef(null);
   const inputRef = useRef(null);
   const fabRef = useRef(null);
   const containerRef = useRef(null);
+  const windowRef = useRef(null);
   const rafRef = useRef(null);
   const currentPosRef = useRef(null);
+  const winRafRef = useRef(null);
+  const currentWinPosRef = useRef(null);
+
+  // Posición de la ventana de chat arrastrable (persiste en localStorage para versión web)
+  const [windowPosition, setWindowPosition] = useState(() => {
+    try {
+      const saved = localStorage.getItem('growcap_assistant_win_pos');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') {
+          return parsed;
+        }
+      }
+    } catch {
+      // Ignorar fallo de storage
+    }
+    return null;
+  });
+  const [isWindowDragging, setIsWindowDragging] = useState(false);
+  const windowDragRef = useRef({
+    active: false,
+    hasMoved: false,
+    startX: 0,
+    startY: 0,
+    initX: 0,
+    initY: 0,
+    width: 420,
+    height: 600,
+  });
 
   // Globito de bienvenida interactivo al entrar
   const { user } = useAuth();
@@ -132,6 +163,19 @@ export default function GrowCapAssistantWidget() {
     setBubbleExiting(false);
   };
 
+  // Estado de acoplamiento al lateral (derecho o izquierdo) y contracción contra el borde
+  const [dockSide, setDockSide] = useState(() => {
+    try {
+      const saved = localStorage.getItem('growcap_assistant_dock_side');
+      if (saved === 'left' || saved === 'right') return saved;
+    } catch {
+      // ignore
+    }
+    return 'right';
+  });
+  const [isContracted, setIsContracted] = useState(false);
+  const idleTimerRef = useRef(null);
+
   // Posición flotante arrastrable (persistente en localStorage)
   const [position, setPosition] = useState(() => {
     try {
@@ -160,22 +204,66 @@ export default function GrowCapAssistantWidget() {
     height: 46,
   });
 
+  // Temporizador para contraer el botón contra el borde tras inactividad
+  const startIdleContractTimer = () => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    if (showGreetingBubble || isDragging || isOpen) return;
+
+    idleTimerRef.current = setTimeout(() => {
+      setIsContracted(true);
+    }, 2800);
+  };
+
+  const handleMouseEnter = () => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    setIsContracted(false);
+  };
+
+  const handleMouseLeave = () => {
+    startIdleContractTimer();
+  };
+
+  // Control de contracción según el globito de bienvenida
+  useEffect(() => {
+    if (showGreetingBubble) {
+      setIsContracted(false);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    } else {
+      startIdleContractTimer();
+    }
+  }, [showGreetingBubble]);
+
+  // Al cerrar la ventana del asistente, expandir unos segundos y contraer
+  useEffect(() => {
+    if (!isOpen) {
+      setIsContracted(false);
+      startIdleContractTimer();
+    } else {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, []);
+
   // Cálculo de límites de pantalla y posición por defecto adaptada a móvil y desktop
   const getBounds = (elWidth = 145, elHeight = 46) => {
     if (typeof window === 'undefined') {
-      return { minX: 12, maxX: 300, minY: 64, maxY: 600, isMobile: false, defaultPos: { x: 200, y: 500 } };
+      return { minX: 0, maxX: 300, minY: 64, maxY: 600, isMobile: false, defaultPos: { x: 200, y: 500 } };
     }
     const isMobile = window.innerWidth <= 768;
-    const pad = isMobile ? 14 : 24;
-    const minX = isMobile ? 14 : 16;
-    const maxX = Math.max(minX, window.innerWidth - elWidth - minX);
+    const minX = 0; // Pegado al borde izquierdo
+    const maxX = Math.max(0, window.innerWidth - elWidth); // Pegado al borde derecho
     const minY = isMobile ? 64 : 16;
     // En móvil se deja margen de seguridad sobre la barra inferior (mobile-nav ~76px)
     const maxY = Math.max(minY, window.innerHeight - elHeight - (isMobile ? 86 : 24));
 
     const defaultPos = {
-      x: window.innerWidth - elWidth - pad,
-      y: isMobile ? window.innerHeight - elHeight - 88 : window.innerHeight - elHeight - pad,
+      x: window.innerWidth - elWidth,
+      y: isMobile ? window.innerHeight - elHeight - 88 : window.innerHeight - elHeight - 32,
     };
 
     return { minX, maxX, minY, maxY, isMobile, defaultPos };
@@ -183,34 +271,31 @@ export default function GrowCapAssistantWidget() {
 
   useEffect(() => {
     const ensureValidPosition = () => {
-      const w = fabRef.current?.offsetWidth || 145;
-      const h = fabRef.current?.offsetHeight || 46;
-      const { minX, maxX, minY, maxY, isMobile, defaultPos } = getBounds(w, h);
+      const w = 145;
+      const h = 46;
+      const { minX, maxX, minY, maxY, defaultPos } = getBounds(w, h);
 
       setPosition((prev) => {
         if (!prev) return defaultPos;
-        let x = Math.min(Math.max(minX, prev.x), maxX);
+        const targetX = dockSide === 'left' ? minX : maxX;
         let y = Math.min(Math.max(minY, prev.y), maxY);
-
-        // En móvil mantener siempre anclado magnéticamente a uno de los laterales
-        if (isMobile) {
-          x = (x + w / 2 < window.innerWidth / 2) ? minX : maxX;
-        }
-
-        return { x: Math.round(x), y: Math.round(y) };
+        return { x: Math.round(targetX), y: Math.round(y) };
       });
     };
 
     ensureValidPosition();
     window.addEventListener('resize', ensureValidPosition);
     return () => window.removeEventListener('resize', ensureValidPosition);
-  }, []);
+  }, [dockSide]);
 
   const handlePointerDown = (e) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
 
-    const w = fabRef.current?.offsetWidth || 145;
-    const h = fabRef.current?.offsetHeight || 46;
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    setIsContracted(false);
+
+    const w = 145;
+    const h = 46;
     const containerRect = containerRef.current?.getBoundingClientRect();
 
     const initX = containerRect ? containerRect.left : (position?.x ?? 0);
@@ -249,6 +334,7 @@ export default function GrowCapAssistantWidget() {
     if (!dragRef.current.hasMoved && Math.hypot(dx, dy) > 6) {
       dragRef.current.hasMoved = true;
       setIsDragging(true);
+      setIsContracted(false);
     }
 
     if (dragRef.current.hasMoved) {
@@ -287,24 +373,22 @@ export default function GrowCapAssistantWidget() {
     setIsDragging(false);
 
     if (moved) {
-      const w = dragRef.current.width || 145;
-      const h = dragRef.current.height || 46;
-      const { minX, maxX, minY, maxY, isMobile } = getBounds(w, h);
+      const w = 145;
+      const h = 46;
+      const { minX, maxX, minY, maxY } = getBounds(w, h);
 
-      let finalX = currentPosRef.current?.x ?? dragRef.current.initX;
+      const currentX = currentPosRef.current?.x ?? dragRef.current.initX;
       let finalY = currentPosRef.current?.y ?? dragRef.current.initY;
 
-      // Anclaje magnético (Magnetic Edge Docking): en móvil se adhiere suavemente a la orilla
-      if (isMobile) {
-        const centerX = finalX + w / 2;
-        finalX = centerX < window.innerWidth / 2 ? minX : maxX;
-      } else {
-        if (finalX < minX + 24) finalX = minX;
-        else if (finalX > maxX - 24) finalX = maxX;
-      }
+      // Anclaje al borde más cercano (izquierdo o derecho)
+      const isLeft = (currentX + w / 2) < window.innerWidth / 2;
+      const nextDockSide = isLeft ? 'left' : 'right';
+      const finalX = isLeft ? minX : maxX;
       finalY = Math.min(Math.max(minY, finalY), maxY);
 
-      // Deslizamiento elástico físico y natural
+      setDockSide(nextDockSide);
+
+      // Deslizamiento elástico hacia el borde seleccionado
       if (containerRef.current) {
         containerRef.current.style.transition = 'transform 0.32s cubic-bezier(0.18, 0.89, 0.32, 1.15)';
         containerRef.current.style.transform = `translate3d(${finalX}px, ${finalY}px, 0)`;
@@ -313,43 +397,194 @@ export default function GrowCapAssistantWidget() {
       const finalPos = { x: Math.round(finalX), y: Math.round(finalY) };
       setPosition(finalPos);
       try {
+        localStorage.setItem('growcap_assistant_dock_side', nextDockSide);
         localStorage.setItem('growcap_assistant_fab_pos', JSON.stringify(finalPos));
       } catch {
         // ignore
       }
+
+      // Iniciar temporizador de inactividad para contraerse contra el borde
+      startIdleContractTimer();
     } else {
       setIsOpen(true);
     }
   };
 
-  // Posición dinámica e inteligente de la ventana de chat respecto al botón
-  const getWindowStyle = () => {
-    if (!position || typeof window === 'undefined' || window.innerWidth <= 768) {
-      return undefined;
+  // Cálculo de posición por defecto de la ventana en desktop
+  const getDefaultWindowPos = (w = 420, h = 600) => {
+    if (typeof window === 'undefined') return { x: 100, y: 100 };
+    const pad = 24;
+    const minX = 16;
+    const maxX = Math.max(minX, window.innerWidth - w - pad);
+    const minY = 16;
+    const maxY = Math.max(minY, window.innerHeight - h - pad);
+
+    if (!position) {
+      return { x: maxX, y: maxY };
     }
 
     const isLeft = position.x < window.innerWidth / 2;
     const isTop = position.y < window.innerHeight / 2;
 
-    const style = {};
-    if (isLeft) {
-      style.left = `${Math.max(16, Math.min(position.x, window.innerWidth - 440))}px`;
-      style.right = 'auto';
-    } else {
-      style.right = `${Math.max(16, window.innerWidth - position.x - 160)}px`;
-      style.left = 'auto';
-    }
+    const x = isLeft
+      ? Math.max(minX, Math.min(position.x, maxX))
+      : Math.max(minX, Math.min(position.x + 150 - w, maxX));
 
-    if (isTop) {
-      style.top = `${Math.max(16, Math.min(position.y + 54, window.innerHeight - 620))}px`;
-      style.bottom = 'auto';
-    } else {
-      style.bottom = `${Math.max(20, window.innerHeight - position.y + 12)}px`;
-      style.top = 'auto';
-    }
+    const y = isTop
+      ? Math.max(minY, Math.min(position.y + 54, maxY))
+      : Math.max(minY, Math.min(position.y - h - 12, maxY));
 
-    return style;
+    return { x: Math.round(x), y: Math.round(y) };
   };
+
+  // Posición dinámica e inteligente de la ventana de chat (solo en versión web)
+  const getWindowStyle = () => {
+    if (typeof window === 'undefined' || window.innerWidth <= 900) {
+      return undefined;
+    }
+
+    const pos = windowPosition || getDefaultWindowPos(420, 600);
+    const w = 420;
+    const h = 600;
+    const minX = 16;
+    const maxX = Math.max(minX, window.innerWidth - w - 16);
+    const minY = 16;
+    const maxY = Math.max(minY, window.innerHeight - h - 16);
+
+    const safeX = Math.min(Math.max(minX, pos.x), maxX);
+    const safeY = Math.min(Math.max(minY, pos.y), maxY);
+
+    return {
+      left: `${safeX}px`,
+      top: `${safeY}px`,
+      right: 'auto',
+      bottom: 'auto',
+    };
+  };
+
+  // Manejo de arrastre de la ventana de diálogo (solo versión web)
+  const handleHeaderPointerDown = (e) => {
+    if (typeof window === 'undefined' || window.innerWidth <= 900) return;
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    if (e.target.closest('button, a, input, textarea')) return;
+
+    const winEl = windowRef.current;
+    if (!winEl) return;
+
+    const rect = winEl.getBoundingClientRect();
+    const w = rect.width || 420;
+    const h = rect.height || 600;
+
+    windowDragRef.current = {
+      active: true,
+      hasMoved: false,
+      startX: e.clientX,
+      startY: e.clientY,
+      initX: rect.left,
+      initY: rect.top,
+      width: w,
+      height: h,
+    };
+    currentWinPosRef.current = { x: rect.left, y: rect.top };
+
+    winEl.style.transition = 'none';
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleHeaderPointerMove = (e) => {
+    if (!windowDragRef.current.active) return;
+
+    const dx = e.clientX - windowDragRef.current.startX;
+    const dy = e.clientY - windowDragRef.current.startY;
+
+    if (!windowDragRef.current.hasMoved && Math.hypot(dx, dy) > 5) {
+      windowDragRef.current.hasMoved = true;
+      setIsWindowDragging(true);
+    }
+
+    if (windowDragRef.current.hasMoved) {
+      const w = windowDragRef.current.width || 420;
+      const h = windowDragRef.current.height || 600;
+      const minX = 16;
+      const maxX = Math.max(minX, window.innerWidth - w - 16);
+      const minY = 16;
+      const maxY = Math.max(minY, window.innerHeight - h - 16);
+
+      const nextX = Math.min(Math.max(minX, windowDragRef.current.initX + dx), maxX);
+      const nextY = Math.min(Math.max(minY, windowDragRef.current.initY + dy), maxY);
+
+      currentWinPosRef.current = { x: nextX, y: nextY };
+
+      if (winRafRef.current) cancelAnimationFrame(winRafRef.current);
+      winRafRef.current = requestAnimationFrame(() => {
+        if (windowRef.current) {
+          windowRef.current.style.left = `${nextX}px`;
+          windowRef.current.style.top = `${nextY}px`;
+          windowRef.current.style.right = 'auto';
+          windowRef.current.style.bottom = 'auto';
+        }
+      });
+    }
+  };
+
+  const handleHeaderPointerUp = (e) => {
+    if (!windowDragRef.current.active) return;
+
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+
+    if (winRafRef.current) {
+      cancelAnimationFrame(winRafRef.current);
+      winRafRef.current = null;
+    }
+
+    const moved = windowDragRef.current.hasMoved;
+    windowDragRef.current.active = false;
+    setIsWindowDragging(false);
+
+    if (moved && currentWinPosRef.current) {
+      const finalPos = {
+        x: Math.round(currentWinPosRef.current.x),
+        y: Math.round(currentWinPosRef.current.y),
+      };
+      setWindowPosition(finalPos);
+      try {
+        localStorage.setItem('growcap_assistant_win_pos', JSON.stringify(finalPos));
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  // Mantener la ventana dentro del viewport si cambia la resolución en desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window === 'undefined' || window.innerWidth <= 900) return;
+      setWindowPosition((prev) => {
+        if (!prev) return prev;
+        const w = 420;
+        const h = 600;
+        const minX = 16;
+        const maxX = Math.max(minX, window.innerWidth - w - 16);
+        const minY = 16;
+        const maxY = Math.max(minY, window.innerHeight - h - 16);
+        const safeX = Math.min(Math.max(minX, prev.x), maxX);
+        const safeY = Math.min(Math.max(minY, prev.y), maxY);
+        return { x: Math.round(safeX), y: Math.round(safeY) };
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Escuchar evento personalizado para abrir desde el Sidebar
   useEffect(() => {
@@ -378,9 +613,14 @@ export default function GrowCapAssistantWidget() {
     }
   }, [messages]);
 
-  // Auto-scroll al final del chat
+  // Auto-scroll inteligente: mantiene en pantalla completa la respuesta del asistente sin desplazarla hacia arriba
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg?.role === 'model' && lastModelRowRef.current) {
+      lastModelRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isOpen, isLoading]);
@@ -419,7 +659,7 @@ export default function GrowCapAssistantWidget() {
       const botMessage = {
         role: 'model',
         text: result?.reply || 'No pude obtener una respuesta en este momento.',
-        suggestions: result?.suggestions || [],
+        suggestions: (result?.suggestions || []).slice(0, 3),
       };
 
       setMessages((prev) => [...prev, botMessage]);
@@ -430,7 +670,7 @@ export default function GrowCapAssistantWidget() {
         {
           role: 'model',
           text: 'No pudimos conectar con el servidor en este momento. Por favor verifica tu conexión o intenta más tarde.',
-          suggestions: INITIAL_SUGGESTIONS,
+          suggestions: INITIAL_SUGGESTIONS.slice(0, 3),
         },
       ]);
     } finally {
@@ -454,7 +694,7 @@ export default function GrowCapAssistantWidget() {
       {!isOpen && (
         <div
           ref={containerRef}
-          className={`growcap-assistant-fab-container ${isDragging ? 'is-dragging-container' : ''}`}
+          className={`growcap-assistant-fab-container ${isDragging ? 'is-dragging-container' : ''} dock-${dockSide} ${isContracted ? 'is-contracted' : ''}`}
           style={{
             transform: position
               ? `translate3d(${position.x}px, ${position.y}px, 0)`
@@ -462,11 +702,13 @@ export default function GrowCapAssistantWidget() {
             opacity: position ? 1 : 0,
             pointerEvents: position ? 'auto' : 'none',
           }}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
           {/* Globito de bienvenida con vibración sutil */}
           {showGreetingBubble && !isDragging && (
             <div
-              className={`assistant-speech-bubble ${bubbleExiting ? 'is-exiting' : ''} ${isTopPosition ? 'bubble-bottom' : 'bubble-top'} ${isLeftPosition ? 'bubble-align-left' : 'bubble-align-right'}`}
+              className={`assistant-speech-bubble ${bubbleExiting ? 'is-exiting' : ''} ${isTopPosition ? 'bubble-bottom' : 'bubble-top'} ${dockSide === 'left' ? 'bubble-align-left' : 'bubble-align-right'}`}
               onClick={() => {
                 dismissBubble();
                 setIsOpen(true);
@@ -508,10 +750,10 @@ export default function GrowCapAssistantWidget() {
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            className={`growcap-assistant-fab ${isDragging ? 'is-dragging' : ''}`}
+            className={`growcap-assistant-fab ${isDragging ? 'is-dragging' : ''} dock-${dockSide} ${isContracted ? 'is-contracted' : ''}`}
             style={{ touchAction: 'none' }}
             aria-label="Abrir Asistente Virtual GrowCap"
-            title="Arrastra para mover por la pantalla o haz clic para abrir"
+            title={isContracted ? "Asistente Virtual GrowCap (Haz clic para abrir)" : "Arrastra para mover al costado o haz clic para abrir"}
           >
             <GripVertical size={13} className="assistant-fab-grip" aria-hidden="true" />
             <div className="assistant-fab-icon-wrap">
@@ -526,13 +768,20 @@ export default function GrowCapAssistantWidget() {
       {/* Ventana de Chat Flotante */}
       {isOpen && (
         <div 
-          className="growcap-assistant-window"
+          ref={windowRef}
+          className={`growcap-assistant-window ${isWindowDragging ? 'is-dragging-window' : ''}`}
           style={getWindowStyle()}
           role="dialog"
           aria-label="Ventana de chat con Asistente GrowCap"
         >
-          {/* Header */}
-          <div className="assistant-header">
+          {/* Header Arrastrable (versión web) */}
+          <div 
+            className="assistant-header"
+            onPointerDown={handleHeaderPointerDown}
+            onPointerMove={handleHeaderPointerMove}
+            onPointerUp={handleHeaderPointerUp}
+            onPointerCancel={handleHeaderPointerUp}
+          >
             <div className="assistant-header-profile">
               <div className="assistant-avatar">
                 <Bot size={20} />
@@ -546,10 +795,17 @@ export default function GrowCapAssistantWidget() {
               </div>
             </div>
 
+            <div className="assistant-header-drag-handle" title="Arrastra para mover la ventana" aria-hidden="true">
+              <GripHorizontal size={18} />
+            </div>
+
             <div className="assistant-header-actions">
               <button
                 type="button"
-                onClick={handleReset}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleReset();
+                }}
                 title="Reiniciar conversación"
                 className="assistant-action-btn"
                 aria-label="Reiniciar conversación"
@@ -558,7 +814,10 @@ export default function GrowCapAssistantWidget() {
               </button>
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsOpen(false);
+                }}
                 title="Cerrar chat"
                 className="assistant-action-btn"
                 aria-label="Cerrar chat"
@@ -572,18 +831,23 @@ export default function GrowCapAssistantWidget() {
           <div className="assistant-messages">
             {messages.map((msg, index) => {
               const isUser = msg.role === 'user';
+              const isLastModel = !isUser && index === messages.length - 1;
               return (
-                <div key={index} className={`assistant-message-row ${isUser ? 'user' : 'model'}`}>
+                <div 
+                  key={index} 
+                  ref={isLastModel ? lastModelRowRef : null}
+                  className={`assistant-message-row ${isUser ? 'user' : 'model'}`}
+                >
                   <div className={`assistant-bubble ${isUser ? 'user' : 'model'}`}>
                     <FormattedMessageText text={msg.text} isUser={isUser} />
                   </div>
 
-                  {/* Sugerencias interactivas consecutivas debajo de la última respuesta del modelo */}
+                  {/* Sugerencias interactivas consecutivas debajo de la última respuesta del modelo (máximo 3) */}
                   {!isUser && index === messages.length - 1 && msg.suggestions && msg.suggestions.length > 0 && (
                     <div className="assistant-suggestions-wrap">
                       <span className="assistant-suggestions-title">Preguntas sugeridas siguientes:</span>
                       <div className="assistant-suggestions-list">
-                        {msg.suggestions.map((sug, sIdx) => (
+                        {msg.suggestions.slice(0, 3).map((sug, sIdx) => (
                           <button
                             key={sIdx}
                             type="button"
@@ -646,7 +910,7 @@ export default function GrowCapAssistantWidget() {
               </button>
             </form>
             <p className="assistant-footer-caption">
-              Respuestas oficiales de GrowCap generadas con Inteligencia Artificial.
+              Respuestas generadas con IA. Puede contener errores o información desactualizada. <strong>Verifica siempre con un asesor oficial de GrowCap.</strong>
             </p>
           </div>
         </div>

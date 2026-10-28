@@ -549,6 +549,7 @@ const LoanWizard = forwardRef(({ onCreated, plans = [], prerequisites = null }, 
                 className="hero-amount-input"
                 id="loan-amount"
                 inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]*"
                 max={planMax > 0 ? planMax : undefined}
                 min={planMin || 500}
                 name="cantidad"

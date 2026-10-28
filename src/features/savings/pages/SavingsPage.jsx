@@ -158,7 +158,7 @@ function SavingsPage() {
     const tabParam = searchParams.get('tab');
     if (viewParam === 'my-records' || tabParam === 'records') {
       setActiveTab('records');
-    } else if (tabParam === 'plans') {
+    } else if (viewParam === 'plans' || tabParam === 'plans' || (!viewParam && !tabParam)) {
       setActiveTab('plans');
     }
   }, [searchParams]);
@@ -275,31 +275,7 @@ function SavingsPage() {
     handleMpReturn();
   }, [loadSavingsPlans, searchParams, setSearchParams]);
 
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia();
 
-      mm.add('(prefers-reduced-motion: no-preference)', () => {
-        const cards = gsap.utils.toArray('.motion-plan-card');
-
-        if (!cards.length) {
-          return;
-        }
-
-        gsap.from(cards, {
-          autoAlpha: 0,
-          y: 24,
-          scale: 0.965,
-          duration: 0.58,
-          ease: 'power3.out',
-          stagger: 0.09,
-        });
-      });
-
-      return () => mm.revert();
-    },
-    { dependencies: [activePlans, isLoadingPlans], scope: plansRef, revertOnUpdate: true },
-  );
 
   const requestFormRef = useRef(null);
 

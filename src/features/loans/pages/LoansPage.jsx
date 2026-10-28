@@ -143,7 +143,7 @@ function LoanPlanCard({ index, plan, onClick }) {
 
   return (
     <article 
-      className={`savings-plan-card motion-item motion-plan-card ${isLocked ? 'locked' : ''}`} 
+      className={`savings-plan-card ${isLocked ? 'locked' : ''}`} 
       tabIndex={0}
       onClick={() => onClick && onClick(plan)}
       style={{ cursor: onClick ? 'pointer' : 'default', position: 'relative' }}
@@ -154,25 +154,27 @@ function LoanPlanCard({ index, plan, onClick }) {
         }
       }}
     >
-      {isLocked && (
-        <div className="plan-locked-badge">
-          <Lock size={12} />
-          <span>Requisitos</span>
-        </div>
-      )}
       <div className="savings-plan-card-top">
-        <span className="savings-plan-icon loan-card-icon" aria-hidden="true" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#ffffff', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)' }}>
-          <HandCoins size={20} />
+        <span className="savings-plan-icon" aria-hidden="true">
+          <HandCoins size={22} />
         </span>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <h3 style={{ color: '#0f172a', fontWeight: 800, letterSpacing: '-0.01em' }}>{name}</h3>
-          <p style={{ color: '#475569' }}>{description}</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <h3 className="savings-plan-title">{name}</h3>
+            {isLocked && (
+              <span className="plan-status-badge plan-status-badge-locked">
+                <Lock size={10} aria-hidden="true" />
+                Requisitos
+              </span>
+            )}
+          </div>
+          <p className="savings-plan-desc">{description}</p>
         </div>
       </div>
 
-      <div className="savings-plan-rate loan-plan-rate" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-        <span style={{ color: '#15803d' }}>Monto máximo hasta</span>
-        <strong style={{ color: '#166534' }}>
+      <div className="savings-plan-rate">
+        <span>Monto máximo disponible</span>
+        <strong className="hero-metric-amount">
           {amountMax !== null && amountMax > 0 ? formatAmount(amountMax) : 'Flexible'}
         </strong>
       </div>
@@ -183,8 +185,8 @@ function LoanPlanCard({ index, plan, onClick }) {
           <strong>{rate !== null ? formatPercent(rate) : 'No definido'}</strong>
         </span>
         <span style={{ textAlign: 'right' }}>
-          <small>{abonosStr}</small>
-          <strong style={{ color: '#059669' }}>{formatAmount(cuotaEjemplo)}</strong>
+          <small>Plazo</small>
+          <strong>{abonosStr}</strong>
         </span>
       </div>
 
@@ -274,7 +276,7 @@ function LoansPage() {
       setActiveTab('records');
     } else if (tabParam === 'aval') {
       setActiveTab('aval');
-    } else if (tabParam === 'plans') {
+    } else if (viewParam === 'plans' || tabParam === 'plans' || (!viewParam && !tabParam)) {
       setActiveTab('plans');
     }
   }, [searchParams]);

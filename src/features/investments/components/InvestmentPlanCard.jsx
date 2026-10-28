@@ -89,16 +89,16 @@ function formatStatus(value) {
 }
 
 function InvestmentPlanCard({ description, name, plan, onClick }) {
-  const planName = formatText(name || getValue(plan, ['nombre', 'name', 'titulo', 'title', 'plan', 'tipo']), 'Plan de inversion');
-  const planDescription = formatText(description || getValue(plan, ['descripcion', 'description', 'detalle', 'detalles']), 'Plan activo disponible para solicitud.');
-  const rate = getValue(plan, ['porcentaje', 'porcentaje_1', 'tasa', 'rendimiento', 'interes']);
+  const planName = formatText(name || getValue(plan, ['nombre', 'name', 'titulo', 'title', 'periodo', 'plan']), 'Plan de inversión');
+  const planDescription = formatText(description || getValue(plan, ['descripcion', 'description', 'detalle', 'detalles']), 'Plan a plazo fijo con rendimiento garantizado.');
+  const rate = getValue(plan, ['rendimiento', 'porcentaje', 'porcentaje_1', 'tasa', 'interes']);
   const amount = getValue(plan, ['monto_minimo', 'monto_min', 'capital_minimo', 'inversion_minima', 'monto', 'capital']);
-  const term = getValue(plan, ['plazo', 'periodo', 'tiempo', 'duracion', 'meses']);
-  const status = getValue(plan, ['estado', 'estatus', 'status', 'activo', 'active']);
+  const term = getValue(plan, ['periodo', 'plazo', 'tiempo', 'duracion', 'meses']);
+  const status = getValue(plan, ['status', 'estado', 'estatus', 'activo', 'active']);
 
   return (
     <article 
-      className="savings-plan-card motion-item motion-plan-card" 
+      className="savings-plan-card" 
       tabIndex={0}
       onClick={() => onClick && onClick(plan)}
       style={{ cursor: onClick ? 'pointer' : 'default' }}
@@ -110,28 +110,35 @@ function InvestmentPlanCard({ description, name, plan, onClick }) {
       }}
     >
       <div className="savings-plan-card-top">
-        <span className="savings-plan-icon investment-plan-icon" aria-hidden="true">
-          <ChartNoAxesColumnIncreasing size={20} />
+        <span className="savings-plan-icon" aria-hidden="true">
+          <ChartNoAxesColumnIncreasing size={22} />
         </span>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <h3>{planName}</h3>
-          <p>{planDescription}</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <h3 className="savings-plan-title">{planName}</h3>
+            {status !== null && (
+              <span className={`plan-status-badge ${formatStatus(status) === 'Activo' ? 'plan-status-badge-active' : 'plan-status-badge-inactive'}`}>
+                {formatStatus(status)}
+              </span>
+            )}
+          </div>
+          <p className="savings-plan-desc">{planDescription}</p>
         </div>
       </div>
 
       <div className="savings-plan-rate">
         <span>Rendimiento</span>
-        <strong>{rate !== null ? formatPercent(rate) : 'No definido'}</strong>
+        <strong className="hero-metric-rate">{rate !== null ? formatPercent(rate) : 'No definido'}</strong>
       </div>
 
       <div className="savings-plan-summary">
         <span>
-          <small>Inversion minima</small>
+          <small>Inversión mínima</small>
           <strong>{amount !== null ? formatAmount(amount) : 'No definido'}</strong>
         </span>
-        <span>
-          <small>{term !== null ? 'Plazo' : 'Estado'}</small>
-          <strong>{term !== null ? formatText(term) : formatStatus(status)}</strong>
+        <span style={{ textAlign: 'right' }}>
+          <small>Plazo</small>
+          <strong>{term !== null ? formatText(term) : 'No definido'}</strong>
         </span>
       </div>
 

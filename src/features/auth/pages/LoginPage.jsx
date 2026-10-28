@@ -51,7 +51,7 @@ function LoginPage() {
       navigate(redirectTarget, { replace: true });
     } catch (error) {
       setFieldErrors(error.fieldErrors || {});
-      setFormError(error.message || 'No fue posible iniciar sesion.');
+      setFormError(error.message || 'No fue posible iniciar sesión.');
     } finally {
       setIsSubmitting(false);
     }
@@ -80,37 +80,58 @@ function LoginPage() {
       )}
       <div className="motion-form">
         <Input
+          autoCapitalize="none"
           autoComplete="username"
+          autoCorrect="off"
+          enterKeyHint="next"
           error={getFieldError('email')}
           id="email"
-          label="Correo electronico o usuario"
+          inputMode="email"
+          label="Correo electrónico o usuario"
           name="email"
           onChange={handleChange}
           placeholder="nombre@correo.com"
+          spellCheck={false}
           type="text"
           value={values.email}
         />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <Input
-            autoComplete="current-password"
-            error={getFieldError('password')}
-            id="password"
-            label="Contrasena"
-            name="password"
-            onChange={handleChange}
-            placeholder="Ingresa tu contrasena"
-            type={showPassword ? 'text' : 'password'}
-            value={values.password}
             action={
               <button
-                type="button"
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 onClick={() => setShowPassword(!showPassword)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', padding: 0 }}
-                aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--color-text-muted, #64748b)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '8px',
+                  margin: '-4px',
+                  borderRadius: '6px',
+                }}
+                type="button"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             }
+            autoCapitalize="none"
+            autoComplete="current-password"
+            autoCorrect="off"
+            enterKeyHint="done"
+            error={getFieldError('password')}
+            id="password"
+            inputMode="text"
+            label="Contraseña"
+            name="password"
+            onChange={handleChange}
+            placeholder="Ingresa tu contraseña"
+            spellCheck={false}
+            type={showPassword ? 'text' : 'password'}
+            value={values.password}
           />
           <Link to="/forgot-password" style={{ fontSize: '0.875rem', alignSelf: 'flex-end', textDecoration: 'none', color: 'var(--color-primary, #007bff)' }}>
             ¿Olvidé mi contraseña?

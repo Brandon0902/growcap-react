@@ -3857,6 +3857,7 @@ function FinancialRequestList({
                           id="action-transfer-amount"
                           type="number"
                           inputMode="decimal"
+                          pattern="[0-9]*[.,]?[0-9]*"
                           step="0.01"
                           min="1"
                           max={

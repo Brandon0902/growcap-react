@@ -614,6 +614,8 @@ export default function SavingsVoluntaryDepositModal({
                       </span>
                       <input
                         type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*[.,]?[0-9]*"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
                         placeholder="0.00"

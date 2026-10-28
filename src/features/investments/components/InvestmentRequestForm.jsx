@@ -406,6 +406,7 @@ const InvestmentRequestForm = forwardRef(({ onCreated, plans = [] }, ref) => {
                 className="hero-amount-input"
                 id="investment-amount"
                 inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]*"
                 max={maxAmount ?? undefined}
                 min={minAmount ?? 1}
                 name="cantidad"

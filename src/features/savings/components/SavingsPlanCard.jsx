@@ -218,6 +218,42 @@ function buildHighlights(plan) {
   };
 }
 
+export function getSavingsExpiration(plan) {
+  if (!plan) return 'No definido';
+
+  // 1. Plan con fecha personalizada / escalonada (ej. Meta Libre)
+  if (plan.permite_fecha_personalizada || plan.es_escalonado) {
+    return 'Plazo libre (mín. 2 meses)';
+  }
+
+  // 2. Plan estacional con corte fijado (ej. Verano, Meta Navideña)
+  const mesCorte = Number(plan.mes_corte ?? plan.plan_mes_corte);
+  const diaCorte = Number(plan.dia_corte ?? plan.dia_corte ?? 1);
+
+  if (mesCorte && diaCorte) {
+    const start = new Date();
+    let targetYear = start.getFullYear();
+    const targetMonth = mesCorte - 1;
+    const currentYearTarget = new Date(targetYear, targetMonth, diaCorte);
+    if (currentYearTarget <= start) {
+      targetYear += 1;
+    }
+    const targetDate = new Date(targetYear, targetMonth, diaCorte);
+    return targetDate.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  // 3. Meses mínimos fijados (ej. 12 meses)
+  const mesesMinimos = Number(plan.meses_minimos ?? 0);
+  if (mesesMinimos > 0) {
+    const targetDate = new Date();
+    targetDate.setMonth(targetDate.getMonth() + mesesMinimos);
+    return targetDate.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  // 4. Sin plazo forzoso (Siempre disponible)
+  return 'Retiro libre';
+}
+
 function buildTags(plan) {
   const savingsType = getValue(plan, ['tipo_ahorro', 'tipo']);
   const isEscalonado = plan.es_escalonado || plan.permite_fecha_personalizada;
@@ -244,7 +280,7 @@ function SavingsPlanCard({ plan, index, onClick, disabled = false }) {
   const isContractActive = Boolean(disabled);
   const isEffectiveDisabled = isContractActive || isPlanInactive;
 
-  const { contextSafe } = useGSAP(
+  useGSAP(
     () => {
       const mm = gsap.matchMedia();
 
@@ -280,55 +316,9 @@ function SavingsPlanCard({ plan, index, onClick, disabled = false }) {
     { dependencies: [plan], scope: cardRef, revertOnUpdate: true },
   );
 
-  const lift = contextSafe(() => {
-    if (isEffectiveDisabled || !cardRef.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return;
-    }
-
-    gsap.to(cardRef.current, {
-      y: -8,
-      scale: 1.01,
-      duration: 0.24,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    });
-    gsap.to(cardRef.current?.querySelector('.savings-plan-icon'), {
-      rotation: -5,
-      scale: 1.06,
-      duration: 0.26,
-      ease: 'back.out(1.8)',
-      overwrite: 'auto',
-    });
-  });
-
-  const settle = contextSafe(() => {
-    if (isEffectiveDisabled || !cardRef.current) {
-      return;
-    }
-
-    gsap.to(cardRef.current, {
-      y: 0,
-      scale: 1,
-      duration: 0.28,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    });
-    gsap.to(cardRef.current?.querySelector('.savings-plan-icon'), {
-      rotation: 0,
-      scale: 1,
-      duration: 0.28,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    });
-  });
-
   return (
     <article
-      className={`savings-plan-card motion-plan-card ${isEffectiveDisabled ? 'savings-plan-disabled' : ''}`}
-      onBlur={!isEffectiveDisabled ? settle : undefined}
-      onFocus={!isEffectiveDisabled ? lift : undefined}
-      onMouseEnter={!isEffectiveDisabled ? lift : undefined}
-      onMouseLeave={!isEffectiveDisabled ? settle : undefined}
+      className={`savings-plan-card ${isEffectiveDisabled ? 'savings-plan-disabled' : ''}`}
       onClick={() => {
         if (!isEffectiveDisabled && typeof onClick === 'function') onClick(plan);
       }}
@@ -349,58 +339,33 @@ function SavingsPlanCard({ plan, index, onClick, disabled = false }) {
     >
       <div className="savings-plan-card-top">
         <span className="savings-plan-icon" aria-hidden="true" style={isPlanInactive ? { filter: 'grayscale(0.6)', opacity: 0.7 } : undefined}>
-          <Icon size={20} />
+          <Icon size={22} />
         </span>
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-          <h3 style={{ margin: 0, color: isPlanInactive ? '#64748b' : undefined }}>{toText(title)}</h3>
-          {isPlanInactive ? (
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                fontSize: '0.68rem',
-                fontWeight: 700,
-                background: '#fef2f2',
-                color: '#ef4444',
-                border: '1px solid #fecaca',
-                padding: '2px 6px',
-                borderRadius: '10px',
-                letterSpacing: '0.02em',
-                flexShrink: 0,
-              }}
-            >
-              <Lock size={10} aria-hidden="true" />
-              INACTIVO
-            </span>
-          ) : isContractActive ? (
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                fontSize: '0.68rem',
-                fontWeight: 700,
-                background: 'rgba(147, 51, 234, 0.1)',
-                color: 'var(--color-primary)',
-                border: '1px solid rgba(147, 51, 234, 0.25)',
-                padding: '2px 6px',
-                borderRadius: '10px',
-                letterSpacing: '0.02em',
-                flexShrink: 0,
-              }}
-            >
-              <Lock size={10} aria-hidden="true" />
-              ACTIVO
-            </span>
-          ) : null}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+            <h3 className="savings-plan-title" style={{ margin: 0, color: isPlanInactive ? '#64748b' : undefined }}>{toText(title)}</h3>
+            {isPlanInactive ? (
+              <span className="plan-status-badge plan-status-badge-inactive">
+                <Lock size={10} aria-hidden="true" />
+                Inactivo
+              </span>
+            ) : isContractActive ? (
+              <span className="plan-status-badge plan-status-badge-active">
+                <Lock size={10} aria-hidden="true" />
+                Activo
+              </span>
+            ) : null}
+          </div>
+          {(planDescriptions[toText(title)] || getValue(plan, descriptionFields)) && (
+            <p className="savings-plan-desc">{planDescriptions[toText(title)] || getValue(plan, descriptionFields)}</p>
+          )}
         </div>
       </div>
 
       <div className="savings-plan-rate">
         <span>Porcentaje</span>
         <strong
-          className={Number.isFinite(highlights.percentage?.numericValue) ? 'plan-number' : undefined}
+          className={`hero-metric-rate ${Number.isFinite(highlights.percentage?.numericValue) ? 'plan-number' : ''}`}
           data-suffix="%"
           data-value={Number.isFinite(highlights.percentage?.numericValue) ? highlights.percentage.numericValue : undefined}
           data-prefix={highlights.percentage?.prefix}
@@ -412,24 +377,14 @@ function SavingsPlanCard({ plan, index, onClick, disabled = false }) {
 
       <div className="savings-plan-summary">
         <span>
-          <small>Monto minimo</small>
-          <strong>{highlights.amount || 'No definido'}</strong>
+          <small>Monto mínimo</small>
+          <strong>{highlights.amount || 'Flexible'}</strong>
         </span>
-        <span>
-          <small>Estado</small>
-          <strong style={{ color: isPlanInactive ? '#ef4444' : '#10b981', fontWeight: 600 }}>
-            {highlights.status || 'No definido'}
-          </strong>
+        <span style={{ textAlign: 'right' }}>
+          <small>Vencimiento</small>
+          <strong>{getSavingsExpiration(plan)}</strong>
         </span>
       </div>
-
-      {tags.length > 0 && (
-        <div className="savings-plan-tags">
-          {tags.map((tag) => (
-            <span key={tag}>{tag}</span>
-          ))}
-        </div>
-      )}
 
       {isPlanInactive ? (
         <div
@@ -447,9 +402,9 @@ function SavingsPlanCard({ plan, index, onClick, disabled = false }) {
         <div
           className="savings-plan-status-banner"
           style={{
-            background: 'rgba(147, 51, 234, 0.05)',
-            border: '1px solid rgba(147, 51, 234, 0.2)',
-            color: 'var(--color-primary)',
+            background: '#f5f3ff',
+            border: '1px solid #e9d5ff',
+            color: '#6b21a8',
           }}
         >
           <Lock size={12} aria-hidden="true" />

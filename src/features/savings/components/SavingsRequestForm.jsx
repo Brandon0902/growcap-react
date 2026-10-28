@@ -551,17 +551,17 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
             <div className={`hero-amount-box ${firstFieldError(fieldErrors, 'cuota') ? 'has-error' : ''}`}>
               <span className="hero-amount-currency" aria-hidden="true">$</span>
               <input
+                autoComplete="off"
                 autoFocus
                 className="hero-amount-input"
+                data-form-type="other"
+                data-lpignore="true"
                 id="savings-fee"
                 inputMode="decimal"
-                max={salaryCapacity?.capacidad_disponible > 0 ? salaryCapacity.capacidad_disponible : undefined}
-                min={minFee ?? 1}
                 name="cuota"
                 onChange={handleChange}
                 placeholder="0.00"
-                step="0.01"
-                type="number"
+                type="text"
                 value={values.cuota}
               />
               <span className="hero-amount-suffix" aria-hidden="true">MXN</span>
@@ -573,14 +573,6 @@ const SavingsRequestForm = forwardRef(({ plans = [], suggestedFrequency, salaryC
               <span style={{ color: '#64748b' }}>
                 Mínimo del plan: <strong style={{ color: '#334155' }}>{minFee !== null ? formatMoney(minFee) : '$100.00'}</strong>
               </span>
-              {salaryCapacity && salaryCapacity.salario_periodico > 0 && (
-                <span style={{ color: '#64748b' }}>
-                  Disponible (máx 50% nómina):{' '}
-                  <strong style={{ color: salaryCapacity.capacidad_disponible > 0 ? '#16a34a' : '#dc2626' }}>
-                    {formatMoney(salaryCapacity.capacidad_disponible)}
-                  </strong>
-                </span>
-              )}
             </div>
           </div>
         </WizardStep>

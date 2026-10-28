@@ -358,7 +358,10 @@ export default function GeneralWithdrawalModal({
               </Button>
             </div>
           ) : !isResettingNip ? (
-            <form onSubmit={handleSubmitWithdrawal} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form autoComplete="off" onSubmit={handleSubmitWithdrawal} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Dummy hidden inputs to absorb browser password autofill heuristics */}
+              <input type="text" name="prevent_autofill_username" style={{ display: 'none' }} tabIndex={-1} aria-hidden="true" autoComplete="username" />
+              <input type="password" name="prevent_autofill_password" style={{ display: 'none' }} tabIndex={-1} aria-hidden="true" autoComplete="current-password" />
               {/* Selector de Cuenta de Origen */}
               {accountsList.length > 0 && (
                 <div>
@@ -493,17 +496,23 @@ export default function GeneralWithdrawalModal({
                 <div className="hero-amount-box">
                   <span className="hero-amount-currency" aria-hidden="true">$</span>
                   <input
+                    autoComplete="off"
                     autoFocus
                     className="hero-amount-input"
+                    data-form-type="other"
+                    data-lpignore="true"
+                    disabled={isSubmitting}
                     id={`${modalId}-amount`}
                     inputMode="decimal"
-                    disabled={isSubmitting}
-                    max={maxAvailable}
-                    min="1"
-                    onChange={(e) => setAmount(e.target.value)}
+                    name="monto_retiro"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || /^\d*(\.\d{0,2})?$/.test(val)) {
+                        setAmount(val);
+                      }
+                    }}
                     placeholder="0.00"
-                    step="0.01"
-                    type="number"
+                    type="text"
                     value={amount}
                   />
                   <span className="hero-amount-suffix" aria-hidden="true">MXN</span>
@@ -567,14 +576,18 @@ export default function GeneralWithdrawalModal({
                 </div>
                 <div style={{ position: 'relative' }}>
                   <input
+                    autoComplete="one-time-code"
+                    data-form-type="other"
+                    data-lpignore="true"
+                    disabled={isSubmitting}
                     id={`${modalId}-nip`}
-                    type={showNip ? 'text' : 'password'}
                     inputMode="numeric"
                     maxLength={6}
-                    value={nip}
+                    name="nip_seguridad"
                     onChange={(e) => setNip(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="••••"
-                    disabled={isSubmitting}
+                    type={showNip ? 'text' : 'password'}
+                    value={nip}
                     style={{
                       width: '100%',
                       padding: '10px 42px 10px 14px',

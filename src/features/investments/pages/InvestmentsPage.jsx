@@ -51,8 +51,7 @@ function InvestmentsPage() {
   const [activeTab, setActiveTab] = useState(() => {
     const viewParam = searchParams.get('view');
     const tabParam = searchParams.get('tab');
-    if (viewParam === 'plans' || tabParam === 'plans') return 'plans';
-    return 'records';
+    return viewParam === 'my-records' || tabParam === 'records' ? 'records' : 'plans';
   });
 
   useGrowcapPageMotion(pageRef);
@@ -70,9 +69,6 @@ function InvestmentsPage() {
       setPlans(plansResponse.data);
       const invs = investmentsResponse.data || [];
       setInvestments(invs);
-      if (invs.length === 0 && !searchParams.get('tab') && !searchParams.get('view')) {
-        setActiveTab('plans');
-      }
     } catch (requestError) {
       const normalized = normalizeApiError(requestError, 'No fue posible cargar inversiones y planes.');
       setError(normalized.message);
@@ -92,7 +88,7 @@ function InvestmentsPage() {
     const tabParam = searchParams.get('tab');
     if (viewParam === 'my-records' || tabParam === 'records') {
       setActiveTab('records');
-    } else if (tabParam === 'plans') {
+    } else if (viewParam === 'plans' || tabParam === 'plans' || (!viewParam && !tabParam)) {
       setActiveTab('plans');
     }
   }, [searchParams]);
