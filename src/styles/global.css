@@ -167,16 +167,16 @@ h3 {
 }
 
 .brand-mark {
-  width: 58px;
-  height: 58px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  border-radius: var(--radius);
-  box-shadow: inset 0 -3px 0 rgba(250, 204, 21, 0.42);
+  width: 52px;
+  height: 52px;
+  background: var(--color-primary);
+  border-radius: 12px;
+  box-shadow: none;
   overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 58px;
+  flex: 0 0 52px;
 }
 
 .brand-logo {
@@ -288,6 +288,15 @@ h3 {
   min-height: 178px;
   overflow: hidden;
   position: relative;
+}
+
+.page-hero--no-stats {
+  grid-template-columns: 68px minmax(0, 1fr);
+  min-height: auto;
+}
+
+.page-hero--no-stats::after {
+  display: none !important;
 }
 
 .motion-page .page-hero,
@@ -689,6 +698,313 @@ h3 {
   margin-bottom: 0;
 }
 
+
+/* ==========================================================================
+   Dashboard Balance & Quick Actions Card
+   ========================================================================== */
+.dashboard-balance-card {
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius, 14px);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.balance-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.balance-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.balance-card-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.balance-card-icon {
+  color: var(--color-primary, #7c3aed);
+  flex-shrink: 0;
+}
+
+.balance-card-updated {
+  font-size: 0.72rem;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.balance-card-updated strong {
+  color: #334155;
+  font-weight: 600;
+}
+
+.balance-card-amount-wrap {
+  display: flex;
+  align-items: baseline;
+}
+
+.balance-card-amount {
+  color: #0f172a;
+  font-size: clamp(1.85rem, 3.4vw, 2.35rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-family: "Segoe UI", "Bahnschrift", Arial, sans-serif;
+}
+
+.balance-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .dashboard-balance-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .balance-card-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    width: 100%;
+  }
+
+  .balance-card-actions .hero-pill-btn {
+    border-radius: 10px;
+    font-size: 0.74rem;
+    gap: 4px;
+    min-height: 40px;
+    padding: 8px 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .balance-card-actions .hero-pill-btn {
+    font-size: 0.69rem;
+    padding: 6px 2px;
+  }
+}
+
+
+
+/* ==========================================================================
+   Segmented Control (Fused Module Nav Inside Balance Card)
+   ========================================================================== */
+.segmented-control {
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+  display: flex;
+  gap: 4px;
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .dashboard-balance-card .segmented-control {
+    width: auto;
+    flex-shrink: 0;
+  }
+}
+
+.segmented-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  touch-action: manipulation;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.segmented-btn:hover:not(.active) {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.segmented-btn.active {
+  background: #ffffff;
+  color: var(--color-primary-dark, #581c87);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1), 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.segmented-btn .segmented-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  line-height: 1.2;
+}
+
+.segmented-btn.active .segmented-badge {
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--color-primary-dark, #581c87);
+}
+
+.segmented-badge.badge-danger {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 480px) {
+  .dashboard-balance-card .segmented-control {
+    gap: 3px;
+    padding: 3px;
+  }
+  .segmented-btn {
+    font-size: 0.72rem;
+    padding: 7px 4px;
+    gap: 4px;
+  }
+  .segmented-btn .segmented-badge {
+    padding: 1px 4px;
+  }
+}
+
+
+/* ==========================================================================
+   Pill Tabs (Fused Module Nav Inside Balance Card - Option 1)
+   ========================================================================== */
+.pill-nav-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .dashboard-balance-card .pill-nav-group {
+    width: auto;
+    flex-shrink: 0;
+  }
+}
+
+.pill-nav-group .hero-pill-btn {
+  flex: 1;
+  border-radius: 9px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  gap: 5px;
+  justify-content: center;
+  min-height: 40px;
+  outline: none;
+  padding: 8px 10px;
+  white-space: nowrap;
+  user-select: none;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+  box-shadow: none;
+  touch-action: manipulation;
+  transition: all 140ms ease;
+}
+
+.pill-nav-group .hero-pill-btn:hover:not(.active) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.pill-nav-group .hero-pill-btn.active {
+  background: var(--color-primary, #7c3aed);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(124, 58, 237, 0.25);
+}
+
+.pill-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: inherit;
+  line-height: 1.2;
+}
+
+.hero-pill-btn.active .pill-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.pill-badge.badge-danger {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 640px) {
+  .pill-nav-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+  }
+
+  .pill-nav-group .hero-pill-btn {
+    border-radius: 10px;
+    font-size: 0.74rem;
+    gap: 4px;
+    min-height: 40px;
+    padding: 8px 4px;
+  }
+}
+
+@media (max-width: 380px) {
+  .pill-nav-group .hero-pill-btn {
+    font-size: 0.70rem;
+    padding: 6px 2px;
+    gap: 3px;
+  }
+  .pill-nav-group .hero-pill-btn .pill-badge {
+    padding: 1px 4px;
+    font-size: 0.65rem;
+  }
+}
+
 .portfolio-ledger-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -703,7 +1019,9 @@ h3 {
 }
 
 .portfolio-item-card {
-  background: #ffffff;
+  background:
+    linear-gradient(135deg, rgba(250, 204, 21, 0.16), transparent 32%),
+    var(--color-surface, #ffffff);
   border: 1px solid var(--color-border, #e2e8f0);
   border-radius: 14px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);

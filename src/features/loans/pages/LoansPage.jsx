@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowRight, Banknote, ChevronUp, Eye, HandCoins, HelpCircle, RefreshCw, Lock, ShieldCheck, XCircle } from 'lucide-react';
+import { AlertCircle, ArrowRight, Banknote, ChevronUp, Eye, HandCoins, HelpCircle, PlusCircle, RefreshCw, Lock, ShieldCheck, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { normalizeApiError } from '../../../api/apiUtils.js';
@@ -397,17 +397,88 @@ function LoansPage() {
       <PageHero
         eyebrow="● Préstamos Personales"
         icon={Banknote}
-        stats={
-          loanMetrics.activeCount > 0 ? [
-            { label: 'Adeudo Restante', value: isLoading ? '...' : formatCurrency(loanMetrics.totalAdeudoRestante) },
-            { label: 'Próxima Cuota Estimada', value: isLoading ? '...' : formatCurrency(loanMetrics.totalCuotaFija) },
-          ] : [
-            { label: 'Adeudo Activo', value: '$0.00' },
-            { label: 'Planes Disponibles', value: isLoading ? '...' : String(plans.length) },
-          ]
-        }
         title="Línea de Financiamiento y Préstamos"
       />
+
+      {/* Tarjeta de Saldo y Navegación Unificada */}
+      <section className="dashboard-balance-card motion-immediate" aria-label="Saldo y operaciones de préstamos">
+        <div className="balance-card-main">
+          <div className="balance-card-header">
+            <div className="balance-card-label">
+              <Banknote size={16} className="balance-card-icon" aria-hidden="true" />
+              <span>Adeudo Restante</span>
+            </div>
+            <span className="balance-card-updated">
+              {loanMetrics.activeCount > 0 ? (
+                <>
+                  Próxima cuota: <strong>{isLoading ? '...' : formatCurrency(loanMetrics.totalCuotaFija)}</strong>
+                </>
+              ) : (
+                <>
+                  Estado: <strong>Al corriente</strong>
+                </>
+              )}
+            </span>
+          </div>
+
+          <div className="balance-card-amount-wrap">
+            <strong className="balance-card-amount">
+              {isLoading ? '...' : formatCurrency(loanMetrics.totalAdeudoRestante || 0)}
+            </strong>
+          </div>
+        </div>
+
+        <div className="pill-nav-group" role="tablist" aria-label="Secciones de Préstamos">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'records'}
+            className={`hero-pill-btn ${activeTab === 'records' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('records');
+              setSearchParams({ tab: 'records' });
+            }}
+          >
+            <Eye size={15} />
+            <span>Activos</span>
+            <span className="pill-badge">{loans.length}</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'plans'}
+            className={`hero-pill-btn ${activeTab === 'plans' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('plans');
+              setSearchParams({ tab: 'plans' });
+            }}
+          >
+            <Banknote size={15} />
+            <span>Planes</span>
+            <span className="pill-badge">{plans.length}</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'aval'}
+            className={`hero-pill-btn ${activeTab === 'aval' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('aval');
+              setSearchParams({ tab: 'aval' });
+            }}
+          >
+            <ShieldCheck size={15} />
+            <span>Aval</span>
+            {pendingAvalRequests.length > 0 && (
+              <span className="pill-badge badge-danger">
+                {pendingAvalRequests.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </section>
 
       {checkoutNotice.message && (
         <div style={{ marginBottom: '16px' }}>
@@ -444,75 +515,6 @@ function LoansPage() {
           </button>
         </div>
       )}
-
-      {/* Segmented Top Navigation */}
-      <div className="module-nav-tabs loans-nav-tabs" role="tablist" aria-label="Secciones de Préstamos">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'records'}
-          className={`module-nav-btn ${activeTab === 'records' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('records');
-            setSearchParams({ tab: 'records' });
-          }}
-        >
-          <Eye size={15} />
-          <span className="module-nav-label-desktop">Mis préstamos</span>
-          <span className="module-nav-label-mobile">Préstamos</span>
-          <span className={`module-nav-badge ${activeTab === 'records' ? 'active' : 'inactive'}`}>
-            {loans.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'plans'}
-          className={`module-nav-btn ${activeTab === 'plans' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('plans');
-            setSearchParams({ tab: 'plans' });
-          }}
-        >
-          <Banknote size={15} />
-          <span className="module-nav-label-desktop">Planes y solicitud</span>
-          <span className="module-nav-label-mobile">Solicitar</span>
-          <span className={`module-nav-badge ${activeTab === 'plans' ? 'active' : 'inactive'}`}>
-            {plans.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'aval'}
-          className={`module-nav-btn ${activeTab === 'aval' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('aval');
-            setSearchParams({ tab: 'aval' });
-          }}
-        >
-          <ShieldCheck size={15} />
-          <span className="module-nav-label-desktop">Aval solidario</span>
-          <span className="module-nav-label-mobile">Aval</span>
-          {pendingAvalRequests.length > 0 && (
-            <span
-              style={{
-                background: '#dc2626',
-                color: '#ffffff',
-                fontSize: '0.68rem',
-                fontWeight: 700,
-                padding: '1px 5px',
-                borderRadius: '8px',
-                lineHeight: 1.2,
-              }}
-            >
-              {pendingAvalRequests.length}
-            </span>
-          )}
-        </button>
-      </div>
 
       {activeTab === 'records' && (
         <>

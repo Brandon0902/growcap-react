@@ -1,4 +1,4 @@
-import { AlertCircle, HelpCircle, ChartNoAxesColumnIncreasing, ChevronUp, Eye, History, RefreshCw } from 'lucide-react';
+import { AlertCircle, HelpCircle, ChartNoAxesColumnIncreasing, ChevronUp, Eye, History, PlusCircle, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { normalizeApiError } from '../../../api/apiUtils.js';
@@ -201,60 +201,75 @@ function InvestmentsPage() {
       <PageHero
         eyebrow="● Inversión y Rendimientos"
         icon={ChartNoAxesColumnIncreasing}
-        stats={
-          investmentMetrics.activeCount > 0 ? [
-            { label: 'Valor Portafolio', value: isLoading ? '...' : formatCurrency(investmentMetrics.totalSaldoVivo) },
-            { label: 'Ganancia Generada', value: isLoading ? '...' : `+${formatCurrency(investmentMetrics.totalRendimientos)}` },
-          ] : [
-            { label: 'Portafolio Activo', value: '$0.00' },
-            { label: 'Planes Disponibles', value: isLoading ? '...' : String(plans.length) },
-          ]
-        }
         title="Crece tu patrimonio con planes de inversión"
       />
+
+      {/* Tarjeta de Saldo y Navegación Unificada */}
+      <section className="dashboard-balance-card motion-immediate" aria-label="Saldo y operaciones de inversión">
+        <div className="balance-card-main">
+          <div className="balance-card-header">
+            <div className="balance-card-label">
+              <ChartNoAxesColumnIncreasing size={16} className="balance-card-icon" aria-hidden="true" />
+              <span>Valor del Portafolio</span>
+            </div>
+            <span className="balance-card-updated">
+              {investmentMetrics.activeCount > 0 ? (
+                <>
+                  Rendimientos: <strong>+{isLoading ? '...' : formatCurrency(investmentMetrics.totalRendimientos)}</strong>
+                </>
+              ) : (
+                <>
+                  Planes disponibles: <strong>{plans.length}</strong>
+                </>
+              )}
+            </span>
+          </div>
+
+          <div className="balance-card-amount-wrap">
+            <strong className="balance-card-amount">
+              {isLoading ? '...' : formatCurrency(investmentMetrics.totalSaldoVivo || 0)}
+            </strong>
+          </div>
+        </div>
+
+        <div className="pill-nav-group" role="tablist" aria-label="Secciones de Inversión">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'records'}
+            className={`hero-pill-btn ${activeTab === 'records' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('records');
+              setSearchParams({ tab: 'records' });
+            }}
+          >
+            <Eye size={15} />
+            <span>Mis Inversiones</span>
+            <span className="pill-badge">{investments.length}</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'plans'}
+            className={`hero-pill-btn ${activeTab === 'plans' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('plans');
+              setSearchParams({ tab: 'plans' });
+            }}
+          >
+            <ChartNoAxesColumnIncreasing size={15} />
+            <span>Planes</span>
+            <span className="pill-badge">{plans.length}</span>
+          </button>
+        </div>
+      </section>
 
       {checkoutNotice.message && (
         <div style={{ marginBottom: '16px' }}>
           <Alert type={checkoutNotice.type}>{checkoutNotice.message}</Alert>
         </div>
       )}
-
-      {/* Segmented Top Navigation */}
-      <div className="module-nav-tabs" role="tablist" aria-label="Secciones de Inversión">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'records'}
-          className={`module-nav-btn ${activeTab === 'records' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('records');
-            setSearchParams({ tab: 'records' });
-          }}
-        >
-          <Eye size={16} />
-          <span>Mis inversiones</span>
-          <span className={`module-nav-badge ${activeTab === 'records' ? 'active' : 'inactive'}`}>
-            {investments.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'plans'}
-          className={`module-nav-btn ${activeTab === 'plans' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('plans');
-            setSearchParams({ tab: 'plans' });
-          }}
-        >
-          <ChartNoAxesColumnIncreasing size={16} />
-          <span>Planes disponibles</span>
-          <span className={`module-nav-badge ${activeTab === 'plans' ? 'active' : 'inactive'}`}>
-            {plans.length}
-          </span>
-        </button>
-      </div>
 
       {activeTab === 'records' && (
         <section className="section-block records-main-section motion-immediate" ref={recordsRef}>

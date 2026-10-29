@@ -1,4 +1,4 @@
-import { ArrowDownLeft, Banknote, ChartNoAxesColumnIncreasing, ChevronRight, FileText, HandCoins, Lightbulb, PlusCircle, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowDownLeft, Banknote, ChartNoAxesColumnIncreasing, ChevronRight, FileText, HandCoins, Lightbulb, PlusCircle, ShieldCheck, Sparkles, Wallet } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { normalizeApiError } from '../../../api/apiUtils.js';
 import Alert from '../../../components/common/Alert.jsx';
@@ -211,44 +211,60 @@ function DashboardPage() {
     <div className="page dashboard-page" ref={pageRef}>
       <PageHero
         eyebrow={`● Portafolio Personal · ${formalDate}`}
-        stats={[
-          { label: 'Saldo Disponible', value: isLoadingBalance ? 'Cargando...' : formatCurrency(generalBalance) },
-          { label: 'Actualizado', value: balanceDate || 'Hoy' },
-        ]}
         title={greetingText}
-        actions={
-          <div className="hero-action-pills">
-            <button
-              type="button"
-              className="hero-pill-btn hero-pill-primary"
-              onClick={() => setIsDepositModalOpen(true)}
-            >
-              <PlusCircle size={16} />
-              <span className="hidden min-[380px]:inline">Cargar Saldo</span>
-            </button>
-            <button
-              type="button"
-              className="hero-pill-btn hero-pill-secondary"
-              onClick={() => setIsWithdrawalModalOpen(true)}
-              disabled={Number(generalBalance ?? 0) <= 0}
-              title={Number(generalBalance ?? 0) <= 0 ? 'Sin saldo disponible para retirar' : 'Retirar saldo'}
-            >
-              <ArrowDownLeft size={16} className="text-purple-600" />
-              <span>Retirar</span>
-            </button>
-            <button
-              type="button"
-              className="hero-pill-btn hero-pill-secondary"
-              onClick={() => setIsKardexModalOpen(true)}
-            >
-              <FileText size={16} className="text-slate-500" />
-              <span>Movimientos</span>
-            </button>
-          </div>
-        }
       >
         <FinancialTipCarousel context="dashboard" />
       </PageHero>
+
+      {/* Tarjeta de Saldo Disponible y Operaciones de Cuenta */}
+      <section className="dashboard-balance-card motion-immediate" aria-label="Saldo disponible y operaciones">
+        <div className="balance-card-main">
+          <div className="balance-card-header">
+            <div className="balance-card-label">
+              <Wallet size={16} className="balance-card-icon" aria-hidden="true" />
+              <span>Saldo Disponible</span>
+            </div>
+            <span className="balance-card-updated">
+              Actualizado: <strong>{balanceDate || 'Hoy'}</strong>
+            </span>
+          </div>
+
+          <div className="balance-card-amount-wrap">
+            <strong className="balance-card-amount">
+              {isLoadingBalance ? 'Cargando...' : formatCurrency(generalBalance)}
+            </strong>
+          </div>
+        </div>
+
+        <div className="balance-card-actions">
+          <button
+            type="button"
+            className="hero-pill-btn hero-pill-primary"
+            onClick={() => setIsDepositModalOpen(true)}
+          >
+            <PlusCircle size={15} />
+            <span>Cargar Saldo</span>
+          </button>
+          <button
+            type="button"
+            className="hero-pill-btn hero-pill-secondary"
+            onClick={() => setIsWithdrawalModalOpen(true)}
+            disabled={Number(generalBalance ?? 0) <= 0}
+            title={Number(generalBalance ?? 0) <= 0 ? 'Sin saldo disponible para retirar' : 'Retirar saldo'}
+          >
+            <ArrowDownLeft size={15} className="text-purple-600" />
+            <span>Retirar</span>
+          </button>
+          <button
+            type="button"
+            className="hero-pill-btn hero-pill-secondary"
+            onClick={() => setIsKardexModalOpen(true)}
+          >
+            <FileText size={15} className="text-slate-500" />
+            <span>Movimientos</span>
+          </button>
+        </div>
+      </section>
 
       {notice.message && (
         <div style={{ marginBottom: '16px' }}>

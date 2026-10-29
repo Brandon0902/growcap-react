@@ -241,13 +241,15 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(3px)',
+        backgroundColor: 'rgba(15, 23, 42, 0.7)',
+        backdropFilter: 'blur(4px)',
         zIndex: 99999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px',
+        padding: '24px 18px',
+        boxSizing: 'border-box',
+        overflowY: 'auto',
       }}
       onClick={handleClose}
     >
@@ -259,13 +261,14 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
           background: '#ffffff',
           borderRadius: '16px',
           width: '100%',
-          maxWidth: '520px',
-          maxHeight: '92vh',
+          maxWidth: '440px',
+          maxHeight: '88vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.05)',
+          boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.25)',
           border: '1px solid #e2e8f0',
           overflow: 'hidden',
+          margin: 'auto',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -275,15 +278,15 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '16px 20px',
+            padding: '12px 16px',
             borderBottom: '1px solid #f1f5f9',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div
               style={{
-                width: '36px',
-                height: '36px',
+                width: '32px',
+                height: '32px',
                 borderRadius: '8px',
                 background: '#eff6ff',
                 color: '#2563eb',
@@ -291,24 +294,26 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 border: '1px solid #bfdbfe',
+                flexShrink: 0,
               }}
             >
-              <Building2 size={18} />
+              <Building2 size={16} />
             </div>
             <div>
               <h2
                 id={`${modalId}-title`}
                 style={{
                   margin: 0,
-                  fontSize: '1.05rem',
+                  fontSize: '0.96rem',
                   fontWeight: 700,
                   color: '#0f172a',
+                  lineHeight: 1.2,
                 }}
               >
                 Cargar Saldo
               </h2>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                Abona a tu saldo disponible mediante transferencia SPEI
+              <span style={{ fontSize: '0.70rem', color: '#64748b' }}>
+                Abona a tu saldo disponible vía SPEI
               </span>
             </div>
           </div>
@@ -322,7 +327,7 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
               border: 'none',
               cursor: 'pointer',
               color: '#94a3b8',
-              padding: '6px',
+              padding: '4px',
               borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
@@ -340,28 +345,28 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
             display: 'flex',
             background: '#f8fafc',
             borderBottom: '1px solid #e2e8f0',
-            padding: '6px 20px 0',
-            gap: '8px',
+            padding: '4px 16px 0',
+            gap: '6px',
           }}
         >
           <button
             type="button"
             onClick={() => setActiveTab('new')}
             style={{
-              padding: '8px 14px',
+              padding: '6px 12px',
               border: 'none',
               borderBottom: activeTab === 'new' ? '2px solid #2563eb' : '2px solid transparent',
               background: 'transparent',
               color: activeTab === 'new' ? '#1e293b' : '#64748b',
               fontWeight: activeTab === 'new' ? 700 : 500,
-              fontSize: '0.8rem',
+              fontSize: '0.76rem',
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
             }}
           >
-            <PlusCircle size={15} />
+            <PlusCircle size={13} />
             <span>Registrar Depósito</span>
           </button>
 
@@ -369,77 +374,56 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
             type="button"
             onClick={() => setActiveTab('history')}
             style={{
-              padding: '8px 14px',
+              padding: '6px 12px',
               border: 'none',
               borderBottom: activeTab === 'history' ? '2px solid #2563eb' : '2px solid transparent',
               background: 'transparent',
               color: activeTab === 'history' ? '#1e293b' : '#64748b',
               fontWeight: activeTab === 'history' ? 700 : 500,
-              fontSize: '0.8rem',
+              fontSize: '0.76rem',
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
             }}
           >
-            <History size={15} />
+            <History size={13} />
             <span>Mis Depósitos ({depositsList.length})</span>
           </button>
         </div>
 
         {/* Body Content */}
-        <div style={{ padding: '16px 20px', overflowY: 'auto', flex: 1 }}>
+        <div style={{ padding: '12px 16px', overflowY: 'auto', flex: 1 }}>
           {error && (
-            <div style={{ marginBottom: '14px' }}>
+            <div style={{ marginBottom: '10px' }}>
               <Alert type="error">{error}</Alert>
             </div>
           )}
 
           {successMessage && (
-            <div style={{ marginBottom: '14px' }}>
+            <div style={{ marginBottom: '10px' }}>
               <Alert type="success">{successMessage}</Alert>
             </div>
           )}
 
           {activeTab === 'new' ? (
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Voucher SPEI */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* Voucher SPEI Compacto */}
               <div
                 style={{
                   background: '#f8fafc',
                   border: '1px solid #e2e8f0',
                   borderRadius: '10px',
-                  padding: '12px 14px',
+                  padding: '9px 12px',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '8px',
+                  gap: '5px',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', color: '#475569' }}>
-                  <span>Banco: <strong>{bankData?.banco || 'BBVA / STP'}</strong></span>
-                  <span>Beneficiario: <strong>{bankData?.beneficiario || 'GROWCAP'}</strong></span>
-                </div>
-
-                <div
-                  style={{
-                    background: '#ffffff',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '8px',
-                    padding: '8px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <div>
-                    <span style={{ display: 'block', fontSize: '0.62rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
-                      CLABE Interbancaria
-                    </span>
-                    <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace', letterSpacing: '0.04em' }}>
-                      {bankData?.clabe || '012180015040590130'}
-                    </span>
-                  </div>
-
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.67rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.03em' }}>
+                    CLABE Interbancaria
+                  </span>
                   <button
                     type="button"
                     onClick={() => handleCopy(bankData?.clabe || '012180015040590130', 'clabe')}
@@ -447,30 +431,39 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '4px',
-                      padding: '4px 8px',
-                      borderRadius: '6px',
+                      padding: '3px 8px',
+                      borderRadius: '5px',
                       border: '1px solid #cbd5e1',
                       background: copiedField === 'clabe' ? '#ecfdf5' : '#ffffff',
                       color: copiedField === 'clabe' ? '#15803d' : '#475569',
-                      fontSize: '0.7rem',
+                      fontSize: '0.68rem',
                       fontWeight: 600,
                       cursor: 'pointer',
                     }}
                   >
-                    {copiedField === 'clabe' ? <Check size={12} /> : <Copy size={12} />}
+                    {copiedField === 'clabe' ? <Check size={11} /> : <Copy size={11} />}
                     <span>{copiedField === 'clabe' ? 'Copiada' : 'Copiar'}</span>
                   </button>
                 </div>
+
+                <div style={{ fontSize: '1.02rem', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace', letterSpacing: '0.04em' }}>
+                  {bankData?.clabe || '012180015040590130'}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.70rem', color: '#64748b', borderTop: '1px solid #f1f5f9', paddingTop: '4px' }}>
+                  <span>Banco: <strong style={{ color: '#334155' }}>{bankData?.banco || 'BBVA / STP'}</strong></span>
+                  <span>Beneficiario: <strong style={{ color: '#334155' }}>{bankData?.beneficiario || 'GROWCAP'}</strong></span>
+                </div>
               </div>
 
-              {/* Input Monto Hero */}
+              {/* Input Monto Hero Compacto */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#475569', marginBottom: '3px' }}>
                   Monto transferido *
                 </label>
-                <div className="hero-amount-field" style={{ margin: 0 }}>
-                  <div className="hero-amount-box">
-                    <span className="hero-amount-currency">$</span>
+                <div className="hero-amount-field" style={{ margin: 0, gap: 0 }}>
+                  <div className="hero-amount-box" style={{ padding: '4px 12px', borderRadius: '10px' }}>
+                    <span className="hero-amount-currency" style={{ fontSize: '1.4rem' }}>$</span>
                     <input
                       type="number"
                       inputMode="decimal"
@@ -481,17 +474,18 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       className="hero-amount-input"
+                      style={{ fontSize: '1.45rem', padding: '2px 0' }}
                     />
-                    <span className="hero-amount-suffix">MXN</span>
+                    <span className="hero-amount-suffix" style={{ fontSize: '0.75rem' }}>MXN</span>
                   </div>
                 </div>
               </div>
 
-              {/* Fila Fecha y Referencia */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+              {/* Fila Fecha y Referencia en 2 Columnas */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Fecha de la transferencia *
+                  <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#475569', marginBottom: '3px' }}>
+                    Fecha *
                   </label>
                   <input
                     type="date"
@@ -500,20 +494,20 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                     onChange={(e) => setFechaDeposito(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '9px 12px',
-                      fontSize: '0.92rem',
+                      padding: '6px 8px',
+                      fontSize: '0.82rem',
                       fontWeight: 600,
                       color: '#0f172a',
                       border: '1px solid #cbd5e1',
-                      borderRadius: '8px',
+                      borderRadius: '7px',
                       boxSizing: 'border-box',
                     }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                    Folio / Clave de rastreo SPEI *
+                  <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#475569', marginBottom: '3px' }}>
+                    Folio / Rastreo SPEI *
                   </label>
                   <input
                     type="text"
@@ -523,32 +517,36 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                     onChange={(e) => setReferencia(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '9px 12px',
-                      fontSize: '0.92rem',
+                      padding: '6px 8px',
+                      fontSize: '0.82rem',
                       fontWeight: 600,
                       color: '#0f172a',
                       border: '1px solid #cbd5e1',
-                      borderRadius: '8px',
+                      borderRadius: '7px',
                       boxSizing: 'border-box',
                     }}
                   />
                 </div>
               </div>
 
-              {/* Upload Comprobante Obligatorio */}
+              {/* Upload Comprobante Compacto */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                  Comprobante de transferencia (PDF, JPG, PNG) *
+                <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#334155', marginBottom: '3px' }}>
+                  Comprobante de pago *
                 </label>
                 <div
                   style={{
                     border: comprobanteFile ? '1.5px solid #22c55e' : '1.5px dashed #cbd5e1',
                     borderRadius: '8px',
-                    padding: '12px 14px',
-                    textAlign: 'center',
+                    padding: '8px 12px',
                     background: comprobanteFile ? '#f0fdf4' : '#fafafa',
                     cursor: 'pointer',
-                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    minHeight: '40px',
+                    boxSizing: 'border-box',
                   }}
                   onClick={() => document.getElementById(`${modalId}-file-input`)?.click()}
                 >
@@ -561,25 +559,23 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                   />
 
                   {comprobanteFile ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                      <FileCheck size={20} color="#16a34a" />
-                      <div style={{ textAlign: 'left' }}>
-                        <strong style={{ fontSize: '0.78rem', color: '#15803d', display: 'block' }}>
-                          {comprobanteFile.name}
-                        </strong>
-                        <span style={{ fontSize: '0.68rem', color: '#16a34a' }}>
-                          {(comprobanteFile.size / 1024).toFixed(0)} KB • Clic para cambiar
-                        </span>
-                      </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, overflow: 'hidden' }}>
+                      <FileCheck size={16} color="#16a34a" style={{ flexShrink: 0 }} />
+                      <strong style={{ fontSize: '0.75rem', color: '#15803d', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {comprobanteFile.name}
+                      </strong>
+                      <span style={{ fontSize: '0.68rem', color: '#16a34a', flexShrink: 0 }}>
+                        ({(comprobanteFile.size / 1024).toFixed(0)} KB) • Cambiar
+                      </span>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                      <Upload size={20} color="#64748b" />
-                      <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#1e293b' }}>
-                        Adjuntar comprobante de pago
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Upload size={15} color="#64748b" />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#1e293b' }}>
+                        Adjuntar comprobante
                       </span>
                       <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
-                        Obligatorio para que administración acredite tus fondos
+                        (PDF, JPG o PNG)
                       </span>
                     </div>
                   )}
@@ -588,8 +584,8 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
 
               {/* Nota opcional */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                  Nota o comentario adicional (opcional)
+                <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#334155', marginBottom: '3px' }}>
+                  Nota adicional (opcional)
                 </label>
                 <input
                   type="text"
@@ -598,10 +594,10 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                   onChange={(e) => setNota(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '7px 10px',
-                    fontSize: '0.82rem',
+                    padding: '6px 8px',
+                    fontSize: '0.80rem',
                     border: '1px solid #cbd5e1',
-                    borderRadius: '6px',
+                    borderRadius: '7px',
                     boxSizing: 'border-box',
                   }}
                 />
@@ -613,8 +609,8 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                   display: 'flex',
                   justifyContent: 'flex-end',
                   gap: '8px',
-                  marginTop: '8px',
-                  paddingTop: '12px',
+                  marginTop: '4px',
+                  paddingTop: '10px',
                   borderTop: '1px solid #f1f5f9',
                 }}
               >
@@ -623,7 +619,7 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                   className="button-secondary"
                   onClick={handleClose}
                   disabled={isSubmitting}
-                  style={{ fontSize: '0.8rem', padding: '7px 16px' }}
+                  style={{ fontSize: '0.78rem', padding: '6px 14px', minHeight: '32px' }}
                 >
                   Cancelar
                 </Button>
@@ -631,7 +627,7 @@ export default function DepositModal({ isOpen, onClose, onSuccess }) {
                   type="submit"
                   className="button-primary"
                   disabled={isSubmitting || !comprobanteFile || !amount}
-                  style={{ fontSize: '0.8rem', padding: '7px 18px' }}
+                  style={{ fontSize: '0.78rem', padding: '6px 16px', minHeight: '32px' }}
                 >
                   {isSubmitting ? 'Registrando...' : 'Registrar Depósito'}
                 </Button>

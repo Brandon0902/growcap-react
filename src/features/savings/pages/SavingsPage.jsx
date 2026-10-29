@@ -1,4 +1,4 @@
-import { AlertCircle, HelpCircle, ChevronUp, Eye, EyeOff, HandCoins, History, PiggyBank, RefreshCw, TrendingUp } from 'lucide-react';
+import { AlertCircle, HelpCircle, ChevronUp, Eye, EyeOff, HandCoins, History, PiggyBank, PlusCircle, RefreshCw, TrendingUp } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
@@ -296,51 +296,63 @@ function SavingsPage() {
       <PageHero
         eyebrow="Ahorro"
         icon={HandCoins}
-        stats={[
-          { label: 'Total en Ahorro', value: isLoadingPlans ? '...' : formatCurrency(savingsMetrics.totalAhorrado) },
-          { label: 'Saldo Disponible', value: isLoadingPlans ? '...' : formatCurrency(savingsMetrics.totalDisponible) },
-        ]}
         title="Haz crecer tu dinero con GrowCap"
       />
 
+      {/* Tarjeta de Saldo y Navegación Unificada */}
+      <section className="dashboard-balance-card motion-immediate" aria-label="Saldo y operaciones de ahorro">
+        <div className="balance-card-main">
+          <div className="balance-card-header">
+            <div className="balance-card-label">
+              <HandCoins size={16} className="balance-card-icon" aria-hidden="true" />
+              <span>Total en Ahorro</span>
+            </div>
+            <span className="balance-card-updated">
+              Disponible: <strong>{isLoadingPlans ? '...' : formatCurrency(savingsMetrics.totalDisponible)}</strong>
+            </span>
+          </div>
+
+          <div className="balance-card-amount-wrap">
+            <strong className="balance-card-amount">
+              {isLoadingPlans ? '...' : formatCurrency(savingsMetrics.totalAhorrado)}
+            </strong>
+          </div>
+        </div>
+
+        <div className="pill-nav-group" role="tablist" aria-label="Secciones de Ahorro">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'records'}
+            className={`hero-pill-btn ${activeTab === 'records' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('records');
+              setSearchParams({ tab: 'records' });
+            }}
+          >
+            <Eye size={15} />
+            <span>Mis Ahorros</span>
+            <span className="pill-badge">{savings.length}</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'plans'}
+            className={`hero-pill-btn ${activeTab === 'plans' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('plans');
+              setSearchParams({ tab: 'plans' });
+            }}
+          >
+            <PiggyBank size={15} />
+            <span>Planes</span>
+            <span className="pill-badge">{activePlans.length}</span>
+          </button>
+        </div>
+      </section>
+
       {checkoutNotice.message && <Alert type={checkoutNotice.type}>{checkoutNotice.message}</Alert>}
-
-      {/* Segmented Top Navigation */}
-      <div className="module-nav-tabs" role="tablist" aria-label="Secciones de Ahorro">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'records'}
-          className={`module-nav-btn ${activeTab === 'records' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('records');
-            setSearchParams({ tab: 'records' });
-          }}
-        >
-          <Eye size={16} />
-          <span>Mis ahorros activos</span>
-          <span className={`module-nav-badge ${activeTab === 'records' ? 'active' : 'inactive'}`}>
-            {savings.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'plans'}
-          className={`module-nav-btn ${activeTab === 'plans' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('plans');
-            setSearchParams({ tab: 'plans' });
-          }}
-        >
-          <PiggyBank size={16} />
-          <span>Planes y solicitud</span>
-          <span className={`module-nav-badge ${activeTab === 'plans' ? 'active' : 'inactive'}`}>
-            {activePlans.length}
-          </span>
-        </button>
-      </div>
 
       {activeTab === 'records' && (
         <section className="section-block records-main-section motion-immediate" ref={recordsRef}>

@@ -1,6 +1,8 @@
 function PageHero({ actions, children, eyebrow, icon: Icon, stats = [], title }) {
+  const hasStats = Array.isArray(stats) && stats.length > 0;
+
   return (
-    <section className="page-hero">
+    <section className={`page-hero ${!hasStats ? 'page-hero--no-stats' : ''}`}>
       <div className="hero-index" aria-hidden="true">
         GC
       </div>
@@ -15,7 +17,7 @@ function PageHero({ actions, children, eyebrow, icon: Icon, stats = [], title })
         {children && (typeof children === 'string' ? <p>{children}</p> : <div className="page-hero-content">{children}</div>)}
         {actions && <div className="hero-actions">{actions}</div>}
       </div>
-      {stats.length > 0 && (
+      {hasStats && (
         <div className="hero-stat-stack" aria-label="Indicadores destacados">
           {stats.map((stat) => (
             <div className="hero-stat" key={stat.label}>
