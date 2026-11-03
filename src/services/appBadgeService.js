@@ -117,7 +117,10 @@ export async function setAppBadge(count) {
   // 5. Delegación al Service Worker (crítico para Safari iOS cuando el tab pasa a background)
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
     try {
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((resolve) => setTimeout(resolve, 1500)),
+      ]);
       if (reg?.active) {
         reg.active.postMessage({
           type: normalizedCount > 0 ? 'SET_BADGE' : 'CLEAR_BADGE',

@@ -25,6 +25,7 @@ import {
 import {
   isPushSupported,
   subscribeToPushNotifications,
+  syncPushSubscriptionIfGranted,
 } from '../../services/pushNotificationService.js';
 
 function formatRelativeTime(dateString) {
@@ -114,7 +115,11 @@ function NotificationBell() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
-      setHasPushPermission(Notification.permission === 'granted');
+      const isGranted = Notification.permission === 'granted';
+      setHasPushPermission(isGranted);
+      if (isGranted) {
+        syncPushSubscriptionIfGranted();
+      }
     }
   }, []);
 
@@ -126,7 +131,11 @@ function NotificationBell() {
         setHasPushPermission(true);
         await requestBadgePermission();
         await setAppBadge(unreadCount);
+      } else if (typeof window !== 'undefined' && window.Notification?.permission === 'granted') {
+        setHasPushPermission(true);
       }
+    } catch (pushErr) {
+      console.warn('[Push] Error al habilitar avisos:', pushErr);
     } finally {
       setIsPushLoading(false);
     }

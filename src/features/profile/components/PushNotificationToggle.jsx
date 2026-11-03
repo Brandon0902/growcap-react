@@ -6,6 +6,7 @@ import {
   getActivePushSubscription,
   subscribeToPushNotifications,
   unsubscribeFromPushNotifications,
+  syncPushSubscriptionIfGranted,
 } from '../../../services/pushNotificationService.js';
 import { requestBadgePermission, setAppBadge, getAppBadgeCount } from '../../../services/appBadgeService.js';
 
@@ -22,6 +23,9 @@ export default function PushNotificationToggle() {
       if (isSupp) {
         const sub = await getActivePushSubscription();
         setIsSubscribed(Boolean(sub));
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          syncPushSubscriptionIfGranted();
+        }
       }
     };
     checkStatus();

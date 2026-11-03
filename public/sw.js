@@ -76,11 +76,27 @@ self.addEventListener('push', (event) => {
 
   // Sincronizar el globito del icono con el conteo enviado en el payload push
   if (typeof payload.badgeCount === 'number') {
-    if (payload.badgeCount > 0 && 'setAppBadge' in self.navigator) {
-      tasks.push(self.navigator.setAppBadge(payload.badgeCount).catch(() => {}));
-    } else if (payload.badgeCount === 0 && 'clearAppBadge' in self.navigator) {
-      tasks.push(self.navigator.clearAppBadge().catch(() => {}));
-    }
+    const bCount = Math.max(0, parseInt(payload.badgeCount, 10) || 0);
+    const applyBadgeTask = async () => {
+      try {
+        if (bCount > 0) {
+          if ('setAppBadge' in self.navigator) {
+            await self.navigator.setAppBadge(bCount);
+          } else if (self.registration && 'setAppBadge' in self.registration) {
+            await self.registration.setAppBadge(bCount);
+          }
+        } else {
+          if ('clearAppBadge' in self.navigator) {
+            await self.navigator.clearAppBadge();
+          } else if (self.registration && 'clearAppBadge' in self.registration) {
+            await self.registration.clearAppBadge();
+          }
+        }
+      } catch (err) {
+        console.debug('[SW Push] Error actualizando badge:', err);
+      }
+    };
+    tasks.push(applyBadgeTask());
   }
 
   event.waitUntil(Promise.all(tasks));
