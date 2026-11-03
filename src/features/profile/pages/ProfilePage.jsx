@@ -13,6 +13,7 @@ import BeneficiariesEditModal from '../components/BeneficiariesEditModal.jsx';
 import BeneficiariesTermsModal from '../components/BeneficiariesTermsModal.jsx';
 import ChangePasswordModal from '../components/ChangePasswordModal.jsx';
 import ProfileCorrectionModal from '../components/ProfileCorrectionModal.jsx';
+import PushNotificationToggle from '../components/PushNotificationToggle.jsx';
 import { normalizeApiError } from '../../../api/apiUtils.js';
 import Alert from '../../../components/common/Alert.jsx';
 import Button from '../../../components/common/Button.jsx';
@@ -322,6 +323,19 @@ function ProfilePage() {
                     <KeyRound size={18} aria-hidden="true" />
                     Cambiar contraseña
                   </Button>
+                </div>
+              </Card>
+
+              {/* Avisos y notificaciones en tu dispositivo */}
+              <Card className="profile-card motion-immediate" style={{ marginTop: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
+                  <div>
+                    <h2>Avisos en tu dispositivo</h2>
+                    <p style={{ margin: '4px 0 0', color: 'var(--color-text-muted)', fontSize: '0.88rem' }}>
+                      Recibe notificaciones inmediatas al acreditarse tus depósitos, préstamos y retiros.
+                    </p>
+                  </div>
+                  <PushNotificationToggle />
                 </div>
               </Card>
 

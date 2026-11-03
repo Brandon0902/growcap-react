@@ -8,6 +8,26 @@ import './styles/global.css';
 import './styles/accessibility.css';
 import './components/common/GrowCapAssistantWidget.css';
 
+// Registrar Service Worker para PWA, Badging API y Web Push en Safari iOS 16.4+
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  const registerSW = () => {
+    navigator.serviceWorker
+      .register('/sw.js', { scope: '/' })
+      .then((reg) => {
+        console.log('[GrowCap Cliente PWA] Service Worker activo, scope:', reg.scope);
+      })
+      .catch((err) => {
+        console.warn('[GrowCap Cliente PWA] Error al registrar Service Worker:', err);
+      });
+  };
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    registerSW();
+  } else {
+    window.addEventListener('load', registerSW);
+  }
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>

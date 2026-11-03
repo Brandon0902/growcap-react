@@ -85,4 +85,10 @@ export const ENDPOINTS = {
     health: '/assistant/health',
     financialTip: '/assistant/financial-tip',
   },
+  push: {
+    publicKey: '/push/public-key',
+    subscribe: '/push/subscribe',
+    unsubscribe: '/push/unsubscribe',
+    test: '/push/test',
+  },
 };

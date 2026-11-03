@@ -16,6 +16,16 @@ import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
 } from '../../services/notificationService.js';
+import {
+  setAppBadge,
+  clearAppBadge,
+  decrementAppBadge,
+  requestBadgePermission,
+} from '../../services/appBadgeService.js';
+import {
+  isPushSupported,
+  subscribeToPushNotifications,
+} from '../../services/pushNotificationService.js';
 
 function formatRelativeTime(dateString) {
   if (!dateString) return '';
@@ -99,11 +109,37 @@ function NotificationBell() {
   const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef(null);
 
+  const [hasPushPermission, setHasPushPermission] = useState(false);
+  const [isPushLoading, setIsPushLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setHasPushPermission(Notification.permission === 'granted');
+    }
+  }, []);
+
+  const handleEnablePush = async () => {
+    setIsPushLoading(true);
+    try {
+      const res = await subscribeToPushNotifications();
+      if (res?.success) {
+        setHasPushPermission(true);
+        await requestBadgePermission();
+        await setAppBadge(unreadCount);
+      }
+    } finally {
+      setIsPushLoading(false);
+    }
+  };
+
   const fetchNotifs = async () => {
     try {
       const res = await getNotifications({ limit: 25 });
-      setNotifications(res.data || []);
-      setUnreadCount(Number(res.unreadCount || 0));
+      const items = res.data || [];
+      const count = Number(res.unreadCount || 0);
+      setNotifications(items);
+      setUnreadCount(count);
+      setAppBadge(count);
     } catch {
       // Silencioso en caso de error de red
     }
@@ -152,7 +188,11 @@ function NotificationBell() {
         setNotifications((prev) =>
           prev.map((n) => (n.id === notif.id ? { ...n, is_read: true, read_at: new Date() } : n))
         );
-        setUnreadCount((c) => Math.max(0, c - 1));
+        setUnreadCount((c) => {
+          const next = Math.max(0, c - 1);
+          setAppBadge(next);
+          return next;
+        });
       } catch {}
     }
 
@@ -168,6 +208,7 @@ function NotificationBell() {
       await markAllNotificationsAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true, read_at: new Date() })));
       setUnreadCount(0);
+      clearAppBadge();
     } catch {}
   };
 
@@ -248,6 +289,44 @@ function NotificationBell() {
               </button>
             )}
           </div>
+
+          {/* Banner discreto para activar avisos en móvil si está soportado y no concedido */}
+          {isPushSupported() && !hasPushPermission && (
+            <div
+              style={{
+                padding: '8px 16px',
+                background: '#f0fdf4',
+                borderBottom: '1px solid #dcfce7',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+              }}
+            >
+              <span style={{ fontSize: '0.74rem', color: '#166534', fontWeight: 500 }}>
+                Recibe avisos de tus movimientos en tu móvil
+              </span>
+              <button
+                type="button"
+                onClick={handleEnablePush}
+                disabled={isPushLoading}
+                style={{
+                  background: 'var(--color-primary, #059669)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  cursor: isPushLoading ? 'default' : 'pointer',
+                  opacity: isPushLoading ? 0.7 : 1,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {isPushLoading ? 'Activando...' : 'Activar'}
+              </button>
+            </div>
+          )}
 
           {/* List */}
           <div
